@@ -40,7 +40,7 @@ export function AnimatedGridPattern({
   const id = useId()
   const containerRef = useRef(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
-  const [squares, setSquares] = useState([])
+  const [squares, setSquares] = useState<Array<{id: number, pos: [number, number]}>>([])
 
   const getPos = useCallback(() => {
     return [
@@ -53,7 +53,7 @@ export function AnimatedGridPattern({
   const generateSquares = useCallback((count: number) => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
-      pos: getPos(),
+      pos: getPos() as [number, number],
     }))
   }, [getPos])
 
@@ -64,7 +64,7 @@ export function AnimatedGridPattern({
         sq.id === id
           ? {
               ...sq,
-              pos: getPos(),
+              pos: getPos() as [number, number],
             }
           : sq
       )

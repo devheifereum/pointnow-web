@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, MapPin, ChevronLeft, ChevronRight, Heart, Share2 } from "lucide-react";
+import { Star, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import Navbar from "@/components/Navbar";
@@ -10,7 +10,7 @@ interface RestaurantProfileProps {
   restaurantName: string;
 }
 
-export default function RestaurantProfile({ restaurantName }: RestaurantProfileProps) {
+export default function RestaurantProfile({ restaurantName: _restaurantName }: RestaurantProfileProps) {
   const [activeTab, setActiveTab] = useState("description");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
