@@ -8,7 +8,7 @@ export default function Navbar() {
         {["Home", "Explore", "About us", "Blog", "Careers"].map((link) => (
           <a
             key={link}
-            href="#"
+            href={link === "Home" ? "/home" : "#"}
             className="text-gray-700 font-medium hover:text-[#7bc74d] transition"
           >
             {link}

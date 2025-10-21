@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Star, MapPin, ChevronLeft, ChevronRight, Heart, Share2 } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
+import Navbar from "@/components/Navbar";
 
 interface RestaurantProfileProps {
   restaurantName: string;
@@ -75,24 +76,7 @@ export default function RestaurantProfile({ restaurantName }: RestaurantProfileP
       
       <div className="relative z-10">
         {/* Navigation */}
-        <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <button className="flex items-center text-gray-600 hover:text-gray-900">
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Back to Restaurants
-              </button>
-              <div className="flex items-center space-x-4">
-                <button className="p-2 text-gray-600 hover:text-gray-900">
-                  <Share2 className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-600 hover:text-gray-900">
-                  <Heart className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <Navbar />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Main Content */}

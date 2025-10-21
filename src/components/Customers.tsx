@@ -201,9 +201,11 @@ export default function Restaurants() {
 
         {/* View All Button */}
         <div className="text-center mt-12">
-          <button className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white font-semibold px-8 py-3 rounded-xl transition-colors">
-            View All Restaurants
-          </button>
+          <Link href="/restaurants">
+            <button className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white font-semibold px-8 py-3 rounded-xl transition-colors">
+              View All Restaurants
+            </button>
+          </Link>
         </div>
       </div>
     </section>
