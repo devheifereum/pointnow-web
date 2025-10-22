@@ -107,10 +107,10 @@ export default function Restaurants() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-gilroy-black text-black mb-4 drop-shadow-sm">
-            Featured Restaurants
+            Our Partner Merchants
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto drop-shadow-sm">
-            Discover amazing restaurants near you with fresh, delicious food delivered to your doorstep
+            Trusted by 1000+ businesses and loved by millions of customers. Check your loyalty points and earn rewards.
           </p>
         </div>
 
@@ -189,9 +189,9 @@ export default function Restaurants() {
                   </div>
                 </div>
 
-                {/* Order Button */}
+                {/* Check Points Button */}
                 <button className="w-full mt-4 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-3 rounded-xl transition-colors">
-                  Order Now
+                  Check Points
                 </button>
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function Restaurants() {
         <div className="text-center mt-12">
           <Link href="/restaurants">
             <button className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white font-semibold px-8 py-3 rounded-xl transition-colors">
-              View All Restaurants
+              View All Partner Merchants
             </button>
           </Link>
         </div>

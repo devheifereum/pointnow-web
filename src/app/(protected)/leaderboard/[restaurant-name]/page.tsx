@@ -1,4 +1,4 @@
-import RestaurantProfile from "@/components/RestaurantProfile";
+import RestaurantProfile from "@/views/restaurants/RestaurantProfile";
 
 interface RestaurantProfilePageProps {
   params: Promise<{

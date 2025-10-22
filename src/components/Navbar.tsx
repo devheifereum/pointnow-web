@@ -5,7 +5,7 @@ export default function Navbar() {
     <nav className="flex justify-between items-center py-6 px-20 bg-white/70 backdrop-blur-md">
       <div className="text-3xl font-gilroy-extrabold text-black">PointNow.</div>
       <div className="flex items-center gap-10">
-        {["Home", "Explore", "About us", "Blog", "Careers"].map((link) => (
+        {["Home", "Why PointNow?", "About Us", "Pricing", "Blog"].map((link) => (
           <a
             key={link}
             href={link === "Home" ? "/home" : "#"}
@@ -29,13 +29,13 @@ export default function Navbar() {
               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" 
             />
           </svg>
-          {/* Cart badge */}
+          {/* Points badge */}
           <span className="absolute -top-1 -right-1 bg-[#7bc74d] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
             3
           </span>
         </button>
         <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
-          Sign up
+          Login to Check Points
         </button>
       </div>
     </nav>
