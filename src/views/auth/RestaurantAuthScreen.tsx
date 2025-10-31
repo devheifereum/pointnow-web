@@ -56,7 +56,7 @@ export default function RestaurantAuthScreen() {
       <div className="relative z-10">
         <Navbar />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 py-6">
           <Link 
             href="/pricing"
             className="inline-flex items-center text-gray-600 hover:text-[#7bc74d] transition-colors mb-6"
@@ -66,11 +66,11 @@ export default function RestaurantAuthScreen() {
           </Link>
 
           <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-            <div className="w-full max-w-6xl">
+            <div className="w-full max-w-[95%] lg:max-w-[90%] xl:max-w-[1400px] px-2 sm:px-4 lg:px-6">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                   {/* Left Side - Branding */}
-                  <div className="relative bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] p-16 flex items-center justify-center">
+                  <div className="relative bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] p-8 lg:p-12 xl:p-16 flex items-center justify-center">
                     <div className="text-center text-white">
                       <div className="text-7xl mb-6">🍽️</div>
                       <h2 className="text-4xl font-gilroy-black mb-4">
@@ -115,7 +115,7 @@ export default function RestaurantAuthScreen() {
                   </div>
 
                   {/* Right Side - Form */}
-                  <div className="p-8 lg:p-16">
+                  <div className="p-6 sm:p-8 lg:p-12 xl:p-16">
                     {/* Header */}
                     <div className="text-center mb-6">
                       <h1 className="text-2xl font-gilroy-black text-black mb-2">
@@ -128,11 +128,12 @@ export default function RestaurantAuthScreen() {
                       </p>
                     </div>
                     {/* Toggle */}
-                    <div className="flex items-center justify-center mb-6">
+                    <div className="flex items-center justify-center mb-6 relative z-10">
                       <div className="bg-gray-100 rounded-xl p-1 inline-flex">
                         <button
+                          type="button"
                           onClick={() => setIsLogin(true)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm ${
+                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
                             isLogin
                               ? "bg-[#7bc74d] text-white shadow-sm"
                               : "text-gray-600 hover:text-gray-900"
@@ -141,8 +142,9 @@ export default function RestaurantAuthScreen() {
                           Login
                         </button>
                         <button
+                          type="button"
                           onClick={() => setIsLogin(false)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm ${
+                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
                             !isLogin
                               ? "bg-[#7bc74d] text-white shadow-sm"
                               : "text-gray-600 hover:text-gray-900"
@@ -153,11 +155,11 @@ export default function RestaurantAuthScreen() {
                       </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                 {!isLogin && (
                   <>
                     {/* Two-column grid for register fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                       <div>
                         <label htmlFor="businessName" className="block text-sm font-semibold text-gray-700 mb-2">
                           Business Name *
@@ -264,8 +266,8 @@ export default function RestaurantAuthScreen() {
                 </div>
 
                 {!isLogin && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                    <div className="sm:col-span-1">
                       <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                         Email Address *
                       </label>
@@ -284,7 +286,7 @@ export default function RestaurantAuthScreen() {
                       </div>
                     </div>
 
-                    <div className="md:col-span-1">
+                    <div className="sm:col-span-1">
                       <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                         Confirm Password *
                       </label>
@@ -406,15 +408,22 @@ export default function RestaurantAuthScreen() {
                     </button>
 
                     {/* Switch Mode */}
-                    <div className="text-center">
+                    <div className="text-center space-y-2">
                       <p className="text-gray-600 text-sm">
                         {isLogin ? "Don&apos;t have an account? " : "Already have an account? "}
                         <button
+                          type="button"
                           onClick={() => setIsLogin(!isLogin)}
                           className="text-[#7bc74d] hover:text-[#6ab63d] font-semibold"
                         >
                           {isLogin ? "Register now" : "Login"}
                         </button>
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Are you a customer?{" "}
+                        <Link href="/auth?mode=user" className="text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
+                          Login as Customer
+                        </Link>
                       </p>
                     </div>
                   </div>

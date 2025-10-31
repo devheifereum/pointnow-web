@@ -44,12 +44,12 @@ export default function Navbar() {
           </span>
         </button>
         <div className="flex items-center gap-4">
-          <Link href="/auth">
+          <Link href="/auth?mode=restaurant">
             <button className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-full font-semibold transition text-sm">
               Restaurant Login
             </button>
           </Link>
-          <Link href="/home">
+          <Link href="/auth?mode=user">
             <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
               Login to Check Points
             </button>
