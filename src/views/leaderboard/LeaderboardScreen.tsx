@@ -331,7 +331,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2">{leaderboardData[1].name}</h3>
+                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{leaderboardData[1].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-3xl font-gilroy-black text-[#7bc74d]">
                           {leaderboardData[1].points.toLocaleString()}
@@ -368,7 +368,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                       <div className={`${getBadgeColor(leaderboardData[0].badge)} text-xs font-semibold px-3 py-1 rounded-full w-fit mx-auto mb-3`}>
                         {leaderboardData[0].badge} Member
                       </div>
-                      <h3 className="text-2xl font-gilroy-black text-center mb-2">{leaderboardData[0].name}</h3>
+                      <h3 className="text-2xl font-gilroy-black text-center mb-2 text-black">{leaderboardData[0].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-4xl font-gilroy-black text-[#7bc74d]">
                           {leaderboardData[0].points.toLocaleString()}
@@ -402,7 +402,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2">{leaderboardData[2].name}</h3>
+                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{leaderboardData[2].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-3xl font-gilroy-black text-[#7bc74d]">
                           {leaderboardData[2].points.toLocaleString()}

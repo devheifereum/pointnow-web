@@ -6,7 +6,6 @@ export default function Navbar() {
     { label: "Home", href: "/home" },
     { label: "Restaurants", href: "/restaurants" },
     { label: "Pricing", href: "/pricing" },
-    { label: "About Us", href: "#about" },
   ];
 
   return (
