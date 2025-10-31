@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, X, Zap, TrendingUp, Users, Shield, Star, Crown } from "lucide-react";
+import Link from "next/link";
+import { Check, X, TrendingUp, Star, Crown } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
@@ -230,15 +231,16 @@ export default function PricingScreen() {
                     </div>
 
                     {/* CTA Button */}
-                    <button
-                      className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 ${
+                    <Link
+                      href="/auth"
+                      className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 inline-block text-center ${
                         plan.highlighted
                           ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
                           : "bg-gray-900 hover:bg-gray-800 text-white"
                       }`}
                     >
                       {plan.cta}
-                    </button>
+                    </Link>
 
                     {/* Features */}
                     <div className="space-y-3">
@@ -312,12 +314,18 @@ export default function PricingScreen() {
                 Join hundreds of merchants using PointNow to build customer loyalty and increase sales.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors">
+                <Link
+                  href="/auth"
+                  className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
+                >
                   Start Free Trial
-                </button>
-                <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20">
+                </Link>
+                <Link
+                  href="/auth"
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20 inline-block text-center"
+                >
                   Schedule Demo
-                </button>
+                </Link>
               </div>
               <p className="text-sm opacity-75 mt-6">
                 No credit card required • 14-day free trial • Cancel anytime
