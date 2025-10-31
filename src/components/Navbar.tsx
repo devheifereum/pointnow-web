@@ -1,18 +1,28 @@
 import React from "react";
+import Link from "next/link";
 
 export default function Navbar() {
+  const navLinks = [
+    { label: "Home", href: "/home" },
+    { label: "Restaurants", href: "/restaurants" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "About Us", href: "#about" },
+  ];
+
   return (
     <nav className="flex justify-between items-center py-6 px-20 bg-white/70 backdrop-blur-md">
-      <div className="text-3xl font-gilroy-extrabold text-black">PointNow.</div>
+      <Link href="/home" className="text-3xl font-gilroy-extrabold text-black hover:text-[#7bc74d] transition">
+        PointNow.
+      </Link>
       <div className="flex items-center gap-10">
-        {["Home", "Why PointNow?", "About Us", "Pricing", "Blog"].map((link) => (
-          <a
-            key={link}
-            href={link === "Home" ? "/home" : "#"}
+        {navLinks.map((link) => (
+          <Link
+            key={link.label}
+            href={link.href}
             className="text-gray-700 font-medium hover:text-[#7bc74d] transition"
           >
-            {link}
-          </a>
+            {link.label}
+          </Link>
         ))}
         <button className="relative p-2 text-gray-700 hover:text-[#7bc74d] transition">
           <svg 
@@ -34,9 +44,11 @@ export default function Navbar() {
             3
           </span>
         </button>
-        <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
-          Login to Check Points
-        </button>
+        <Link href="/home">
+          <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
+            Login to Check Points
+          </button>
+        </Link>
       </div>
     </nav>
   );
