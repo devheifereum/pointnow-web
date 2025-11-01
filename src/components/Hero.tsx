@@ -27,12 +27,11 @@ export default function Hero() {
       <h1 className="text-6xl md:text-7xl font-gilroy-black text-black leading-tight mb-6 tracking-tight">
         Loyalty Points
         <br /> Management for
-        <br /> Restaurants & Retail
+        <br /> Businesses & Brands
       </h1>
 
       <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-12 leading-relaxed">
-        Go-live with your loyalty points system in 2 minutes flat. 
-        Customers check their points, merchants reward loyalty. No credit card needed.
+        Go live with your loyalty points system in 2 minutes flat. Customers check their points, merchants reward loyalty.
       </p>
 
       {/* Search */}
