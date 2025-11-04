@@ -363,7 +363,7 @@ export default function AllRestaurants() {
 
                     {/* Order Button */}
                     <button className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-3 rounded-xl transition-colors">
-                      Order Now
+                      Point Now
                     </button>
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function AllRestaurants() {
                         <span className="font-semibold">{restaurant.priceRange}</span>
                       </div>
                       <button className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-4 py-2 rounded-lg transition-colors">
-                        Order Now
+                        Point Now
                       </button>
                     </div>
                   </div>

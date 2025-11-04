@@ -189,9 +189,9 @@ export default function Restaurants() {
                   </div>
                 </div>
 
-                {/* Check Points Button */}
+                {/* Point Now Button */}
                 <button className="w-full mt-4 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-3 rounded-xl transition-colors">
-                  Check Points
+                  Point Now
                 </button>
               </div>
             </div>

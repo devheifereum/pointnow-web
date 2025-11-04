@@ -51,7 +51,7 @@ export default function Navbar() {
           </Link>
           <Link href="/auth?mode=user">
             <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
-              Login to Check Points
+              Login to Point Now
             </button>
           </Link>
         </div>

@@ -38,7 +38,7 @@ export default function Hero() {
       <div className="flex items-center max-w-xl mx-auto bg-white rounded-full p-2 shadow-lg">
         <input
           type="text"
-          placeholder="Search restaurants or check your points..."
+          placeholder="Search restaurants or Point Now..."
           className="flex-1 px-5 py-3 text-base text-gray-700 outline-none rounded-full"
         />
         <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">

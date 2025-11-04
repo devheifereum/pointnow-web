@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
 
 export default function RestaurantAuthScreen() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,7 +32,21 @@ export default function RestaurantAuthScreen() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? "Login" : "Register", formData);
+    if (isLogin) {
+      // Skip auth for now, redirect to dashboard
+      // In a real app, get restaurant name from auth context/user session
+      // For now, use a default restaurant name
+      // TODO: Replace with actual restaurant name from authenticated user
+      const restaurantSlug = "my-restaurant"; // Default, replace with actual restaurant slug from auth
+      router.push(`/${restaurantSlug}/dashboard`);
+    } else {
+      console.log("Register", formData);
+      // After registration, redirect to dashboard with the registered restaurant name
+      const restaurantSlug = formData.businessName 
+        ? formData.businessName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+        : "my-restaurant";
+      router.push(`/${restaurantSlug}/dashboard`);
+    }
   };
 
   return (
