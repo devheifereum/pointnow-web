@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
@@ -32,21 +32,11 @@ export default function RestaurantAuthScreen() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      // Skip auth for now, redirect to dashboard
-      // In a real app, get restaurant name from auth context/user session
-      // For now, use a default restaurant name
-      // TODO: Replace with actual restaurant name from authenticated user
-      const restaurantSlug = "my-restaurant"; // Default, replace with actual restaurant slug from auth
-      router.push(`/${restaurantSlug}/dashboard`);
-    } else {
-      console.log("Register", formData);
-      // After registration, redirect to dashboard with the registered restaurant name
-      const restaurantSlug = formData.businessName 
-        ? formData.businessName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
-        : "my-restaurant";
-      router.push(`/${restaurantSlug}/dashboard`);
-    }
+    // Mockup UI - always redirect to dashboard
+    const restaurantSlug = formData.businessName && !isLogin
+      ? formData.businessName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+      : "my-restaurant";
+    router.push(`/${restaurantSlug}/dashboard`);
   };
 
   return (
@@ -73,14 +63,6 @@ export default function RestaurantAuthScreen() {
         <Navbar />
 
         <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 py-6">
-          <Link 
-            href="/pricing"
-            className="inline-flex items-center text-gray-600 hover:text-[#7bc74d] transition-colors mb-6"
-          >
-            <ChevronLeft className="w-5 h-5 mr-1" />
-            Back to Pricing
-          </Link>
-
           <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
             <div className="w-full max-w-[95%] lg:max-w-[90%] xl:max-w-[1400px] px-2 sm:px-4 lg:px-6">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
