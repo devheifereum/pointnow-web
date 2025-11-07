@@ -12,7 +12,7 @@ interface RestaurantProfileProps {
 
 export default function RestaurantProfile({ restaurantName: _restaurantName }: RestaurantProfileProps) {
   const [activeTab, setActiveTab] = useState("description");
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [_currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Mock restaurant data
   const restaurant = {

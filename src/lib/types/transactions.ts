@@ -45,7 +45,7 @@ export interface PointTransaction {
   amount: number; // Can be positive (earned) or negative (redeemed)
   type: "EARN" | "REDEEM" | "ADD" | "SUBTRACT";
   staff_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   is_active: boolean;
   transaction_at: string;
   created_at: string;
@@ -92,7 +92,7 @@ export interface CreatePointTransactionPayload {
   customer_id: string;
   amount: number;
   is_active: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   type: "EARN" | "REDEEM" | "ADD" | "SUBTRACT";
   employee_id: string;
 }

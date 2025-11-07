@@ -13,18 +13,19 @@ import {
 import { analyticsApi } from "@/lib/api/analytics";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
+import type { AnalyticsMetadata, TopCustomer, PointHistoricalDataPoint } from "@/lib/types/analytics";
 
 interface RestaurantAnalyticsProps {
   restaurantName?: string;
 }
 
-export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyticsProps) {
+export default function RestaurantAnalytics({ restaurantName: _restaurantName }: RestaurantAnalyticsProps) {
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<any>(null);
-  const [topCustomers, setTopCustomers] = useState<any[]>([]);
-  const [historicalData, setHistoricalData] = useState<any[]>([]);
+  const [metadata, setMetadata] = useState<AnalyticsMetadata | null>(null);
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const [historicalData, setHistoricalData] = useState<PointHistoricalDataPoint[]>([]);
 
   // Date range state - default to last 30 days
   const [startDate, setStartDate] = useState(() => {

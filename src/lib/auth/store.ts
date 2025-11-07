@@ -43,14 +43,14 @@ function loadAuthFromStorage(): { user: AuthUser | null; isAuthenticated: boolea
         return parsed;
       }
     }
-  } catch (e) {
+  } catch {
     // Ignore parse errors
   }
 
   return { user: null, isAuthenticated: false };
 }
 
-export const useAuthStore = create<AuthState>()((set, get) => {
+export const useAuthStore = create<AuthState>()((set) => {
   // Initialize from localStorage
   const stored = loadAuthFromStorage();
 

@@ -5,19 +5,19 @@ import { Trophy, Medal, Award, Crown, Search, ChevronLeft, ChevronRight, Loader2
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
-import type { Customer } from "@/lib/types/customers";
+import type { Customer, LeaderboardMetadata } from "@/lib/types/customers";
 
 interface RestaurantLeaderboardProps {
   restaurantName?: string;
 }
 
-export default function RestaurantLeaderboard({ restaurantName }: RestaurantLeaderboardProps) {
+export default function RestaurantLeaderboard({ restaurantName: _restaurantName }: RestaurantLeaderboardProps) {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [metadata, setMetadata] = useState<any>(null);
+  const [metadata, setMetadata] = useState<LeaderboardMetadata | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,

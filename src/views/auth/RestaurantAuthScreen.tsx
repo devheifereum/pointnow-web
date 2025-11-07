@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Building2, Phone, MapPin, Eye, EyeOff } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";

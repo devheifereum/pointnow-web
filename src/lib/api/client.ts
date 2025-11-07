@@ -25,7 +25,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
   let data: T;
   try {
     data = await response.json();
-  } catch (e) {
+  } catch {
     // If response is not JSON, throw error
     throw new ApiClientError(
       "Invalid response format",
@@ -34,10 +34,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
   }
 
   if (!isSuccess) {
+    const errorData = data as { message?: string; errors?: Record<string, string[]> };
     throw new ApiClientError(
-      (data as any).message || "An error occurred",
+      errorData.message || "An error occurred",
       response.status,
-      (data as any).errors
+      errorData.errors
     );
   }
 

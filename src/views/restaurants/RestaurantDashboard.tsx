@@ -12,7 +12,7 @@ interface RestaurantDashboardProps {
   restaurantName?: string;
 }
 
-export default function RestaurantDashboard({ restaurantName }: RestaurantDashboardProps) {
+export default function RestaurantDashboard({ restaurantName: _restaurantName }: RestaurantDashboardProps) {
   const { user } = useAuthStore();
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [pointsInput, setPointsInput] = useState("");

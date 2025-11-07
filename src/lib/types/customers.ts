@@ -54,11 +54,11 @@ export interface CreateCustomerWithUserPayload {
   email: string;
   phone_number: string;
   is_active: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   business: {
     business_id: string;
     staff_id: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
     is_active: boolean;
     total_points: number;
   };
@@ -69,28 +69,6 @@ export interface CreateCustomerWithUserResponse {
   status_code: number;
   data: {
     customer: Customer;
-    [key: string]: unknown;
-  };
-}
-
-export interface CreatePointTransactionPayload {
-  business_id: string;
-  customer_id: string;
-  amount: number;
-  is_active: boolean;
-  metadata: Record<string, any>;
-  type: "EARN" | "REDEEM" | "ADD" | "SUBTRACT";
-  employee_id: string;
-}
-
-export interface CreatePointTransactionResponse {
-  message: string;
-  status_code: number;
-  data: {
-    point_transaction: {
-      id: string;
-      [key: string]: unknown;
-    };
     [key: string]: unknown;
   };
 }

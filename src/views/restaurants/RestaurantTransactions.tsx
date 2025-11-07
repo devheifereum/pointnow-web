@@ -5,20 +5,20 @@ import { Search, Filter, Download, Plus, Minus, ChevronLeft, ChevronRight, Loade
 import { transactionsApi } from "@/lib/api/transactions";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
-import type { PointTransaction } from "@/lib/types/transactions";
+import type { PointTransaction, TransactionMetadata } from "@/lib/types/transactions";
 
 interface RestaurantTransactionsProps {
   restaurantName?: string;
 }
 
-export default function RestaurantTransactions({ restaurantName }: RestaurantTransactionsProps) {
+export default function RestaurantTransactions({ restaurantName: _restaurantName }: RestaurantTransactionsProps) {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "add" | "subtract">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
-  const [metadata, setMetadata] = useState<any>(null);
+  const [metadata, setMetadata] = useState<TransactionMetadata | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,

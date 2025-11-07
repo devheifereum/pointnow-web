@@ -10,14 +10,13 @@ import {
   Award,
   Clock,
   Save,
-  Upload,
 } from "lucide-react";
 
 interface RestaurantSettingsProps {
   restaurantName?: string;
 }
 
-export default function RestaurantSettings({ restaurantName }: RestaurantSettingsProps) {
+export default function RestaurantSettings({ restaurantName: _restaurantName }: RestaurantSettingsProps) {
   const [businessInfo, setBusinessInfo] = useState({
     name: "Green Forest Restaurant",
     phone: "+1 234-567-8900",
