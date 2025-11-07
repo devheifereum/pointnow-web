@@ -1,37 +1,66 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { User, Phone, X, Plus, Search } from "lucide-react";
-
-interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  points: number;
-}
+import React, { useState, useMemo, useEffect } from "react";
+import { User, Phone, X, Plus, Search, Mail, Loader2 } from "lucide-react";
+import { customersApi } from "@/lib/api/customers";
+import { transactionsApi } from "@/lib/api/transactions";
+import { useAuthStore } from "@/lib/auth/store";
+import { ApiClientError } from "@/lib/api/client";
+import type { Customer } from "@/lib/types/customers";
 
 interface RestaurantDashboardProps {
   restaurantName?: string;
 }
 
-// Mock existing customers - in a real app, this would come from an API/database
-const MOCK_CUSTOMERS: Customer[] = [
-  { id: "1", name: "John Doe", phone: "+1 234-567-8900", points: 150 },
-  { id: "2", name: "Jane Smith", phone: "+1 234-567-8901", points: 320 },
-  { id: "3", name: "Mike Johnson", phone: "+1 234-567-8902", points: 85 },
-  { id: "4", name: "Sarah Williams", phone: "+1 234-567-8903", points: 210 },
-  { id: "5", name: "David Brown", phone: "+1 234-567-8904", points: 450 },
-];
-
 export default function RestaurantDashboard({ restaurantName }: RestaurantDashboardProps) {
+  const { user } = useAuthStore();
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [pointsInput, setPointsInput] = useState("");
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerEmail, setNewCustomerEmail] = useState("");
   const [newCustomerPhone, setNewCustomerPhone] = useState("");
-  const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const businessId = user?.businessId || "";
+  // staff_id is the user's ID when they are staff/admin
+  const staffId = user?.user?.id || "";
+
+  // Fetch customers when search is opened
+  useEffect(() => {
+    if (showCustomerSearch && businessId) {
+      fetchCustomers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCustomerSearch, businessId]);
+
+  const fetchCustomers = async () => {
+    if (!businessId) return;
+
+    setIsLoadingCustomers(true);
+    setError(null);
+
+    try {
+      const response = await customersApi.getAll({
+        business_id: businessId,
+        limit: 100, // Get more customers for search
+      });
+      setCustomers(response.data.customers || []);
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "Failed to load customers");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsLoadingCustomers(false);
+    }
+  };
 
   // Filter customers based on search query
   const filteredCustomers = useMemo(() => {
@@ -40,7 +69,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     return customers.filter(
       (customer) =>
         customer.name.toLowerCase().includes(query) ||
-        customer.phone.includes(query)
+        customer.phone_number?.toLowerCase().includes(query) ||
+        customer.email?.toLowerCase().includes(query)
     );
   }, [customers, searchQuery]);
 
@@ -58,21 +88,53 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setPointsInput("");
   };
 
-  const handleAddCustomer = () => {
-    if (newCustomerName.trim() && newCustomerPhone.trim()) {
-      const newCustomer: Customer = {
-        id: Date.now().toString(),
+  const handleAddCustomer = async () => {
+    if (!newCustomerName.trim() || !newCustomerEmail.trim() || !newCustomerPhone.trim()) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    if (!businessId || !staffId) {
+      setError("Business ID or Staff ID not found. Please log in again.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const response = await customersApi.createWithUser({
         name: newCustomerName.trim(),
-        phone: newCustomerPhone.trim(),
-        points: 0,
-      };
+        email: newCustomerEmail.trim(),
+        phone_number: newCustomerPhone.trim(),
+        is_active: true,
+        metadata: {},
+        business: {
+          business_id: businessId,
+          staff_id: staffId,
+          metadata: {},
+          is_active: true,
+          total_points: 0,
+        },
+      });
+
+      const newCustomer = response.data.customer;
       setCustomers((prev) => [...prev, newCustomer]);
       setCurrentCustomer(newCustomer);
       setShowNewCustomerForm(false);
       setShowCustomerSearch(false);
       setNewCustomerName("");
+      setNewCustomerEmail("");
       setNewCustomerPhone("");
       setSearchQuery("");
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "Failed to create customer");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -81,6 +143,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setShowCustomerSearch(false);
     setSearchQuery("");
     setPointsInput("");
+    setError(null);
   };
 
   const handleClearCustomer = () => {
@@ -91,19 +154,52 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setSearchQuery("");
   };
 
+  const createTransaction = async (amount: number, type: "EARN" | "REDEEM") => {
+    if (!currentCustomer || !businessId || !staffId) {
+      setError("Missing required information");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      await transactionsApi.create({
+        business_id: businessId,
+        customer_id: currentCustomer.id,
+        amount: amount,
+        is_active: true,
+        metadata: {},
+        type: type,
+        employee_id: staffId,
+      });
+
+      // Refresh customer data to get updated points
+      const customersResponse = await customersApi.getAll({
+        business_id: businessId,
+        limit: 100,
+      });
+      const updatedCustomers = customersResponse.data.customers || [];
+      setCustomers(updatedCustomers);
+      const updatedCustomer = updatedCustomers.find((c) => c.id === currentCustomer.id) || currentCustomer;
+      setCurrentCustomer(updatedCustomer);
+      setPointsInput("");
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "Failed to process transaction");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleAddPoints = () => {
     if (currentCustomer && pointsInput) {
       const pointsToAdd = parseInt(pointsInput);
       if (pointsToAdd > 0) {
-        const updatedCustomer = {
-          ...currentCustomer,
-          points: currentCustomer.points + pointsToAdd,
-        };
-        setCurrentCustomer(updatedCustomer);
-        setCustomers((prev) =>
-          prev.map((c) => (c.id === currentCustomer.id ? updatedCustomer : c))
-        );
-        setPointsInput("");
+        createTransaction(pointsToAdd, "EARN");
       }
     }
   };
@@ -112,15 +208,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     if (currentCustomer && pointsInput) {
       const pointsToSubtract = parseInt(pointsInput);
       if (pointsToSubtract > 0) {
-        const updatedCustomer = {
-          ...currentCustomer,
-          points: Math.max(0, currentCustomer.points - pointsToSubtract),
-        };
-        setCurrentCustomer(updatedCustomer);
-        setCustomers((prev) =>
-          prev.map((c) => (c.id === currentCustomer.id ? updatedCustomer : c))
-        );
-        setPointsInput("");
+        createTransaction(-pointsToSubtract, "REDEEM");
       }
     }
   };
@@ -132,6 +220,12 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         <h1 className="text-3xl font-gilroy-black text-black mb-2">Dashboard</h1>
         <p className="text-gray-600">Manage customer points</p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {/* Left Column - Customer Info */}
@@ -149,8 +243,14 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                         <h2 className="text-2xl font-gilroy-black text-black">{currentCustomer.name}</h2>
                         <p className="text-gray-600 text-sm flex items-center gap-1">
                           <Phone className="w-4 h-4" />
-                          {currentCustomer.phone}
+                          {currentCustomer.phone_number || "-"}
                         </p>
+                        {currentCustomer.email && (
+                          <p className="text-gray-600 text-sm flex items-center gap-1">
+                            <Mail className="w-4 h-4" />
+                            {currentCustomer.email}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -166,7 +266,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 <div className="bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-xl p-6 text-center mb-6">
                   <p className="text-gray-700 text-sm mb-2 font-medium">Current Points</p>
                   <p className="text-5xl md:text-6xl font-gilroy-black text-white">
-                    {currentCustomer.points}
+                    {currentCustomer.points || 0}
                   </p>
                 </div>
 
@@ -187,15 +287,31 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       onClick={handleAddPoints}
-                      className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
+                      disabled={isProcessing}
+                      className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                     >
-                      Add Points
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Add Points"
+                      )}
                     </button>
                     <button
                       onClick={handleSubtractPoints}
-                      className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
+                      disabled={isProcessing}
+                      className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                     >
-                      Subtract Points
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Subtract Points"
+                      )}
                     </button>
                   </div>
                 )}
@@ -231,7 +347,12 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
                 {/* Customer List */}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {filteredCustomers.length > 0 ? (
+                  {isLoadingCustomers ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#7bc74d]" />
+                      <span className="ml-3 text-gray-600">Loading customers...</span>
+                    </div>
+                  ) : filteredCustomers.length > 0 ? (
                     filteredCustomers.map((customer) => (
                       <button
                         key={customer.id}
@@ -247,12 +368,18 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                               <p className="font-semibold text-black">{customer.name}</p>
                               <p className="text-sm text-gray-600 flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
-                                {customer.phone}
+                                {customer.phone_number || "-"}
                               </p>
+                              {customer.email && (
+                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <Mail className="w-3 h-3" />
+                                  {customer.email}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.points}</p>
+                            <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.points || 0}</p>
                             <p className="text-xs text-gray-500">points</p>
                           </div>
                         </div>
@@ -307,6 +434,22 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Email *
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="email"
+                            value={newCustomerEmail}
+                            onChange={(e) => setNewCustomerEmail(e.target.value)}
+                            placeholder="Enter email address"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Phone Number *
                         </label>
                         <div className="relative">
@@ -323,10 +466,17 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
                       <button
                         onClick={handleAddCustomer}
-                        disabled={!newCustomerName.trim() || !newCustomerPhone.trim()}
-                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
+                        disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !newCustomerPhone.trim() || isProcessing}
+                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                       >
-                        Add Customer
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Add Customer"
+                        )}
                       </button>
                     </div>
                   </div>

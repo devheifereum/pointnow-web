@@ -7,12 +7,18 @@ import { ChevronLeft, Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } 
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
+import { authApi } from "@/lib/api/auth";
+import { useAuthStore } from "@/lib/auth/store";
+import { ApiClientError } from "@/lib/api/client";
 
 export default function RestaurantAuthScreen() {
   const router = useRouter();
+  const { setAuth } = useAuthStore();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     businessName: "",
     email: "",
@@ -21,31 +27,92 @@ export default function RestaurantAuthScreen() {
     phone: "",
     address: "",
     ownerName: "",
+    registrationNumber: "",
+    description: "",
+    latitude: "",
+    longitude: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      // Skip auth for now, redirect to dashboard
-      // In a real app, get restaurant name from auth context/user session
-      // For now, use a default restaurant name
-      // TODO: Replace with actual restaurant name from authenticated user
-      const restaurantSlug = "my-restaurant"; // Default, replace with actual restaurant slug from auth
-      router.push(`/${restaurantSlug}/dashboard`);
-    } else {
-      console.log("Register", formData);
-      // After registration, redirect to dashboard with the registered restaurant name
-      const restaurantSlug = formData.businessName 
-        ? formData.businessName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
-        : "my-restaurant";
-      router.push(`/${restaurantSlug}/dashboard`);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login
+        const response = await authApi.login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        setAuth(response.data.user, response.data.backend_tokens);
+
+        // Check if user is admin or staff
+        const user = response.data.user;
+        const isAdminOrStaff = user.admin || user.staff;
+
+        if (isAdminOrStaff) {
+          // Redirect to restaurant dashboard
+          router.push("/my-restaurant/dashboard");
+        } else {
+          // If user logs in but is not admin/staff, redirect to home
+          router.push("/home");
+        }
+      } else {
+        // Register Business
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!formData.latitude || !formData.longitude) {
+          setError("Please provide latitude and longitude for your business location");
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await authApi.registerBusiness({
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          role: "ADMIN",
+          is_active: true,
+          metadata: {},
+          business: {
+            name: formData.businessName,
+            registration_number: formData.registrationNumber,
+            description: formData.description,
+            address: formData.address,
+            latitude: parseFloat(formData.latitude),
+            longitude: parseFloat(formData.longitude),
+            metadata: {},
+            is_active: true,
+          },
+        });
+
+        setAuth(response.data.user, response.data.backend_tokens);
+        
+        // Redirect to restaurant dashboard
+        router.push("/my-restaurant/dashboard");
+      }
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "An error occurred. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,6 +238,12 @@ export default function RestaurantAuthScreen() {
                       </div>
                     </div>
 
+                    {error && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                 {!isLogin && (
                   <>
@@ -196,20 +269,20 @@ export default function RestaurantAuthScreen() {
                       </div>
 
                       <div>
-                        <label htmlFor="ownerName" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Owner Name *
+                        <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Registration Number *
                         </label>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="text"
-                            id="ownerName"
-                            name="ownerName"
-                            value={formData.ownerName}
+                            id="registrationNumber"
+                            name="registrationNumber"
+                            value={formData.registrationNumber}
                             onChange={handleInputChange}
                             required={!isLogin}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            placeholder="Enter owner name"
+                            placeholder="e.g., SSM2003"
                           />
                         </div>
                       </div>
@@ -251,6 +324,62 @@ export default function RestaurantAuthScreen() {
                           />
                         </div>
                       </div>
+
+                      <div>
+                        <label htmlFor="latitude" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Latitude *
+                        </label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="number"
+                            step="any"
+                            id="latitude"
+                            name="latitude"
+                            value={formData.latitude}
+                            onChange={handleInputChange}
+                            required={!isLogin}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            placeholder="e.g., 39.0481"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="longitude" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Longitude *
+                        </label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="number"
+                            step="any"
+                            id="longitude"
+                            name="longitude"
+                            value={formData.longitude}
+                            onChange={handleInputChange}
+                            required={!isLogin}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            placeholder="e.g., -29.5238"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Business Description *
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        required={!isLogin}
+                        rows={4}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                        placeholder="Describe your business..."
+                      />
                     </div>
                   </>
                 )}
@@ -387,9 +516,10 @@ export default function RestaurantAuthScreen() {
 
                     <button
                       type="submit"
-                      className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg"
+                      disabled={isLoading}
+                      className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg"
                     >
-                      {isLogin ? "Sign In" : "Create Account"}
+                      {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                     </button>
                     </form>
 

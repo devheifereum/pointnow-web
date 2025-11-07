@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Mail, Lock, Phone, User, Eye, EyeOff, Gift } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
+import { authApi } from "@/lib/api/auth";
+import { useAuthStore } from "@/lib/auth/store";
+import { ApiClientError } from "@/lib/api/client";
 
 export default function UserAuthScreen() {
+  const router = useRouter();
+  const { setAuth } = useAuthStore();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,11 +32,66 @@ export default function UserAuthScreen() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? "User Login" : "User Register", formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login
+        const response = await authApi.login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        setAuth(response.data.user, response.data.backend_tokens);
+
+        // Check if user is admin or staff
+        const user = response.data.user;
+        const isAdminOrStaff = user.admin || user.staff;
+
+        if (isAdminOrStaff) {
+          // Redirect to restaurant dashboard
+          router.push("/my-restaurant/dashboard");
+        } else {
+          // Redirect to home for regular users
+          router.push("/home");
+        }
+      } else {
+        // Register
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await authApi.registerUser({
+          email: formData.email,
+          password: formData.password,
+          phone_number: formData.phone,
+          role: "CUSTOMER",
+          is_active: false,
+          metadata: {},
+        });
+
+        setAuth(response.data.user, response.data.backend_tokens);
+        
+        // Redirect to home for new users
+        router.push("/home");
+      }
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "An error occurred. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -152,6 +215,12 @@ export default function UserAuthScreen() {
                         </button>
                       </div>
                     </div>
+
+                    {error && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                       {!isLogin && (
@@ -305,9 +374,10 @@ export default function UserAuthScreen() {
 
                       <button
                         type="submit"
-                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg"
+                        disabled={isLoading}
+                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg"
                       >
-                        {isLogin ? "Sign In" : "Create Account"}
+                        {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                       </button>
                     </form>
 

@@ -1,7 +1,11 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { useAuthStore } from "@/lib/auth/store";
 
 export default function Navbar() {
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
   const navLinks = [
     { label: "Home", href: "/home" },
     { label: "Restaurants", href: "/restaurants" },
@@ -44,16 +48,23 @@ export default function Navbar() {
           </span>
         </button>
         <div className="flex items-center gap-4">
-          <Link href="/auth?mode=restaurant">
-            <button className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-full font-semibold transition text-sm">
-              Restaurant Login
-            </button>
-          </Link>
-          <Link href="/auth?mode=user">
-            <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
-              Login to Point Now
-            </button>
-          </Link>
+          {isAuthenticated && user ? (
+            <>
+              <span className="text-gray-700 font-medium">{user.user.email}</span>
+              <button
+                onClick={clearAuth}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2.5 rounded-full font-semibold transition text-sm"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/auth">
+              <button className="bg-[#7bc74d] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#6ab63d] transition">
+                Login
+              </button>
+            </Link>
+          )}
         </div>
       </div>
     </nav>

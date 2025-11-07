@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   BarChart3,
@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuthStore } from "@/lib/auth/store";
 
 interface SidebarItem {
   label: string;
@@ -32,8 +33,16 @@ const sidebarItems: SidebarItem[] = [
 export default function RestaurantSidebar() {
   const pathname = usePathname();
   const params = useParams();
+  const router = useRouter();
+  const { clearAuth } = useAuthStore();
   const restaurantName = params?.["restaurant-name"] as string || "";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    clearAuth();
+    setIsMobileMenuOpen(false);
+    router.push("/home");
+  };
 
   return (
     <>
@@ -113,8 +122,8 @@ export default function RestaurantSidebar() {
 
           {/* Logout */}
           <div className="p-2 lg:p-4 border-t border-gray-200 w-full min-w-0">
-            <Link
-              href="/home"
+            <button
+              onClick={handleLogout}
               title="Logout"
               className="flex items-center justify-center lg:justify-center px-3 lg:px-0 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors group relative w-full min-w-0"
             >
@@ -126,7 +135,7 @@ export default function RestaurantSidebar() {
               <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity hidden lg:block">
                 Logout
               </span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
