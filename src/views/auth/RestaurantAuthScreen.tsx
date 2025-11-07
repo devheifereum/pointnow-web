@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Building2, Phone, MapPin, User, Eye, EyeOff } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
@@ -140,14 +140,6 @@ export default function RestaurantAuthScreen() {
         <Navbar />
 
         <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 py-6">
-          <Link 
-            href="/pricing"
-            className="inline-flex items-center text-gray-600 hover:text-[#7bc74d] transition-colors mb-6"
-          >
-            <ChevronLeft className="w-5 h-5 mr-1" />
-            Back to Pricing
-          </Link>
-
           <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
             <div className="w-full max-w-[95%] lg:max-w-[90%] xl:max-w-[1400px] px-2 sm:px-4 lg:px-6">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
