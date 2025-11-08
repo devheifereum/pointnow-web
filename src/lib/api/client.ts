@@ -3,7 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 export interface ApiError {
   message: string;
   status: number;
-  errors?: Record<string, string[]>;
+  errors?: Record<string, string[]>; //test
 }
 
 export class ApiClientError extends Error {
