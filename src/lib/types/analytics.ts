@@ -1,45 +1,65 @@
+export interface RecentCustomer {
+  id: string;
+  email: string;
+  name: string;
+  phone_number: string;
+}
+
 export interface AnalyticsMetadata {
-  total_customers?: number;
-  total_points_issued?: number;
-  points_redeemed?: number;
-  active_this_month?: number;
-  [key: string]: unknown;
+  total_customers: number;
+  total_points: number;
+  total_active_customers: number;
+  recent_customers: RecentCustomer;
 }
 
 export interface AnalyticsMetadataResponse {
-  message?: string;
-  status: number;
-  data: AnalyticsMetadata;
+  message: string;
+  status_code: number;
+  data: {
+    metadata: AnalyticsMetadata;
+  };
 }
 
 export interface TopCustomer {
   id: string;
   name: string;
-  email?: string;
-  points: number;
-  visits: number;
-  rank?: number;
-  [key: string]: unknown;
+  email: string;
+  phone_number: string;
+  total_points: number;
+  total_visits: number;
+  last_visit_at: string;
+}
+
+export interface PaginationMetadata {
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
 export interface TopCustomersResponse {
-  message?: string;
-  status: number;
-  data: TopCustomer[];
+  message: string;
+  status_code: number;
+  data: {
+    customers: TopCustomer[];
+    metadata: PaginationMetadata;
+  };
 }
 
 export interface PointHistoricalDataPoint {
+  count: number;
+  total_points: number;
   date: string;
-  points_issued: number;
-  points_redeemed: number;
-  net_points: number;
-  [key: string]: unknown;
 }
 
 export interface PointHistoricalDataResponse {
-  message?: string;
-  status: number;
-  data: PointHistoricalDataPoint[];
+  message: string;
+  status_code: number;
+  data: {
+    historical_data: PointHistoricalDataPoint[];
+  };
 }
 
 export interface AnalyticsParams {

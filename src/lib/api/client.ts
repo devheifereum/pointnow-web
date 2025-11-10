@@ -22,13 +22,34 @@ async function handleResponse<T>(response: Response): Promise<T> {
   // Handle both 200 (OK) and 201 (Created) as success
   const isSuccess = response.ok || response.status === 201;
   
+  // Check content type
+  const contentType = response.headers.get("content-type");
+  const isJson = contentType?.includes("application/json");
+  
+  // Handle empty responses
+  const text = await response.text();
+  
+  if (!text && isSuccess) {
+    // Empty successful response
+    return {} as T;
+  }
+  
+  if (!isJson && text) {
+    // Non-JSON response - provide more context
+    const statusText = response.statusText || "Unknown error";
+    throw new ApiClientError(
+      `Invalid response format: Expected JSON but received ${contentType || "unknown"}. Status: ${response.status} ${statusText}. Response: ${text.substring(0, 200)}`,
+      response.status
+    );
+  }
+  
   let data: T;
   try {
-    data = await response.json();
-  } catch {
-    // If response is not JSON, throw error
+    data = text ? JSON.parse(text) : ({} as T);
+  } catch (parseError) {
+    // JSON parse error
     throw new ApiClientError(
-      "Invalid response format",
+      `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : "Unknown error"}. Response: ${text.substring(0, 200)}`,
       response.status
     );
   }
@@ -36,7 +57,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
   if (!isSuccess) {
     const errorData = data as { message?: string; errors?: Record<string, string[]> };
     throw new ApiClientError(
-      errorData.message || "An error occurred",
+      errorData.message || `Request failed with status ${response.status}`,
       response.status,
       errorData.errors
     );
@@ -50,6 +71,14 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_URL}${endpoint}`;
+
+  // Check if API URL is configured
+  if (!API_URL) {
+    throw new ApiClientError(
+      "API URL is not configured. Please set NEXT_PUBLIC_API_URL environment variable.",
+      0
+    );
+  }
 
   // Get token from localStorage if available
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -75,7 +104,12 @@ export async function apiRequest<T>(
     if (error instanceof ApiClientError) {
       throw error;
     }
-    throw new ApiClientError("Network error", 0);
+    // Network or other fetch errors
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new ApiClientError(
+      `Network error: ${errorMessage}. Please check your connection and API URL: ${url}`,
+      0
+    );
   }
 }
 

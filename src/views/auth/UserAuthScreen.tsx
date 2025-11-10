@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Phone, User, Eye, EyeOff, Gift } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Gift } from "lucide-react";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
@@ -26,6 +28,7 @@ export default function UserAuthScreen() {
     confirmPassword: "",
     phone: "",
   });
+  const [phoneValue, setPhoneValue] = useState<string | undefined>();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -72,7 +75,7 @@ export default function UserAuthScreen() {
         const response = await authApi.registerUser({
           email: formData.email,
           password: formData.password,
-          phone_number: formData.phone,
+          phone_number: phoneValue || "",
           role: "CUSTOMER",
           is_active: false,
           metadata: {},
@@ -123,43 +126,43 @@ export default function UserAuthScreen() {
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                   {/* Left Side - Branding */}
-                  <div className="relative bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] p-8 lg:p-12 xl:p-16 flex items-center justify-center">
+                  <div className="relative bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] p-6 sm:p-8 lg:p-12 xl:p-16 flex items-center justify-center min-h-[300px] lg:min-h-auto">
                     <div className="text-center text-white">
-                      <div className="text-7xl mb-6">🎁</div>
-                      <h2 className="text-4xl font-gilroy-black mb-4">
+                      <div className="text-5xl sm:text-6xl lg:text-7xl mb-4 sm:mb-6">🎁</div>
+                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-gilroy-black mb-3 sm:mb-4">
                         {isLogin ? "Welcome Back!" : "Join PointNow"}
                       </h2>
-                      <p className="text-xl opacity-90 mb-8">
+                      <p className="hidden lg:block text-base sm:text-lg lg:text-xl opacity-90 mb-6 sm:mb-8 px-4">
                         {isLogin
                           ? "Sign in to check your points and redeem rewards at your favorite restaurants."
                           : "Start earning points and unlock exclusive rewards at restaurants near you."}
                       </p>
                       
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-left">
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2">
-                            <Gift className="w-5 h-5" />
+                      <div className="hidden lg:block space-y-3 sm:space-y-4">
+                        <div className="flex items-center gap-2 sm:gap-3 text-left">
+                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 flex-shrink-0">
+                            <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
                           <div>
-                            <h3 className="font-gilroy-extrabold text-sm">Earn Points</h3>
+                            <h3 className="font-gilroy-extrabold text-xs sm:text-sm">Earn Points</h3>
                             <p className="text-xs opacity-90">Get rewarded for every visit</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 text-left">
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2">
-                            <Gift className="w-5 h-5" />
+                        <div className="flex items-center gap-2 sm:gap-3 text-left">
+                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 flex-shrink-0">
+                            <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
                           <div>
-                            <h3 className="font-gilroy-extrabold text-sm">Redeem Rewards</h3>
+                            <h3 className="font-gilroy-extrabold text-xs sm:text-sm">Redeem Rewards</h3>
                             <p className="text-xs opacity-90">Use points for discounts & freebies</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 text-left">
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2">
-                            <Gift className="w-5 h-5" />
+                        <div className="flex items-center gap-2 sm:gap-3 text-left">
+                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 flex-shrink-0">
+                            <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
                           <div>
-                            <h3 className="font-gilroy-extrabold text-sm">Track Progress</h3>
+                            <h3 className="font-gilroy-extrabold text-xs sm:text-sm">Track Progress</h3>
                             <p className="text-xs opacity-90">See your points across all restaurants</p>
                           </div>
                         </div>
@@ -183,28 +186,18 @@ export default function UserAuthScreen() {
                     {/* Toggle */}
                     <div className="flex items-center justify-center mb-6 relative z-10">
                       <div className="bg-gray-100 rounded-xl p-1 inline-flex">
-                        <button
-                          type="button"
-                          onClick={() => setIsLogin(true)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
-                            isLogin
-                              ? "bg-[#7bc74d] text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
+                        <Link
+                          href="/auth?mode=user"
+                          className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer bg-[#7bc74d] text-white shadow-sm"
                         >
-                          Login
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsLogin(false)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
-                            !isLogin
-                              ? "bg-[#7bc74d] text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
+                          User
+                        </Link>
+                        <Link
+                          href="/auth?mode=restaurant"
+                          className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer text-gray-600 hover:text-gray-900"
                         >
-                          Register
-                        </button>
+                          Restaurant
+                        </Link>
                       </div>
                     </div>
 
@@ -241,16 +234,25 @@ export default function UserAuthScreen() {
                               Phone Number *
                             </label>
                             <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                              <input
-                                type="tel"
-                                id="phone"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                                required={!isLogin}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                              <PhoneInput
                                 placeholder="Enter phone number"
+                                value={phoneValue}
+                                onChange={setPhoneValue}
+                                defaultCountry="MY"
+                                className="w-full"
+                                style={{
+                                  '--PhoneInput-color--focus': '#7bc74d',
+                                  '--PhoneInputCountryFlag-borderColor': 'transparent',
+                                  '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                                }}
+                                inputComponent={({ value, onChange, ...props }) => (
+                                  <input
+                                    {...props}
+                                    value={value}
+                                    onChange={onChange}
+                                    className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                  />
+                                )}
                               />
                             </div>
                           </div>
@@ -374,14 +376,14 @@ export default function UserAuthScreen() {
                     </form>
 
                     {/* Divider */}
-                    <div className="my-5 flex items-center">
+                    {/* <div className="my-5 flex items-center">
                       <div className="flex-1 border-t border-gray-200"></div>
                       <span className="px-4 text-sm text-gray-500">or</span>
                       <div className="flex-1 border-t border-gray-200"></div>
-                    </div>
+                    </div> */}
 
                     {/* Social Login */}
-                    <button className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5">
+                    {/* <button className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5">
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path
                           fill="currentColor"
@@ -401,12 +403,12 @@ export default function UserAuthScreen() {
                         />
                       </svg>
                       Continue with Google
-                    </button>
+                    </button> */}
 
                     {/* Switch Mode */}
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 mt-4">
                       <p className="text-gray-600 text-sm">
-                        {isLogin ? "Don&apos;t have an account? " : "Already have an account? "}
+                        {isLogin ? "Don't have an account? " : "Already have an account? "}
                         <button
                           type="button"
                           onClick={() => setIsLogin(!isLogin)}
@@ -414,12 +416,6 @@ export default function UserAuthScreen() {
                         >
                           {isLogin ? "Register now" : "Login"}
                         </button>
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        Are you a restaurant owner?{" "}
-                        <Link href="/auth?mode=restaurant" className="text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
-                          Login as Restaurant
-                        </Link>
                       </p>
                     </div>
                   </div>

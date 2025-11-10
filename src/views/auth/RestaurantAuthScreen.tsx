@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Building2, Phone, MapPin, Eye, EyeOff } from "lucide-react";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
@@ -32,6 +34,7 @@ export default function RestaurantAuthScreen() {
     latitude: "",
     longitude: "",
   });
+  const [phoneValue, setPhoneValue] = useState<string | undefined>();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -84,7 +87,7 @@ export default function RestaurantAuthScreen() {
         const response = await authApi.registerBusiness({
           email: formData.email,
           password: formData.password,
-          phone: formData.phone,
+          phone: phoneValue || "",
           role: "ADMIN",
           is_active: true,
           metadata: {},
@@ -151,13 +154,13 @@ export default function RestaurantAuthScreen() {
                       <h2 className="text-4xl font-gilroy-black mb-4">
                         {isLogin ? "Welcome Back!" : "Join PointNow"}
                       </h2>
-                      <p className="text-xl opacity-90 mb-8">
+                      <p className="hidden lg:block text-xl opacity-90 mb-8">
                         {isLogin
                           ? "Sign in to manage your loyalty program and reward your customers."
                           : "Start rewarding your customers and grow your business with our powerful loyalty platform."}
                       </p>
                       
-                      <div className="space-y-4">
+                      <div className="hidden lg:block space-y-4">
                         <div className="flex items-center gap-3 text-left">
                           <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2">
                             <Building2 className="w-5 h-5" />
@@ -205,28 +208,18 @@ export default function RestaurantAuthScreen() {
                     {/* Toggle */}
                     <div className="flex items-center justify-center mb-6 relative z-10">
                       <div className="bg-gray-100 rounded-xl p-1 inline-flex">
-                        <button
-                          type="button"
-                          onClick={() => setIsLogin(true)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
-                            isLogin
-                              ? "bg-[#7bc74d] text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
+                        <Link
+                          href="/auth?mode=user"
+                          className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer text-gray-600 hover:text-gray-900"
                         >
-                          Login
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsLogin(false)}
-                          className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer ${
-                            !isLogin
-                              ? "bg-[#7bc74d] text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
+                          User
+                        </Link>
+                        <Link
+                          href="/auth?mode=restaurant"
+                          className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer bg-[#7bc74d] text-white shadow-sm"
                         >
-                          Register
-                        </button>
+                          Restaurant
+                        </Link>
                       </div>
                     </div>
 
@@ -284,16 +277,25 @@ export default function RestaurantAuthScreen() {
                           Phone Number *
                         </label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required={!isLogin}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                          <PhoneInput
                             placeholder="Enter phone number"
+                            value={phoneValue}
+                            onChange={setPhoneValue}
+                            defaultCountry="MY"
+                            className="w-full"
+                            style={{
+                              '--PhoneInput-color--focus': '#7bc74d',
+                              '--PhoneInputCountryFlag-borderColor': 'transparent',
+                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                            }}
+                            inputComponent={({ value, onChange, ...props }) => (
+                              <input
+                                {...props}
+                                value={value}
+                                onChange={onChange}
+                                className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                              />
+                            )}
                           />
                         </div>
                       </div>
@@ -516,14 +518,14 @@ export default function RestaurantAuthScreen() {
                     </form>
 
                     {/* Divider */}
-                    <div className="my-5 flex items-center">
+                    {/* <div className="my-5 flex items-center">
                       <div className="flex-1 border-t border-gray-200"></div>
                       <span className="px-4 text-sm text-gray-500">or</span>
                       <div className="flex-1 border-t border-gray-200"></div>
-                    </div>
+                    </div> */}
 
                     {/* Social Login */}
-                    <button className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5">
+                    {/* <button className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5">
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path
                           fill="currentColor"
@@ -543,12 +545,12 @@ export default function RestaurantAuthScreen() {
                         />
                       </svg>
                       Continue with Google
-                    </button>
+                    </button> */}
 
                     {/* Switch Mode */}
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 mt-4">
                       <p className="text-gray-600 text-sm">
-                        {isLogin ? "Don&apos;t have an account? " : "Already have an account? "}
+                        {isLogin ? "Don't have an account? " : "Already have an account? "}
                         <button
                           type="button"
                           onClick={() => setIsLogin(!isLogin)}
@@ -556,12 +558,6 @@ export default function RestaurantAuthScreen() {
                         >
                           {isLogin ? "Register now" : "Login"}
                         </button>
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        Are you a customer?{" "}
-                        <Link href="/auth?mode=user" className="text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
-                          Login as Customer
-                        </Link>
                       </p>
                     </div>
                   </div>

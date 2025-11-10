@@ -1,143 +1,200 @@
 "use client";
 
-import React, { useState } from "react";
-import { Trophy, Medal, Award, Crown, TrendingUp, Calendar, Star, ChevronLeft, Search } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2 } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import { customersApi } from "@/lib/api/customers";
+import { businessApi } from "@/lib/api/business";
+import { ApiClientError } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/auth/store";
+import type { Customer, CustomerPosition } from "@/lib/types/customers";
+import type { Business } from "@/lib/types/business";
 
 interface LeaderboardScreenProps {
   restaurantName: string;
 }
 
+// Helper function to create slug from name
+const createSlug = (name: string): string => {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+};
+
 export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenProps) {
   const [timeFilter, setTimeFilter] = useState<"all-time" | "monthly" | "weekly">("all-time");
   const [searchQuery, setSearchQuery] = useState("");
+  const [leaderboardData, setLeaderboardData] = useState<Customer[]>([]);
+  const [restaurantData, setRestaurantData] = useState<Business | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [userPosition, setUserPosition] = useState<CustomerPosition | null>(null);
+  const [isLoadingPosition, setIsLoadingPosition] = useState(false);
+  const { user: authUser } = useAuthStore();
 
-  // Mock restaurant data based on the name
-  const restaurantData = {
-    name: restaurantName.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" "),
-    emoji: getRestaurantEmoji(restaurantName),
-    totalMembers: 2847,
-    totalPoints: 1284567,
-    rayColor: getRestaurantColor(restaurantName),
+
+  // Fetch business by name/slug
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      try {
+        const response = await businessApi.getAll({ limit: 100 });
+        const businesses = response.data.businesses;
+        const matchingBusiness = businesses.find(
+          (b) => createSlug(b.name) === restaurantName
+        );
+        
+        if (matchingBusiness) {
+          setRestaurantData(matchingBusiness);
+          setBusinessId(matchingBusiness.id);
+        } else {
+          setError("Restaurant not found");
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (err instanceof ApiClientError) {
+          setError(err.message || "Failed to load restaurant");
+        } else {
+          setError("An unexpected error occurred");
+        }
+        setIsLoading(false);
+      }
+    };
+
+    fetchBusiness();
+  }, [restaurantName]);
+
+  // Fetch leaderboard data
+  useEffect(() => {
+    if (!businessId) return;
+
+    const fetchLeaderboard = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const now = new Date();
+        const endDate = now.toISOString().split('T')[0];
+        let startDate: string | undefined;
+        
+        if (timeFilter === "weekly") {
+          const weekAgo = new Date(now);
+          weekAgo.setDate(now.getDate() - 7);
+          startDate = weekAgo.toISOString().split('T')[0];
+        } else if (timeFilter === "monthly") {
+          const monthAgo = new Date(now);
+          monthAgo.setMonth(now.getMonth() - 1);
+          startDate = monthAgo.toISOString().split('T')[0];
+        }
+        
+        const response = await customersApi.getLeaderboard({
+          business_id: businessId,
+          page: 1,
+          limit: 100,
+          start_date: startDate,
+          end_date: timeFilter !== "all-time" ? endDate : undefined,
+        });
+        
+        setLeaderboardData(response.data.customers || []);
+      } catch (err) {
+        if (err instanceof ApiClientError) {
+          setError(err.message || "Failed to load leaderboard");
+        } else {
+          setError("An unexpected error occurred");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, [businessId, timeFilter]);
+
+  // Fetch user position
+  useEffect(() => {
+    if (!businessId || !authUser?.user?.id) return;
+
+    const fetchUserPosition = async () => {
+      try {
+        setIsLoadingPosition(true);
+        
+        // First, get the user profile to retrieve the customer ID
+        const profileResponse = await customersApi.getUserProfile(authUser.user.id);
+        const customerId = profileResponse.data.user.customer?.id;
+        
+        if (!customerId) {
+          // User doesn't have a customer record yet
+          setUserPosition(null);
+          return;
+        }
+        
+        const response = await customersApi.getPosition({
+          business_id: businessId,
+          customer_id: customerId,
+        });
+        setUserPosition(response.data.position);
+      } catch (err) {
+        // Silently fail - user might not be a customer for this business
+        // Only log if it's not a "Customer not found" error
+        if (err instanceof ApiClientError && err.message !== "Customer not found") {
+          console.error("Failed to fetch user position:", err);
+        }
+        setUserPosition(null);
+      } finally {
+        setIsLoadingPosition(false);
+      }
+    };
+
+    fetchUserPosition();
+  }, [businessId, authUser?.user?.id]);
+
+  // Helper functions for display
+  const getRestaurantEmoji = (name: string): string => {
+    const emojis = ["🍝", "🍣", "🍛", "🍔", "🥐", "🌮", "🥢", "🫒", "🥩", "🍜", "🍕", "🍱", "🍽️"];
+    return emojis[name.length % emojis.length];
   };
 
-  // Mock leaderboard data
-  const leaderboardData = [
-    {
-      rank: 1,
-      name: "Sarah Johnson",
-      points: 15840,
-      visits: 89,
-      joinedDate: "Jan 2024",
-      lastVisit: "2 days ago",
-      badge: "Diamond",
-      avatar: "👩",
-      trend: "+12%"
-    },
-    {
-      rank: 2,
-      name: "Michael Chen",
-      points: 14250,
-      visits: 76,
-      joinedDate: "Dec 2023",
-      lastVisit: "1 day ago",
-      badge: "Diamond",
-      avatar: "👨",
-      trend: "+8%"
-    },
-    {
-      rank: 3,
-      name: "Emma Williams",
-      points: 12890,
-      visits: 68,
-      joinedDate: "Feb 2024",
-      lastVisit: "Today",
-      badge: "Platinum",
-      avatar: "👩‍🦰",
-      trend: "+15%"
-    },
-    {
-      rank: 4,
-      name: "James Anderson",
-      points: 11560,
-      visits: 62,
-      joinedDate: "Mar 2024",
-      lastVisit: "5 hours ago",
-      badge: "Platinum",
-      avatar: "🧔",
-      trend: "+10%"
-    },
-    {
-      rank: 5,
-      name: "Olivia Martinez",
-      points: 10240,
-      visits: 54,
-      joinedDate: "Jan 2024",
-      lastVisit: "Yesterday",
-      badge: "Platinum",
-      avatar: "👱‍♀️",
-      trend: "+6%"
-    },
-    {
-      rank: 6,
-      name: "David Lee",
-      points: 9875,
-      visits: 51,
-      joinedDate: "Apr 2024",
-      lastVisit: "3 days ago",
-      badge: "Gold",
-      avatar: "👨‍💼",
-      trend: "+9%"
-    },
-    {
-      rank: 7,
-      name: "Sophia Taylor",
-      points: 9120,
-      visits: 48,
-      joinedDate: "Feb 2024",
-      lastVisit: "1 week ago",
-      badge: "Gold",
-      avatar: "👩‍💻",
-      trend: "+7%"
-    },
-    {
-      rank: 8,
-      name: "Daniel Brown",
-      points: 8560,
-      visits: 45,
-      joinedDate: "Mar 2024",
-      lastVisit: "4 days ago",
-      badge: "Gold",
-      avatar: "👨‍🎓",
-      trend: "+5%"
-    },
-    {
-      rank: 9,
-      name: "Ava Garcia",
-      points: 7940,
-      visits: 42,
-      joinedDate: "May 2024",
-      lastVisit: "Today",
-      badge: "Gold",
-      avatar: "👩‍🔬",
-      trend: "+11%"
-    },
-    {
-      rank: 10,
-      name: "William Davis",
-      points: 7320,
-      visits: 39,
-      joinedDate: "Jan 2024",
-      lastVisit: "2 days ago",
-      badge: "Silver",
-      avatar: "👨‍⚕️",
-      trend: "+4%"
-    }
-  ];
+  // Format date for display
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  // Get badge based on points
+  const getBadge = (points: number): string => {
+    if (points >= 10000) return "Diamond";
+    if (points >= 5000) return "Platinum";
+    if (points >= 2000) return "Gold";
+    return "Silver";
+  };
+
+  // Get avatar emoji based on name
+  const getAvatar = (name: string): string => {
+    const avatars = ["👤", "👨", "👩", "🧔", "👱‍♀️", "👨‍💼", "👩‍💻", "👨‍🎓", "👩‍🔬", "👨‍⚕️"];
+    return avatars[name.length % avatars.length];
+  };
+
+  // Extended customer type for display
+  interface DisplayCustomer extends Customer {
+    rank: number;
+    points: number;
+    visits: number;
+    lastVisit: string;
+    badge: string;
+    avatar: string;
+    joinedDate: string;
+  }
 
   // Get medal component based on rank
   const getMedalIcon = (rank: number) => {
@@ -170,12 +227,31 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   };
 
   // Filter leaderboard based on search query
-  const filteredLeaderboard = leaderboardData.filter((customer) => {
-    if (!searchQuery) return true;
-    return customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           customer.badge.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           customer.rank.toString().includes(searchQuery);
-  });
+  const filteredLeaderboard: DisplayCustomer[] = leaderboardData
+    .map((customer, index) => {
+      const totalPoints = (customer as Customer & { total_points?: number }).total_points || customer.points || 0;
+      const totalVisits = (customer as Customer & { total_visits?: number }).total_visits || customer.visits || 0;
+      const lastVisitAt = (customer as Customer & { last_visit_at?: string }).last_visit_at || customer.last_visit;
+      
+      return {
+        ...customer,
+        rank: index + 1,
+        points: totalPoints,
+        visits: totalVisits,
+        lastVisit: formatDate(lastVisitAt),
+        badge: getBadge(totalPoints),
+        avatar: getAvatar(customer.name),
+        joinedDate: customer.created_at 
+          ? new Date(customer.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          : "N/A",
+      };
+    })
+    .filter((customer) => {
+      if (!searchQuery) return true;
+      return customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             customer.badge.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             customer.rank.toString().includes(searchQuery);
+    });
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -213,39 +289,56 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
           </Link>
 
           {/* Restaurant Header */}
-          <div className="relative bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-8 overflow-hidden">
-            <LightRays
-              count={8}
-              color="rgba(255, 255, 255, 0.2)"
-              blur={30}
-              speed={8}
-              length="90%"
-              className="absolute inset-0"
-            />
-            
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
-              <div className="flex items-center mb-6 md:mb-0">
-                <div className="text-6xl mr-6 bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                  {restaurantData.emoji}
-                </div>
-                <div className="text-white">
-                  <h1 className="text-4xl font-gilroy-black mb-2">{restaurantData.name}</h1>
-                  <p className="text-xl opacity-90">Points Leaderboard</p>
-                </div>
+          {isLoading && !restaurantData ? (
+            <div className="relative bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-8 overflow-hidden">
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
               </div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-8 mb-8">
+              <p className="text-red-600 text-center">{error}</p>
+            </div>
+          ) : restaurantData ? (
+            <div className="relative bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-8 overflow-hidden">
+              <LightRays
+                count={8}
+                color="rgba(255, 255, 255, 0.2)"
+                blur={30}
+                speed={8}
+                length="90%"
+                className="absolute inset-0"
+              />
               
-              <div className="flex gap-6 text-white text-center">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 min-w-[120px]">
-                  <div className="text-3xl font-gilroy-black">{restaurantData.totalMembers.toLocaleString()}</div>
-                  <div className="text-sm opacity-90">Total Members</div>
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center">
+                  <div className="text-4xl sm:text-5xl md:text-6xl mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                    {getRestaurantEmoji(restaurantData.name)}
+                  </div>
+                  <div className="text-white">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">{restaurantData.name}</h1>
+                    <p className="text-base sm:text-lg md:text-xl opacity-90">Points Leaderboard</p>
+                  </div>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 min-w-[120px]">
-                  <div className="text-3xl font-gilroy-black">{(restaurantData.totalPoints / 1000).toFixed(0)}K</div>
-                  <div className="text-sm opacity-90">Points Earned</div>
+                
+                <div className="flex gap-3 sm:gap-4 md:gap-6 text-white text-center w-full md:w-auto justify-center md:justify-end">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 flex-1 md:flex-none md:min-w-[120px]">
+                    <div className="text-2xl sm:text-3xl font-gilroy-black">{leaderboardData.length}</div>
+                    <div className="text-xs sm:text-sm opacity-90">Total Members</div>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 flex-1 md:flex-none md:min-w-[120px]">
+                    <div className="text-2xl sm:text-3xl font-gilroy-black">
+                      {Math.round(leaderboardData.reduce((sum, c) => {
+                        const totalPoints = (c as Customer & { total_points?: number }).total_points || c.points || 0;
+                        return sum + totalPoints;
+                      }, 0) / 1000)}K
+                    </div>
+                    <div className="text-xs sm:text-sm opacity-90">Points Earned</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : null}
 
           {/* Search Bar and Time Filter */}
           <div className="mb-6">
@@ -314,37 +407,40 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
             )}
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="text-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#7bc74d]" />
+              <p className="mt-4 text-gray-600">Loading leaderboard...</p>
+            </div>
+          )}
+
           {/* Top 3 Podium - Only show when no search or when top 3 are in results */}
-          {(!searchQuery || filteredLeaderboard.some(c => c.rank <= 3)) && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {!isLoading && filteredLeaderboard.length > 0 && (!searchQuery || filteredLeaderboard.some(c => c.rank <= 3)) && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {/* 2nd Place */}
-              {(!searchQuery || filteredLeaderboard.some(c => c.rank === 2)) && (
+              {filteredLeaderboard.length > 1 && (!searchQuery || filteredLeaderboard.some(c => c.rank === 2)) && (
                 <div className="md:order-1 order-2">
                   <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-gray-400/10 to-transparent rounded-bl-full" />
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-5xl mb-2">{leaderboardData[1].avatar}</div>
+                          <div className="text-5xl mb-2">{filteredLeaderboard[1].avatar}</div>
                           <div className="absolute -top-2 -right-2">
                             {getMedalIcon(2)}
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{leaderboardData[1].name}</h3>
+                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{filteredLeaderboard[1].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-3xl font-gilroy-black text-[#7bc74d]">
-                          {leaderboardData[1].points.toLocaleString()}
+                          {filteredLeaderboard[1].points.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600">points</div>
                       </div>
                       <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                        <span>{leaderboardData[1].visits} visits</span>
-                        <span>•</span>
-                        <span className="flex items-center text-green-600">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          {leaderboardData[1].trend}
-                        </span>
+                        <span>{filteredLeaderboard[1].visits} visits</span>
                       </div>
                     </div>
                   </div>
@@ -352,36 +448,31 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
               )}
 
               {/* 1st Place */}
-              {(!searchQuery || filteredLeaderboard.some(c => c.rank === 1)) && (
+              {filteredLeaderboard.length > 0 && (!searchQuery || filteredLeaderboard.some(c => c.rank === 1)) && (
                 <div className="md:order-2 order-1">
                   <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-yellow-400 relative overflow-hidden transform md:scale-105">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-yellow-400/20 to-transparent rounded-bl-full" />
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-6xl mb-2">{leaderboardData[0].avatar}</div>
+                          <div className="text-6xl mb-2">{filteredLeaderboard[0].avatar}</div>
                           <div className="absolute -top-4 -right-4 animate-pulse">
                             {getMedalIcon(1)}
                           </div>
                         </div>
                       </div>
-                      <div className={`${getBadgeColor(leaderboardData[0].badge)} text-xs font-semibold px-3 py-1 rounded-full w-fit mx-auto mb-3`}>
-                        {leaderboardData[0].badge} Member
+                      <div className={`${getBadgeColor(filteredLeaderboard[0].badge)} text-xs font-semibold px-3 py-1 rounded-full w-fit mx-auto mb-3`}>
+                        {filteredLeaderboard[0].badge} Member
                       </div>
-                      <h3 className="text-2xl font-gilroy-black text-center mb-2 text-black">{leaderboardData[0].name}</h3>
+                      <h3 className="text-2xl font-gilroy-black text-center mb-2 text-black">{filteredLeaderboard[0].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-4xl font-gilroy-black text-[#7bc74d]">
-                          {leaderboardData[0].points.toLocaleString()}
+                          {filteredLeaderboard[0].points.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600">points</div>
                       </div>
                       <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                        <span>{leaderboardData[0].visits} visits</span>
-                        <span>•</span>
-                        <span className="flex items-center text-green-600">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          {leaderboardData[0].trend}
-                        </span>
+                        <span>{filteredLeaderboard[0].visits} visits</span>
                       </div>
                     </div>
                   </div>
@@ -389,33 +480,28 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
               )}
 
               {/* 3rd Place */}
-              {(!searchQuery || filteredLeaderboard.some(c => c.rank === 3)) && (
+              {filteredLeaderboard.length > 2 && (!searchQuery || filteredLeaderboard.some(c => c.rank === 3)) && (
                 <div className="md:order-3 order-3">
                   <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-orange-200 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/10 to-transparent rounded-bl-full" />
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-5xl mb-2">{leaderboardData[2].avatar}</div>
+                          <div className="text-5xl mb-2">{filteredLeaderboard[2].avatar}</div>
                           <div className="absolute -top-2 -right-2">
                             {getMedalIcon(3)}
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{leaderboardData[2].name}</h3>
+                      <h3 className="text-xl font-gilroy-extrabold text-center mb-2 text-black">{filteredLeaderboard[2].name}</h3>
                       <div className="text-center mb-4">
                         <div className="text-3xl font-gilroy-black text-[#7bc74d]">
-                          {leaderboardData[2].points.toLocaleString()}
+                          {filteredLeaderboard[2].points.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600">points</div>
                       </div>
                       <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                        <span>{leaderboardData[2].visits} visits</span>
-                        <span>•</span>
-                        <span className="flex items-center text-green-600">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          {leaderboardData[2].trend}
-                        </span>
+                        <span>{filteredLeaderboard[2].visits} visits</span>
                       </div>
                     </div>
                   </div>
@@ -425,158 +511,237 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
           )}
 
           {/* Rest of Leaderboard */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Rank</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Points</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Visits</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Badge</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Trend</th>
-                    <th className="px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Last Visit</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredLeaderboard.slice(searchQuery ? 0 : 3).map((customer) => (
-                    <tr key={customer.rank} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+          {!isLoading && (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Rank</th>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Customer</th>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Points</th>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Visits</th>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Badge</th>
+                        <th className="px-4 lg:px-6 py-4 text-left text-xs font-gilroy-extrabold text-gray-700 uppercase tracking-wider">Last Visit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredLeaderboard.slice(searchQuery ? 0 : 3).map((customer) => (
+                        <tr key={customer.id || customer.rank} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {getMedalIcon(customer.rank)}
+                            </div>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="text-2xl lg:text-3xl mr-3">{customer.avatar}</div>
+                              <div>
+                                <div className="text-sm font-gilroy-extrabold text-gray-900">{customer.name}</div>
+                                <div className="text-xs text-gray-500">Joined {customer.joinedDate}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <div className="text-base lg:text-lg font-gilroy-black text-[#7bc74d]">{customer.points.toLocaleString()}</div>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{customer.visits} times</div>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <span className={`${getBadgeColor(customer.badge)} text-xs font-semibold px-2 lg:px-3 py-1 rounded-full`}>
+                              {customer.badge}
+                            </span>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {customer.lastVisit}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {filteredLeaderboard.slice(searchQuery ? 0 : 3).map((customer) => (
+                  <div key={customer.id || customer.rank} className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
                           {getMedalIcon(customer.rank)}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="text-3xl mr-3">{customer.avatar}</div>
-                          <div>
-                            <div className="text-sm font-gilroy-extrabold text-gray-900">{customer.name}</div>
-                            <div className="text-xs text-gray-500">Joined {customer.joinedDate}</div>
-                          </div>
+                        <div className="text-3xl">{customer.avatar}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base font-gilroy-extrabold text-gray-900 truncate">{customer.name}</div>
+                          <div className="text-xs text-gray-500">Joined {customer.joinedDate}</div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </div>
+                      <span className={`${getBadgeColor(customer.badge)} text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0`}>
+                        {customer.badge}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                      <div>
                         <div className="text-lg font-gilroy-black text-[#7bc74d]">{customer.points.toLocaleString()}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{customer.visits} times</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`${getBadgeColor(customer.badge)} text-xs font-semibold px-3 py-1 rounded-full`}>
-                          {customer.badge}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-green-600 text-sm font-semibold">
-                          <TrendingUp className="w-4 h-4 mr-1" />
-                          {customer.trend}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {customer.lastVisit}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* No Results */}
-            {filteredLeaderboard.length === 0 && (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-2xl font-gilroy-extrabold text-black mb-2">No customers found</h3>
-                <p className="text-gray-600 mb-6">Try adjusting your search criteria</p>
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-                >
-                  Clear Search
-                </button>
+                        <div className="text-xs text-gray-600">Points</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-gilroy-black text-gray-900">{customer.visits}</div>
+                        <div className="text-xs text-gray-600">Visits</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{customer.lastVisit}</div>
+                        <div className="text-xs text-gray-600">Last Visit</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </>
+          )}
+
+          {/* No Results */}
+          {!isLoading && filteredLeaderboard.length === 0 && (
+            <div className="text-center py-16 px-4">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl sm:text-2xl font-gilroy-extrabold text-black mb-2">No customers found</h3>
+              <p className="text-gray-600 mb-6 text-sm sm:text-base">Try adjusting your search criteria</p>
+              <button
+                onClick={() => setSearchQuery("")}
+                className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm sm:text-base"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
 
           {/* Current User Position */}
-          <div className="mt-8">
-            <h3 className="text-xl font-gilroy-black text-black mb-4">Your Position</h3>
-            <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d]">
-              <div className="bg-white/10 backdrop-blur-sm p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center flex-1">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mr-4">
-                      <div className="text-3xl font-gilroy-black text-white">#48</div>
-                    </div>
-                    <div className="flex items-center flex-1">
-                      <div className="text-5xl mr-4">👤</div>
-                      <div className="text-white">
-                        <div className="text-xl font-gilroy-extrabold mb-1">You (Current User)</div>
-                        <div className="text-sm opacity-90">Joined Mar 2024</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-6 text-white">
-                    <div className="text-center">
-                      <div className="text-3xl font-gilroy-black">3,450</div>
-                      <div className="text-sm opacity-90">Points</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-gilroy-black">28</div>
-                      <div className="text-sm opacity-90">Visits</div>
-                    </div>
-                    <div className="text-center">
-                      <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
-                        Silver
-                      </span>
-                      <div className="text-sm opacity-90 mt-1">Badge</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center text-2xl font-gilroy-black">
-                        <TrendingUp className="w-5 h-5 mr-1" />
-                        +8%
-                      </div>
-                      <div className="text-sm opacity-90">Trend</div>
-                    </div>
+          {authUser?.user?.id && (
+            <div className="mt-6 sm:mt-8">
+              <h3 className="text-lg sm:text-xl font-gilroy-black text-black mb-4">Your Position</h3>
+              {isLoadingPosition ? (
+                <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d] p-4 sm:p-6">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-white" />
+                    <span className="ml-3 text-white text-sm sm:text-base">Loading your position...</span>
                   </div>
                 </div>
-                
-                {/* Progress to Next Rank */}
-                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2 text-white">
-                    <span className="text-sm font-semibold">Progress to Rank #47</span>
-                    <span className="text-sm">120 points to go</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-white h-full rounded-full transition-all duration-500"
-                      style={{ width: '75%' }}
-                    />
-                  </div>
-                  <div className="mt-2 text-xs text-white/80">
-                    You need 120 more points to move up to rank #47. Keep visiting to earn more!
-                  </div>
-                </div>
+              ) : userPosition ? (
+                <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d]">
+                  <div className="bg-white/10 backdrop-blur-sm p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 mr-3 sm:mr-4 flex-shrink-0">
+                          <div className="text-2xl sm:text-3xl font-gilroy-black text-white">#{userPosition.position}</div>
+                        </div>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className="text-3xl sm:text-4xl md:text-5xl mr-3 sm:mr-4 flex-shrink-0">👤</div>
+                          <div className="text-white min-w-0">
+                            <div className="text-base sm:text-lg md:text-xl font-gilroy-extrabold mb-1 truncate">
+                              {authUser.user.name || "You"}
+                            </div>
+                            <div className="text-xs sm:text-sm opacity-90">
+                              Joined {new Date(userPosition.joined_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-3 sm:gap-4 md:gap-6 text-white w-full sm:w-auto justify-between sm:justify-end">
+                        <div className="text-center">
+                          <div className="text-xl sm:text-2xl md:text-3xl font-gilroy-black">{userPosition.total_points.toLocaleString()}</div>
+                          <div className="text-xs sm:text-sm opacity-90">Points</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xl sm:text-2xl md:text-3xl font-gilroy-black">{userPosition.total_visits}</div>
+                          <div className="text-xs sm:text-sm opacity-90">Visits</div>
+                        </div>
+                        <div className="text-center">
+                          <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded-full block mb-1">
+                            {getBadge(userPosition.total_points)}
+                          </span>
+                          <div className="text-xs sm:text-sm opacity-90">Badge</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Progress to Next Rank */}
+                    {userPosition.position > 1 && filteredLeaderboard.length > 0 && (
+                      <div className="mt-4 sm:mt-6 bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4">
+                        {(() => {
+                          const nextRankCustomer = filteredLeaderboard.find(c => c.rank === userPosition.position - 1);
+                          const pointsNeeded = nextRankCustomer 
+                            ? nextRankCustomer.points - userPosition.total_points 
+                            : 0;
+                          const progressPercent = nextRankCustomer && nextRankCustomer.points > userPosition.total_points
+                            ? Math.min(100, ((userPosition.total_points / nextRankCustomer.points) * 100))
+                            : 100;
+                          
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-2 text-white">
+                                <span className="text-sm font-semibold">Progress to Rank #{userPosition.position - 1}</span>
+                                {pointsNeeded > 0 && (
+                                  <span className="text-sm">{pointsNeeded} points to go</span>
+                                )}
+                              </div>
+                              <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                                <div 
+                                  className="bg-white h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${progressPercent}%` }}
+                                />
+                              </div>
+                              {pointsNeeded > 0 && (
+                                <div className="mt-2 text-xs text-white/80">
+                                  You need {pointsNeeded} more points to move up to rank #{userPosition.position - 1}. Keep visiting to earn more!
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
 
-                {/* Quick Stats Comparison */}
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                    <div className="text-xs text-white/80 mb-1">Points to Top 10</div>
-                    <div className="text-2xl font-gilroy-black text-white">3,870</div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                    <div className="text-xs text-white/80 mb-1">Last Visit</div>
-                    <div className="text-2xl font-gilroy-black text-white">3 days</div>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                    <div className="text-xs text-white/80 mb-1">Next Reward</div>
-                    <div className="text-2xl font-gilroy-black text-white">550 pts</div>
+                    {/* Quick Stats Comparison */}
+                    <div className="mt-4 grid grid-cols-3 gap-4">
+                      {(() => {
+                        const top10Customer = filteredLeaderboard.find(c => c.rank === 10);
+                        const pointsToTop10 = top10Customer 
+                          ? Math.max(0, top10Customer.points - userPosition.total_points)
+                          : 0;
+                        const lastVisitDays = userPosition.last_visit_at
+                          ? Math.floor((new Date().getTime() - new Date(userPosition.last_visit_at).getTime()) / (1000 * 60 * 60 * 24))
+                          : 0;
+                        
+                        return (
+                          <>
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                              <div className="text-xs text-white/80 mb-1">Points to Top 10</div>
+                              <div className="text-2xl font-gilroy-black text-white">{pointsToTop10.toLocaleString()}</div>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                              <div className="text-xs text-white/80 mb-1">Last Visit</div>
+                              <div className="text-2xl font-gilroy-black text-white">
+                                {lastVisitDays === 0 ? "Today" : lastVisitDays === 1 ? "1 day" : `${lastVisitDays} days`}
+                              </div>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                              <div className="text-xs text-white/80 mb-1">Total Points</div>
+                              <div className="text-2xl font-gilroy-black text-white">{userPosition.total_points.toLocaleString()}</div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : null}
             </div>
-          </div>
+          )}
 
           {/* Info Section */}
           <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
@@ -588,8 +753,6 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                 <h3 className="text-lg font-gilroy-extrabold text-gray-900 mb-2">How to Earn More Points</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Visit regularly and earn points with every purchase</li>
-                  <li>• Refer friends to earn bonus points</li>
-                  <li>• Complete special challenges for extra rewards</li>
                   <li>• Climb the leaderboard and unlock exclusive perks</li>
                 </ul>
               </div>
@@ -601,40 +764,4 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   );
 }
 
-// Helper functions
-function getRestaurantEmoji(slug: string): string {
-  const emojiMap: { [key: string]: string } = {
-    "bella-vista": "🍝",
-    "sakura-sushi": "🍣",
-    "spice-garden": "🍛",
-    "burger-palace": "🍔",
-    "le-petit-cafe": "🥐",
-    "taco-fiesta": "🌮",
-    "golden-dragon": "🥢",
-    "mediterranean-breeze": "🫒",
-    "steakhouse-prime": "🥩",
-    "thai-garden": "🍜",
-    "pizza-corner": "🍕",
-    "sushi-master": "🍱",
-  };
-  return emojiMap[slug] || "🍽️";
-}
-
-function getRestaurantColor(slug: string): string {
-  const colorMap: { [key: string]: string } = {
-    "bella-vista": "rgba(123, 199, 77, 0.4)",
-    "sakura-sushi": "rgba(59, 130, 246, 0.4)",
-    "spice-garden": "rgba(245, 158, 11, 0.4)",
-    "burger-palace": "rgba(239, 68, 68, 0.4)",
-    "le-petit-cafe": "rgba(168, 85, 247, 0.4)",
-    "taco-fiesta": "rgba(34, 197, 94, 0.4)",
-    "golden-dragon": "rgba(220, 38, 127, 0.4)",
-    "mediterranean-breeze": "rgba(34, 197, 94, 0.4)",
-    "steakhouse-prime": "rgba(139, 69, 19, 0.4)",
-    "thai-garden": "rgba(251, 146, 60, 0.4)",
-    "pizza-corner": "rgba(34, 197, 94, 0.4)",
-    "sushi-master": "rgba(59, 130, 246, 0.4)",
-  };
-  return colorMap[slug] || "rgba(123, 199, 77, 0.4)";
-}
 

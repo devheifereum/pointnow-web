@@ -1,25 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-/* Gilroy font - you'll need to add the actual Gilroy font files */
-@font-face {
-  font-family: 'Gilroy';
-  src: url('/fonts/Gilroy-ExtraBold.woff2') format('woff2'),
-       url('/fonts/Gilroy-ExtraBold.woff') format('woff');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Gilroy';
-  src: url('/fonts/Gilroy-Black.woff2') format('woff2'),
-       url('/fonts/Gilroy-Black.woff') format('woff');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -28,8 +9,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Gilroy', var(--font-inter), system-ui, sans-serif;
-  --font-gilroy: 'Gilroy', var(--font-inter), system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-gilroy: 'Inter', system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,16 +23,79 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Gilroy', var(--font-inter), system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Utility classes for Gilroy font weights */
+/* Utility classes for font weights - using Inter instead of Gilroy */
 .font-gilroy-extrabold {
-  font-family: 'Gilroy', var(--font-inter), system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 800;
 }
 
 .font-gilroy-black {
-  font-family: 'Gilroy', var(--font-inter), system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 900;
+}
+
+/* Mobile Menu Animations */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-top {
+  animation: slide-in-from-top 0.5s ease-out;
+}
+
+.slide-in-from-right {
+  animation: slide-in-from-right 0.4s ease-out;
+}
+
+.slide-in-from-bottom {
+  animation: slide-in-from-bottom 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
 }

@@ -7,22 +7,19 @@ import type {
 } from "../types/analytics";
 
 export const analyticsApi = {
-  getMetadata: async (params: AnalyticsParams): Promise<AnalyticsMetadataResponse> => {
+  // Analytics Business endpoints
+  getMetadata: async (params: Pick<AnalyticsParams, 'business_id'>): Promise<AnalyticsMetadataResponse> => {
     const queryParams = new URLSearchParams({
       business_id: params.business_id,
-      start_date: params.start_date,
-      end_date: params.end_date,
     });
-    return api.get<AnalyticsMetadataResponse>(`/analytics/leaderboard/metadata?${queryParams}`);
+    return api.get<AnalyticsMetadataResponse>(`/analytics/business/leaderboard/metadata?${queryParams}`);
   },
 
-  getTopCustomers: async (params: AnalyticsParams): Promise<TopCustomersResponse> => {
+  getTopCustomers: async (params: Pick<AnalyticsParams, 'business_id'>): Promise<TopCustomersResponse> => {
     const queryParams = new URLSearchParams({
       business_id: params.business_id,
-      start_date: params.start_date,
-      end_date: params.end_date,
     });
-    return api.get<TopCustomersResponse>(`/analytics/leaderboard/customers?${queryParams}`);
+    return api.get<TopCustomersResponse>(`/analytics/business/leaderboard/customers?${queryParams}`);
   },
 
   getPointHistoricalData: async (
@@ -34,7 +31,30 @@ export const analyticsApi = {
       end_date: params.end_date,
     });
     return api.get<PointHistoricalDataResponse>(
-      `/analytics/leaderboard/points/historical-data?${queryParams}`
+      `/analytics/business/leaderboard/points/historical-data?${queryParams}`
+    );
+  },
+
+  // Analytics Customers endpoints
+  getCustomerMetadata: async (params: Omit<AnalyticsParams, 'business_id'> & { customer_id: string }): Promise<AnalyticsMetadataResponse> => {
+    const queryParams = new URLSearchParams({
+      customer_id: params.customer_id,
+      start_date: params.start_date,
+      end_date: params.end_date,
+    });
+    return api.get<AnalyticsMetadataResponse>(`/analytics/leaderboard/customer/metadata?${queryParams}`);
+  },
+
+  getCustomerPointHistoricalData: async (
+    params: Omit<AnalyticsParams, 'business_id'> & { customer_id: string }
+  ): Promise<PointHistoricalDataResponse> => {
+    const queryParams = new URLSearchParams({
+      customer_id: params.customer_id,
+      start_date: params.start_date,
+      end_date: params.end_date,
+    });
+    return api.get<PointHistoricalDataResponse>(
+      `/analytics/leaderboard/customer/points/historical-data?${queryParams}`
     );
   },
 };

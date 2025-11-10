@@ -178,7 +178,7 @@ export default function PricingScreen() {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
             {plans.map((plan, index) => {
               const Icon = plan.icon;
               const displayPrice = billingPeriod === "monthly" ? plan.price : Math.round(plan.yearlyPrice / 12);
@@ -232,7 +232,7 @@ export default function PricingScreen() {
 
                     {/* CTA Button */}
                     <Link
-                      href="/auth"
+                      href="/auth?mode=restaurant"
                       className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 inline-block text-center ${
                         plan.highlighted
                           ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
@@ -264,23 +264,23 @@ export default function PricingScreen() {
           </div>
 
           {/* Stats Section */}
-          <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-white text-center">
+          <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-12 md:mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 text-white text-center">
               <div>
-                <div className="text-4xl font-gilroy-black mb-2">300+</div>
-                <div className="text-sm opacity-90">Active Merchants</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">300+</div>
+                <div className="text-xs sm:text-sm opacity-90">Active Merchants</div>
               </div>
               <div>
-                <div className="text-4xl font-gilroy-black mb-2">RM136M</div>
-                <div className="text-sm opacity-90">Additional Sales Generated</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">RM136M</div>
+                <div className="text-xs sm:text-sm opacity-90">Additional Sales Generated</div>
               </div>
               <div>
-                <div className="text-4xl font-gilroy-black mb-2">2.8M</div>
-                <div className="text-sm opacity-90">Member Visits</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">2.8M</div>
+                <div className="text-xs sm:text-sm opacity-90">Member Visits</div>
               </div>
               <div>
-                <div className="text-4xl font-gilroy-black mb-2">98%</div>
-                <div className="text-sm opacity-90">Customer Satisfaction</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">98%</div>
+                <div className="text-xs sm:text-sm opacity-90">Customer Satisfaction</div>
               </div>
             </div>
           </div>
@@ -305,23 +305,23 @@ export default function PricingScreen() {
           </div>
 
           {/* CTA Section */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-12 text-center text-white">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-center text-white">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-4xl font-gilroy-black mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-3 sm:mb-4">
                 Ready to Grow Your Business?
               </h2>
-              <p className="text-xl opacity-90 mb-8">
+              <p className="text-base sm:text-lg md:text-xl opacity-90 mb-6 sm:mb-8">
                 Join hundreds of merchants using PointNow to build customer loyalty and increase sales.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/auth"
+                  href="/auth?mode=restaurant"
                   className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
                 >
                   Start Free Trial
                 </Link>
                 <Link
-                  href="/auth"
+                  href="/auth?mode=restaurant"
                   className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20 inline-block text-center"
                 >
                   Schedule Demo

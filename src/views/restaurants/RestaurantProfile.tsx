@@ -10,9 +10,12 @@ interface RestaurantProfileProps {
   restaurantName: string;
 }
 
-export default function RestaurantProfile({ restaurantName: _restaurantName }: RestaurantProfileProps) {
+export default function RestaurantProfile({ restaurantName }: RestaurantProfileProps) {
+  // restaurantName is available but not currently used
+  void restaurantName;
+  
   const [activeTab, setActiveTab] = useState("description");
-  const [_currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Mock restaurant data
   const restaurant = {
