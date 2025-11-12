@@ -159,7 +159,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         business: {
           business_id: businessId,
           branch_id: selectedBranchId,
-          staff_id: staffId,
+          employee_id: staffId,
           metadata: {},
           is_active: true,
           total_points: 0,
@@ -217,9 +217,6 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         customer_id: currentCustomer.id,
         branch_id: selectedBranchId,
         amount: amount,
-        is_active: true,
-        metadata: {},
-        type: type,
         employee_id: staffId,
       });
 

@@ -92,9 +92,6 @@ export interface CreatePointTransactionPayload {
   customer_id: string;
   branch_id: string;
   amount: number;
-  is_active: boolean;
-  metadata: Record<string, unknown>;
-  type: "EARN" | "REDEEM" | "ADD" | "SUBTRACT";
   employee_id: string;
 }
 
