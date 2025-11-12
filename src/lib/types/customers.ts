@@ -52,6 +52,13 @@ export interface CustomersParams {
   limit?: number;
 }
 
+export interface CustomersSearchParams {
+  business_id: string;
+  page?: number;
+  limit?: number;
+  query?: string;
+}
+
 export interface LeaderboardParams {
   business_id: string;
   page?: number;

@@ -3,6 +3,7 @@ import type {
   LeaderboardMetadataResponse,
   CustomersResponse,
   CustomersParams,
+  CustomersSearchParams,
   LeaderboardParams,
   CreateCustomerWithUserPayload,
   CreateCustomerWithUserResponse,
@@ -32,6 +33,24 @@ export const customersApi = {
     }
 
     return api.get<CustomersResponse>(`/customers?${queryParams}`);
+  },
+
+  search: async (params: CustomersSearchParams): Promise<CustomersResponse> => {
+    const queryParams = new URLSearchParams({
+      business_id: params.business_id,
+    });
+
+    if (params.page) {
+      queryParams.append("page", params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append("limit", params.limit.toString());
+    }
+    if (params.query) {
+      queryParams.append("query", params.query);
+    }
+
+    return api.get<CustomersResponse>(`/customers/search?${queryParams}`);
   },
 
   getLeaderboard: async (params: LeaderboardParams): Promise<CustomersResponse> => {

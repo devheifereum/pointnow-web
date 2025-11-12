@@ -65,13 +65,13 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
 
-  // Fetch customers when search is opened
+  // Fetch customers when search is opened or search query changes
   useEffect(() => {
     if (showCustomerSearch && businessId) {
       fetchCustomers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCustomerSearch, businessId]);
+  }, [showCustomerSearch, businessId, searchQuery]);
 
   const fetchBranches = async () => {
     if (!businessId) return;
@@ -108,9 +108,10 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setError(null);
 
     try {
-      const response = await customersApi.getAll({
+      const response = await customersApi.search({
         business_id: businessId,
         limit: 100, // Get more customers for search
+        query: searchQuery.trim() || undefined, // Use search query if available, otherwise get all
       });
       setCustomers(response.data.customers || []);
     } catch (err) {
@@ -124,17 +125,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     }
   };
 
-  // Filter customers based on search query
-  const filteredCustomers = useMemo(() => {
-    if (!searchQuery.trim()) return customers;
-    const query = searchQuery.toLowerCase();
-    return customers.filter(
-      (customer) =>
-        customer.name.toLowerCase().includes(query) ||
-        customer.phone_number?.toLowerCase().includes(query) ||
-        customer.email?.toLowerCase().includes(query)
-    );
-  }, [customers, searchQuery]);
+  // Customers are already filtered by the API search endpoint
+  const filteredCustomers = customers;
 
   const handleNumberClick = (num: string) => {
     if (pointsInput.length < 10) {
@@ -236,9 +228,10 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       });
 
       // Refresh customer data to get updated points
-      const customersResponse = await customersApi.getAll({
+      const customersResponse = await customersApi.search({
         business_id: businessId,
         limit: 100,
+        query: searchQuery.trim() || undefined,
       });
       const updatedCustomers = customersResponse.data.customers || [];
       setCustomers(updatedCustomers);
@@ -319,7 +312,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         )}
       </div>
 
-      {error && (
+      {/* Error Message - Show non-query errors outside cards */}
+      {error && !error.toLowerCase().includes("query") && !error.toLowerCase().includes("search") && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
           <p className="text-red-600">{error}</p>
         </div>
@@ -364,7 +358,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 <div className="bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-xl p-4 sm:p-5 md:p-6 text-center mb-4 sm:mb-6">
                   <p className="text-gray-700 text-xs sm:text-sm mb-2 font-medium">Current Points</p>
                   <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-gilroy-black text-white">
-                    {currentCustomer.points || 0}
+                    {currentCustomer.total_points ?? currentCustomer.points ?? 0}
                   </p>
                 </div>
 
@@ -430,6 +424,13 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                   </button>
                 </div>
 
+                {/* Error Message - Query related errors inside the card */}
+                {error && (error.toLowerCase().includes("query") || error.toLowerCase().includes("search")) && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+
                 {/* Search Input */}
                 <div className="relative mb-4 sm:mb-6">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -477,7 +478,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.points || 0}</p>
+                            <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.total_points ?? customer.points ?? 0}</p>
                             <p className="text-xs text-gray-500">points</p>
                           </div>
                         </div>
