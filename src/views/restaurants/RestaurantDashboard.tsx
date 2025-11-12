@@ -42,6 +42,21 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   // staff_id is the user's ID when they are staff/admin
   const staffId = user?.user?.id || "";
 
+  // Memoize the phone input component to prevent re-renders that cause focus loss
+  const PhoneInputComponent = useMemo(() => {
+    const Component = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+      (props, ref) => (
+        <input
+          {...props}
+          ref={ref}
+          className="w-full text-black placeholder-gray-400"
+        />
+      )
+    );
+    Component.displayName = "PhoneInputComponent";
+    return Component;
+  }, []);
+
   // Fetch branches on mount
   useEffect(() => {
     if (businessId) {
@@ -536,26 +551,60 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                           Phone Number *
                         </label>
                         <div className="relative">
-                          <PhoneInput
-                            placeholder="Enter phone number"
-                            value={phoneValue}
-                            onChange={setPhoneValue}
-                            defaultCountry="MY"
-                            className="w-full"
-                            style={{
-                              '--PhoneInput-color--focus': '#7bc74d',
-                              '--PhoneInputCountryFlag-borderColor': 'transparent',
-                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                            }}
-                            inputComponent={({ value, onChange, ...props }) => (
-                              <input
-                                {...props}
-                                value={value}
-                                onChange={onChange}
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                              />
-                            )}
-                          />
+                          <style dangerouslySetInnerHTML={{__html: `
+                            .phone-input-wrapper .PhoneInput {
+                              display: flex !important;
+                              align-items: center !important;
+                              width: 100% !important;
+                              border: 1px solid #e5e7eb !important;
+                              border-radius: 0.75rem !important;
+                              padding: 0.625rem !important;
+                              transition: all 0.2s !important;
+                            }
+                            .phone-input-wrapper .PhoneInput:focus-within {
+                              outline: none !important;
+                              ring: 2px !important;
+                              ring-color: #7bc74d !important;
+                              border-color: transparent !important;
+                            }
+                            .phone-input-wrapper .PhoneInputCountry {
+                              margin-right: 0 !important;
+                              padding-right: 0 !important;
+                              padding-left: 0.5rem !important;
+                            }
+                            .phone-input-wrapper .PhoneInputCountryIcon {
+                              width: 1.5em;
+                              height: 1.5em;
+                            }
+                            .phone-input-wrapper .PhoneInputCountrySelectArrow {
+                              margin-left: 0.25rem !important;
+                              margin-right: 0.25rem !important;
+                            }
+                            .phone-input-wrapper .PhoneInputInput {
+                              flex: 1 !important;
+                              margin-left: 0 !important;
+                              padding-left: 0.5rem !important;
+                              border: none !important;
+                              outline: none !important;
+                              background: transparent !important;
+                            }
+                          `}} />
+                          <div className="phone-input-wrapper">
+                            <PhoneInput
+                              placeholder="Enter phone number"
+                              value={phoneValue}
+                              onChange={setPhoneValue}
+                              defaultCountry="MY"
+                              international
+                              className="w-full"
+                              style={{
+                                '--PhoneInput-color--focus': '#7bc74d',
+                                '--PhoneInputCountryFlag-borderColor': 'transparent',
+                                '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                              }}
+                              inputComponent={PhoneInputComponent}
+                            />
+                          </div>
                         </div>
                       </div>
 

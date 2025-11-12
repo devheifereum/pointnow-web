@@ -36,3 +36,38 @@ export interface BusinessesParams {
   query?: string;
 }
 
+export interface BusinessAdmin {
+  id: string;
+  user_id: string;
+  business_id: string;
+  level: string;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BusinessStaff {
+  id: string;
+  business_id: string;
+  user_id: string;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BusinessDetail extends Business {
+  status?: string;
+  admins?: BusinessAdmin[];
+  staffs?: BusinessStaff[];
+}
+
+export interface BusinessDetailResponse {
+  message: string;
+  status_code: number;
+  data: {
+    business: BusinessDetail;
+  };
+}
+

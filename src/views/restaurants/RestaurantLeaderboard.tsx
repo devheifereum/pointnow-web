@@ -61,7 +61,7 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
     setError(null);
 
     try {
-      const response = await customersApi.getAll({
+      const response = await customersApi.getLeaderboard({
         business_id: businessId,
         page: pagination.page,
         limit: pagination.limit,
@@ -98,25 +98,38 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
       ? new Date(customer.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
       : "N/A";
     
-    // Calculate last visit (if available)
-    const lastVisit = customer.last_visit
-      ? new Date(customer.last_visit).toLocaleDateString()
+    // Calculate last visit (if available) - use last_visit_at from leaderboard API
+    const lastVisit = customer.last_visit_at
+      ? new Date(customer.last_visit_at).toLocaleDateString("en-US", { 
+          month: "short", 
+          day: "numeric", 
+          year: "numeric" 
+        })
+      : customer.last_visit
+      ? new Date(customer.last_visit).toLocaleDateString("en-US", { 
+          month: "short", 
+          day: "numeric", 
+          year: "numeric" 
+        })
       : "Never";
 
-    // Determine badge based on points (you can customize this logic)
-    const points = customer.points || 0;
+    // Determine badge based on points - use total_points from leaderboard API
+    const points = customer.total_points ?? customer.points ?? 0;
     let badge = "Bronze";
     if (points >= 10000) badge = "Diamond";
     else if (points >= 5000) badge = "Platinum";
     else if (points >= 2000) badge = "Gold";
     else if (points >= 1000) badge = "Silver";
 
+    // Use total_visits from leaderboard API
+    const visits = customer.total_visits ?? customer.visits ?? 0;
+
     return {
       rank,
       name: customer.name || "Unknown Customer",
       phone: customer.phone_number || "-",
       points: points,
-      visits: customer.visits || 0,
+      visits: visits,
       joinedDate,
       lastVisit,
       badge,

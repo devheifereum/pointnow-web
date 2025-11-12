@@ -10,6 +10,16 @@ import {
   ArrowDown,
   Loader2,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { analyticsApi } from "@/lib/api/analytics";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
@@ -36,7 +46,9 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
     return date.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(() => {
-    return new Date().toISOString().split("T")[0];
+    const date = new Date();
+    date.setDate(date.getDate() + 1); // Set to tomorrow to include today's data
+    return date.toISOString().split("T")[0];
   });
 
   const businessId = user?.businessId || "";
@@ -249,37 +261,79 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
         <h2 className="text-lg sm:text-xl font-gilroy-black text-black mb-4 sm:mb-6">Points Historical Data</h2>
         {historicalData.length > 0 ? (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700">Date</th>
-                    <th className="text-right py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700">Count</th>
-                    <th className="text-right py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700">Total Points</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {historicalData.map((dataPoint, index) => {
-                    const date = new Date(dataPoint.date);
-                    const formattedDate = date.toLocaleDateString('en-US', { 
-                      year: 'numeric', 
+          <div className="w-full">
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart
+                data={historicalData.map((dataPoint) => {
+                  const date = new Date(dataPoint.date);
+                  return {
+                    date: date.toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric' 
-                    });
-                    return (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm text-gray-900 whitespace-nowrap">{formattedDate}</td>
-                        <td className="py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm text-gray-600 text-right">{dataPoint.count}</td>
-                        <td className="py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-[#7bc74d] text-right">
-                          {dataPoint.total_points.toLocaleString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    }),
+                    fullDate: date.toLocaleDateString('en-US', { 
+                      year: 'numeric',
+                      month: 'short', 
+                      day: 'numeric' 
+                    }),
+                    count: dataPoint.count,
+                    totalPoints: dataPoint.total_points,
+                  };
+                })}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280"
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  style={{ fontSize: '12px' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '8px 12px'
+                  }}
+                  formatter={(value: number, name: string) => {
+                    if (name === 'totalPoints') {
+                      return [value.toLocaleString(), 'Total Points'];
+                    }
+                    if (name === 'count') {
+                      return [value.toLocaleString(), 'Count'];
+                    }
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <Legend 
+                  wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="totalPoints" 
+                  stroke="#7bc74d" 
+                  strokeWidth={3}
+                  dot={{ fill: '#7bc74d', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Total Points"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ fill: '#3b82f6', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Count"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         ) : (
           <div className="h-48 sm:h-64 flex items-center justify-center bg-gray-50 rounded-xl">

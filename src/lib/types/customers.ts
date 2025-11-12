@@ -17,11 +17,14 @@ export interface Customer {
   name: string;
   email?: string;
   phone_number?: string;
-  points?: number;
-  visits?: number;
+  points?: number; // Legacy field, use total_points for leaderboard
+  total_points?: number; // From leaderboard API
+  visits?: number; // Legacy field, use total_visits for leaderboard
+  total_visits?: number; // From leaderboard API
   created_at?: string;
   updated_at?: string;
-  last_visit?: string;
+  last_visit?: string; // Legacy field, use last_visit_at for leaderboard
+  last_visit_at?: string; // From leaderboard API
   [key: string]: unknown;
 }
 

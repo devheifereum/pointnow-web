@@ -37,7 +37,10 @@ export default function RestaurantTransactions({ restaurantName }: RestaurantTra
     return date.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(() => {
-    return new Date().toISOString().split("T")[0];
+    // Set end_date to tomorrow to ensure today's data is included
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split("T")[0];
   });
 
   const businessId = user?.businessId || "";

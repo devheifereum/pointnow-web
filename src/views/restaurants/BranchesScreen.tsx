@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Loader2, X, Save, Building2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Save, Building2 } from "lucide-react";
 import { branchesApi } from "@/lib/api/branches";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
 import type { Branch } from "@/lib/types/branches";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function BranchesScreen() {
   const { user } = useAuthStore();
@@ -260,120 +268,119 @@ export default function BranchesScreen() {
         </div>
 
       {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-gilroy-black text-black">
-                {editingBranch ? "Edit Branch" : "Create New Branch"}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setBranchName("");
-                  setEditingBranch(null);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      <Dialog open={showModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowModal(false);
+          setBranchName("");
+          setEditingBranch(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-black">
+              {editingBranch ? "Edit Branch" : "Create New Branch"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingBranch ? "Update the branch information" : "Add a new branch to your business"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Branch Name *
+              </label>
+              <input
+                type="text"
+                value={branchName}
+                onChange={(e) => setBranchName(e.target.value)}
+                placeholder="e.g., Gombak"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                autoFocus
+              />
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Branch Name *
-                </label>
-                <input
-                  type="text"
-                  value={branchName}
-                  onChange={(e) => setBranchName(e.target.value)}
-                  placeholder="e.g., Gombak"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
-                  autoFocus
-                />
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={!branchName.trim() || isSubmitting}
-                  className="flex-1 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      {editingBranch ? "Update" : "Create"}
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setBranchName("");
-                    setEditingBranch(null);
-                  }}
-                  className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setShowModal(false);
+                setBranchName("");
+                setEditingBranch(null);
+              }}
+              className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!branchName.trim() || isSubmitting}
+              className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  {editingBranch ? "Update" : "Create"}
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-gilroy-black text-black mb-2">Delete Branch</h2>
-              <p className="text-gray-600">
-                Are you sure you want to delete this branch? This action cannot be undone.
-              </p>
-            </div>
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => {
+        if (!open) {
+          setDeleteConfirm(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-black">Delete Branch</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this branch? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
-                disabled={isSubmitting || !deleteConfirm}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          <DialogFooter>
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              disabled={isSubmitting}
+              className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+              disabled={isSubmitting || !deleteConfirm}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

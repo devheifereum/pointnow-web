@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { BusinessesResponse, BusinessesParams } from "../types/business";
+import type { BusinessesResponse, BusinessesParams, BusinessDetailResponse } from "../types/business";
 
 export const businessApi = {
   getAll: async (params?: BusinessesParams): Promise<BusinessesResponse> => {
@@ -31,5 +31,9 @@ export const businessApi = {
 
     const queryString = queryParams.toString();
     return api.get<BusinessesResponse>(`/business/search${queryString ? `?${queryString}` : ""}`);
+  },
+
+  getById: async (businessId: string): Promise<BusinessDetailResponse> => {
+    return api.get<BusinessDetailResponse>(`/business/${businessId}`);
   },
 };
