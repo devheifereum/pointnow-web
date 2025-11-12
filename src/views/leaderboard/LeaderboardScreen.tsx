@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2 } from "lucide-react";
+import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2, LogIn, ArrowRight } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
@@ -635,34 +635,61 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
           )}
 
           {/* Current User Position */}
-          {authUser?.user?.id && (
-            <div className="mt-6 sm:mt-8">
-              <h3 className="text-lg sm:text-xl font-gilroy-black text-black mb-4">Your Position</h3>
-              {isLoadingPosition ? (
-                <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d] p-4 sm:p-6">
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-white" />
-                    <span className="ml-3 text-white text-sm sm:text-base">Loading your position...</span>
+          <div className="mt-6 sm:mt-8">
+            <h3 className="text-lg sm:text-xl font-gilroy-black text-black mb-4">Your Position</h3>
+            {!authUser?.user?.id ? (
+              /* Not Logged In */
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-blue-200 p-6 sm:p-8">
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-blue-100 rounded-full p-4 mb-4">
+                    <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+                  </div>
+                  <h4 className="text-lg sm:text-xl font-gilroy-extrabold text-gray-900 mb-2">
+                    Login to see your position
+                  </h4>
+                  <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md">
+                    Sign in to check your ranking on the leaderboard and track your points at {restaurantData?.name || "this restaurant"}!
+                  </p>
+                  <Link href="/auth?mode=user">
+                    <button className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                      <LogIn className="w-5 h-5" />
+                      Login to Your Account
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                  </Link>
+                  <p className="text-xs text-gray-500 mt-4">
+                    Don&apos;t have an account?{" "}
+                    <Link href="/auth?mode=user" className="text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
+                      Register now
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            ) : isLoadingPosition ? (
+              <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d] p-4 sm:p-6">
+                <div className="flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-white" />
+                  <span className="ml-3 text-white text-sm sm:text-base">Loading your position...</span>
+                </div>
+              </div>
+            ) : isNotCustomer ? (
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-orange-200 p-6 sm:p-8">
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-orange-100 rounded-full p-4 mb-4">
+                    <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
+                  </div>
+                  <h4 className="text-lg sm:text-xl font-gilroy-extrabold text-gray-900 mb-2">
+                    You are not a customer for this restaurant
+                  </h4>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md">
+                    Visit {restaurantData?.name || "this restaurant"} and make a purchase to join the leaderboard and start earning points!
+                  </p>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700">
+                    💡 Start earning points by visiting the restaurant
                   </div>
                 </div>
-              ) : isNotCustomer ? (
-                <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-orange-200 p-6 sm:p-8">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="bg-orange-100 rounded-full p-4 mb-4">
-                      <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
-                    </div>
-                    <h4 className="text-lg sm:text-xl font-gilroy-extrabold text-gray-900 mb-2">
-                      You are not a customer for this restaurant
-                    </h4>
-                    <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md">
-                      Visit {restaurantData?.name || "this restaurant"} and make a purchase to join the leaderboard and start earning points!
-                    </p>
-                    <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700">
-                      💡 Start earning points by visiting the restaurant
-                    </div>
-                  </div>
-                </div>
-              ) : userPosition ? (
+              </div>
+            ) : userPosition ? (
                 <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-[#7bc74d]">
                   <div className="bg-white/10 backdrop-blur-sm p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -772,8 +799,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                   </div>
                 </div>
               ) : null}
-            </div>
-          )}
+          </div>
 
           {/* Info Section */}
           <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
