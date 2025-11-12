@@ -167,7 +167,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
 
   // Helper functions for display
   const getRestaurantEmoji = (name: string): string => {
-    const emojis = ["🍝", "🍣", "🍛", "🍔", "🥐", "🌮", "🥢", "🫒", "🥩", "🍜", "🍕", "🍱", "🍽️"];
+    const emojis = ["🏢", "🏪", "🏬", "🏭", "🏨", "🏦", "🏛️", "🏗️", "💼", "📊", "💰", "🎯", "📈"];
     return emojis[name.length % emojis.length];
   };
 
@@ -300,7 +300,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
             className="inline-flex items-center text-gray-600 hover:text-[#7bc74d] transition-colors mb-6"
           >
             <ChevronLeft className="w-5 h-5 mr-1" />
-            Back to Restaurants
+            Back to Businesses
           </Link>
 
           {/* Restaurant Header */}
@@ -648,7 +648,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     Login to see your position
                   </h4>
                   <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md">
-                    Sign in to check your ranking on the leaderboard and track your points at {restaurantData?.name || "this restaurant"}!
+                    Sign in to check your ranking on the leaderboard and track your points at {restaurantData?.name || "this business"}!
                   </p>
                   <Link href="/auth?mode=user">
                     <button className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
@@ -679,13 +679,13 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
                   </div>
                   <h4 className="text-lg sm:text-xl font-gilroy-extrabold text-gray-900 mb-2">
-                    You are not a customer for this restaurant
+                    You are not a customer for this business
                   </h4>
                   <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md">
-                    Visit {restaurantData?.name || "this restaurant"} and make a purchase to join the leaderboard and start earning points!
+                    Visit {restaurantData?.name || "this business"} and make a purchase to join the leaderboard and start earning points!
                   </p>
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700">
-                    💡 Start earning points by visiting the restaurant
+                    💡 Start earning points by visiting the business
                   </div>
                 </div>
               </div>

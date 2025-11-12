@@ -197,7 +197,7 @@ export default function RestaurantAuthScreen() {
                   {/* Left Side - Branding */}
                   <div className="relative bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] p-8 lg:p-12 xl:p-16 flex items-center justify-center">
                     <div className="text-center text-white">
-                      <div className="text-7xl mb-6">🍽️</div>
+                      <div className="text-7xl mb-6">🏢</div>
                       <h2 className="text-4xl font-gilroy-black mb-4">
                         {isLogin ? "Welcome Back!" : "Join PointNow"}
                       </h2>

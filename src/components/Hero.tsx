@@ -66,7 +66,7 @@ export default function Hero() {
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-stretch sm:items-center max-w-xl mx-auto bg-white rounded-full p-2 shadow-lg gap-2 sm:gap-0">
         <input
           type="text"
-          placeholder="Search restaurants or Point Now..."
+          placeholder="Search businesses or Point Now..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base text-gray-700 outline-none rounded-full"

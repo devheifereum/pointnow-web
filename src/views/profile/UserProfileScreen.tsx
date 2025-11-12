@@ -113,7 +113,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-gilroy-black text-black mb-2">My Profile</h1>
-            <p className="text-gray-600">View your points and restaurant connections</p>
+            <p className="text-gray-600">View your points and business connections</p>
           </div>
 
           {isLoading ? (
@@ -172,7 +172,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                       <Store className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 font-medium">Restaurants</p>
+                      <p className="text-sm text-gray-600 font-medium">Businesses</p>
                       <p className="text-3xl font-gilroy-black text-black">{profileData?.totalBusinesses || restaurantConnections.length}</p>
                     </div>
                   </div>
@@ -193,15 +193,15 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 </div>
               </div>
 
-              {/* Restaurant Connections */}
+              {/* Business Connections */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-2xl font-gilroy-black text-black flex items-center gap-2">
                     <Trophy className="w-6 h-6 text-[#7bc74d]" />
-                    Restaurant Connections
+                    Business Connections
                   </h3>
                   <p className="text-gray-600 text-sm mt-1">
-                    Points you&apos;ve earned at each restaurant
+                    Points you&apos;ve earned at each business
                   </p>
                 </div>
 
@@ -255,9 +255,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   ) : (
                     <div className="p-12 text-center">
                       <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 text-lg font-medium">No restaurant connections yet</p>
+                      <p className="text-gray-500 text-lg font-medium">No business connections yet</p>
                       <p className="text-gray-400 text-sm mt-2">
-                        Start earning points by visiting restaurants!
+                        Start earning points by visiting businesses!
                       </p>
                     </div>
                   )}
@@ -278,7 +278,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-gilroy-black text-black mb-2">My Profile</h1>
-          <p className="text-gray-600">View your points and restaurant connections</p>
+          <p className="text-gray-600">View your points and business connections</p>
         </div>
 
         {isLoading ? (
@@ -337,7 +337,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                     <Store className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Restaurants</p>
+                    <p className="text-sm text-gray-600 font-medium">Businesses</p>
                     <p className="text-3xl font-gilroy-black text-black">{restaurantConnections.length}</p>
                   </div>
                 </div>
@@ -358,15 +358,15 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 </div>
               </div>
 
-            {/* Restaurant Connections */}
+            {/* Business Connections */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-2xl font-gilroy-black text-black flex items-center gap-2">
                   <Trophy className="w-6 h-6 text-[#7bc74d]" />
-                  Restaurant Connections
+                  Business Connections
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
-                  Points you&apos;ve earned at each restaurant
+                  Points you&apos;ve earned at each business
                 </p>
               </div>
 
@@ -420,9 +420,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 ) : (
                   <div className="p-12 text-center">
                     <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg font-medium">No restaurant connections yet</p>
+                    <p className="text-gray-500 text-lg font-medium">No business connections yet</p>
                     <p className="text-gray-400 text-sm mt-2">
-                      Start earning points by visiting restaurants!
+                      Start earning points by visiting businesses!
                     </p>
                   </div>
                 )}

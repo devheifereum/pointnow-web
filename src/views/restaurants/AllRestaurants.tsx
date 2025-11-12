@@ -19,7 +19,7 @@ const createSlug = (name: string): string => {
 
 // Helper function to get emoji based on business name
 const getBusinessEmoji = (name: string): string => {
-  const emojis = ["🍝", "🍣", "🍛", "🍔", "🥐", "🌮", "🥢", "🫒", "🥩", "🍜", "🍕", "🍱", "🍽️"];
+  const emojis = ["🏢", "🏪", "🏬", "🏭", "🏨", "🏦", "🏛️", "🏗️", "💼", "📊", "💰", "🎯", "📈"];
   return emojis[name.length % emojis.length];
 };
 

@@ -129,7 +129,7 @@ export default function RestaurantProfile({ restaurantName }: RestaurantProfileP
                       className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                     >
                       <div className="w-full h-full flex items-center justify-center text-2xl">
-                        {index === 0 ? "🏢" : index === 1 ? "🍽️" : "🌿"}
+                        {index === 0 ? "🏢" : index === 1 ? "🏪" : "🏬"}
                       </div>
                     </div>
                   ))}

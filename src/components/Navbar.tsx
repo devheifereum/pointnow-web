@@ -72,7 +72,7 @@ export default function Navbar() {
   
   const navLinks = [
     { label: "Home", href: "/home", icon: Home },
-    { label: "Restaurants", href: "/restaurants", icon: Store },
+    { label: "Businesses", href: "/restaurants", icon: Store },
     { label: "Pricing", href: "/pricing", icon: DollarSign },
   ];
 
@@ -248,8 +248,8 @@ export default function Navbar() {
                         {link.label}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {link.label === 'Home' && 'Discover restaurants'}
-                        {link.label === 'Restaurants' && 'Browse all locations'}
+                        {link.label === 'Home' && 'Discover businesses'}
+                        {link.label === 'Businesses' && 'Browse all locations'}
                         {link.label === 'Pricing' && 'View plans & pricing'}
                       </p>
                     </div>

@@ -407,8 +407,8 @@ export default function UserAuthScreen() {
                         {showOTPScreen
                           ? "Enter the verification code sent to your phone number to continue."
                           : isLogin
-                          ? "Sign in to check your points and redeem rewards at your favorite restaurants."
-                          : "Start earning points and unlock exclusive rewards at restaurants near you."}
+                          ? "Sign in to check your points and redeem rewards at your favorite businesses."
+                          : "Start earning points and unlock exclusive rewards at businesses near you."}
                       </p>
                       
                       <div className="hidden lg:block space-y-3 sm:space-y-4">
@@ -436,7 +436,7 @@ export default function UserAuthScreen() {
                           </div>
                           <div>
                             <h3 className="font-gilroy-extrabold text-xs sm:text-sm">Track Progress</h3>
-                            <p className="text-xs opacity-90">See your points across all restaurants</p>
+                            <p className="text-xs opacity-90">See your points across all businesses</p>
                           </div>
                         </div>
                       </div>
