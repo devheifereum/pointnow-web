@@ -90,6 +90,7 @@ export interface TransactionsParams {
 export interface CreatePointTransactionPayload {
   business_id: string;
   customer_id: string;
+  branch_id: string;
   amount: number;
   is_active: boolean;
   metadata: Record<string, unknown>;

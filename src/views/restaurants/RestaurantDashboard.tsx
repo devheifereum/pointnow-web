@@ -6,9 +6,12 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { customersApi } from "@/lib/api/customers";
 import { transactionsApi } from "@/lib/api/transactions";
+import { branchesApi } from "@/lib/api/branches";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
 import type { Customer } from "@/lib/types/customers";
+import type { Branch } from "@/lib/types/branches";
+import { Building2, ChevronDown } from "lucide-react";
 
 interface RestaurantDashboardProps {
   restaurantName?: string;
@@ -31,10 +34,21 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
 
   const businessId = user?.businessId || "";
   // staff_id is the user's ID when they are staff/admin
   const staffId = user?.user?.id || "";
+
+  // Fetch branches on mount
+  useEffect(() => {
+    if (businessId) {
+      fetchBranches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId]);
 
   // Fetch customers when search is opened
   useEffect(() => {
@@ -43,6 +57,34 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCustomerSearch, businessId]);
+
+  const fetchBranches = async () => {
+    if (!businessId) return;
+
+    setIsLoadingBranches(true);
+    setError(null);
+
+    try {
+      const response = await branchesApi.getAll({
+        business_id: businessId,
+        limit: 100,
+      });
+      const branchesList = response.data.branches || [];
+      setBranches(branchesList);
+      // Auto-select first branch if available
+      if (branchesList.length > 0 && !selectedBranchId) {
+        setSelectedBranchId(branchesList[0].id);
+      }
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message || "Failed to load branches");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsLoadingBranches(false);
+    }
+  };
 
   const fetchCustomers = async () => {
     if (!businessId) return;
@@ -99,8 +141,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       return;
     }
 
-    if (!businessId || !staffId) {
-      setError("Business ID or Staff ID not found. Please log in again.");
+    if (!businessId || !staffId || !selectedBranchId) {
+      setError("Please select a branch first");
       return;
     }
 
@@ -116,6 +158,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         metadata: {},
         business: {
           business_id: businessId,
+          branch_id: selectedBranchId,
           staff_id: staffId,
           metadata: {},
           is_active: true,
@@ -160,8 +203,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   };
 
   const createTransaction = async (amount: number, type: "EARN" | "REDEEM") => {
-    if (!currentCustomer || !businessId || !staffId) {
-      setError("Missing required information");
+    if (!currentCustomer || !businessId || !staffId || !selectedBranchId) {
+      setError("Please select a branch first");
       return;
     }
 
@@ -172,6 +215,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       await transactionsApi.create({
         business_id: businessId,
         customer_id: currentCustomer.id,
+        branch_id: selectedBranchId,
         amount: amount,
         is_active: true,
         metadata: {},
@@ -224,6 +268,43 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       <div className="mb-4 sm:mb-6 pt-2 sm:pt-0">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-gilroy-black text-black mb-2">Dashboard</h1>
         <p className="text-xs sm:text-sm lg:text-base text-gray-600">Manage customer points</p>
+      </div>
+
+      {/* Branch Selection */}
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Select Branch *
+        </label>
+        <div className="relative">
+          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+          <select
+            value={selectedBranchId}
+            onChange={(e) => setSelectedBranchId(e.target.value)}
+            disabled={isLoadingBranches || branches.length === 0}
+            className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black bg-white appearance-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+          >
+            {isLoadingBranches ? (
+              <option>Loading branches...</option>
+            ) : branches.length === 0 ? (
+              <option>No branches available</option>
+            ) : (
+              <>
+                <option value="">-- Select a branch --</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        </div>
+        {branches.length === 0 && !isLoadingBranches && (
+          <p className="mt-1 text-xs text-amber-600">
+            No branches found. Please create a branch first in the admin section.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -292,7 +373,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <button
                       onClick={handleAddPoints}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !selectedBranchId}
                       className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       {isProcessing ? (
@@ -306,7 +387,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     </button>
                     <button
                       onClick={handleSubtractPoints}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !selectedBranchId}
                       className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       {isProcessing ? (
@@ -483,7 +564,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
                       <button
                         onClick={handleAddCustomer}
-                        disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || isProcessing}
+                        disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || !selectedBranchId || isProcessing}
                         className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                       >
                         {isProcessing ? (
@@ -505,26 +586,28 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     <h3 className="text-xl font-gilroy-extrabold text-black mb-2">No Customer Selected</h3>
                     <p className="text-gray-600 mb-6">Select an existing customer or add a new one</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        onClick={() => {
-                          setShowCustomerSearch(true);
-                          setShowNewCustomerForm(false);
-                        }}
-                        className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                      >
-                        <Search className="w-5 h-5" />
-                        Select Customer
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowNewCustomerForm(true);
-                          setShowCustomerSearch(false);
-                        }}
-                        className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                      >
-                        <Plus className="w-5 h-5" />
-                        Add New Customer
-                      </button>
+                    <button
+                      onClick={() => {
+                        setShowCustomerSearch(true);
+                        setShowNewCustomerForm(false);
+                      }}
+                      disabled={!selectedBranchId}
+                      className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
+                    >
+                      <Search className="w-5 h-5" />
+                      Select Customer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowNewCustomerForm(true);
+                        setShowCustomerSearch(false);
+                      }}
+                      disabled={!selectedBranchId}
+                      className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-400 font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add New Customer
+                    </button>
                     </div>
                   </div>
                 )}

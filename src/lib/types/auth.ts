@@ -78,17 +78,15 @@ export interface UserRegisterRequest {
 export interface BusinessRegisterRequest {
   email: string;
   password: string;
-  phone: string;
+  phone_number: string;
   is_active?: boolean;
   metadata?: Record<string, unknown>;
   role: "ADMIN";
   business: {
     name: string;
-    registration_number: string;
     description: string;
     address: string;
-    latitude: number;
-    longitude: number;
+    registration_number?: string;
     metadata?: Record<string, unknown>;
     is_active?: boolean;
   };

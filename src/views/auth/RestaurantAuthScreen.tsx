@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Building2, Phone, MapPin, Eye, EyeOff } from "lucide-react";
@@ -28,20 +28,61 @@ export default function RestaurantAuthScreen() {
     confirmPassword: "",
     phone: "",
     address: "",
-    ownerName: "",
-    registrationNumber: "",
     description: "",
-    latitude: "",
-    longitude: "",
+    registrationNumber: "",
   });
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  // Memoize the phone input component to prevent re-renders that cause focus loss
+  const PhoneInputComponent = useMemo(() => {
+    return React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+      (props, ref) => (
+        <input
+          {...props}
+          ref={ref}
+          className="w-full text-black placeholder-gray-400"
+        />
+      )
+    );
+  }, []);
+
+  const validatePassword = (password: string) => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push("At least 8 characters");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("One uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("One lowercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("One number");
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push("One special character");
+    }
+    
+    setPasswordErrors(errors);
+    return errors.length === 0;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
+    const newValue = e.target.value;
+    const updatedFormData = {
       ...formData,
-      [e.target.name]: e.target.value,
-    });
+      [e.target.name]: newValue,
+    };
+    setFormData(updatedFormData);
     setError(null);
+    
+    // Validate password in real-time
+    if (e.target.name === "password") {
+      validatePassword(newValue);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,32 +113,36 @@ export default function RestaurantAuthScreen() {
         }
       } else {
         // Register Business
+        if (!phoneValue || phoneValue.trim() === "") {
+          setError("Please provide a valid phone number");
+          setIsLoading(false);
+          return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
           setError("Passwords do not match");
           setIsLoading(false);
           return;
         }
 
-        if (!formData.latitude || !formData.longitude) {
-          setError("Please provide latitude and longitude for your business location");
+        if (!validatePassword(formData.password)) {
+          setError("Password does not meet requirements");
           setIsLoading(false);
           return;
         }
 
         const response = await authApi.registerBusiness({
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
-          phone: phoneValue || "",
+          phone_number: phoneValue.trim(),
           role: "ADMIN",
           is_active: true,
           metadata: {},
           business: {
-            name: formData.businessName,
-            registration_number: formData.registrationNumber,
-            description: formData.description,
-            address: formData.address,
-            latitude: parseFloat(formData.latitude),
-            longitude: parseFloat(formData.longitude),
+            name: formData.businessName.trim(),
+            description: formData.description.trim(),
+            address: formData.address.trim(),
+            registration_number: formData.registrationNumber.trim() || undefined,
             metadata: {},
             is_active: true,
           },
@@ -232,11 +277,15 @@ export default function RestaurantAuthScreen() {
                     <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                 {!isLogin && (
                   <>
-                    {/* Two-column grid for register fields */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                    {/* Business Information Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-gilroy-extrabold text-black border-b border-gray-200 pb-2">
+                        Business Information
+                      </h3>
+                      
                       <div>
                         <label htmlFor="businessName" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Business Name *
+                          Restaurant Name *
                         </label>
                         <div className="relative">
                           <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -248,14 +297,14 @@ export default function RestaurantAuthScreen() {
                             onChange={handleInputChange}
                             required={!isLogin}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            placeholder="Enter your business name"
+                            placeholder="e.g., Heifereum Restaurant"
                           />
                         </div>
                       </div>
 
                       <div>
                         <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Registration Number *
+                          Registration Number
                         </label>
                         <div className="relative">
                           <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -265,7 +314,6 @@ export default function RestaurantAuthScreen() {
                             name="registrationNumber"
                             value={formData.registrationNumber}
                             onChange={handleInputChange}
-                            required={!isLogin}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                             placeholder="e.g., SSM2003"
                           />
@@ -273,36 +321,8 @@ export default function RestaurantAuthScreen() {
                       </div>
 
                       <div>
-                        <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Phone Number *
-                        </label>
-                        <div className="relative">
-                          <PhoneInput
-                            placeholder="Enter phone number"
-                            value={phoneValue}
-                            onChange={setPhoneValue}
-                            defaultCountry="MY"
-                            className="w-full"
-                            style={{
-                              '--PhoneInput-color--focus': '#7bc74d',
-                              '--PhoneInputCountryFlag-borderColor': 'transparent',
-                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                            }}
-                            inputComponent={({ value, onChange, ...props }) => (
-                              <input
-                                {...props}
-                                value={value}
-                                onChange={onChange}
-                                className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                              />
-                            )}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
                         <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Business Address *
+                          Restaurant Address *
                         </label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -314,66 +334,118 @@ export default function RestaurantAuthScreen() {
                             onChange={handleInputChange}
                             required={!isLogin}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            placeholder="Enter business address"
+                            placeholder="e.g., Jalan Taman Melati 8"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label htmlFor="latitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Latitude *
+                        <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Restaurant Description *
                         </label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="number"
-                            step="any"
-                            id="latitude"
-                            name="latitude"
-                            value={formData.latitude}
-                            onChange={handleInputChange}
-                            required={!isLogin}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            placeholder="e.g., 39.0481"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="longitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Longitude *
-                        </label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="number"
-                            step="any"
-                            id="longitude"
-                            name="longitude"
-                            value={formData.longitude}
-                            onChange={handleInputChange}
-                            required={!isLogin}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            placeholder="e.g., -29.5238"
-                          />
-                        </div>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required={!isLogin}
+                          rows={4}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 resize-none"
+                          placeholder="Tell us about your restaurant, cuisine type, specialties, and what makes it unique..."
+                        />
+                        <p className="mt-1 text-xs text-gray-500">This helps customers discover your restaurant</p>
                       </div>
                     </div>
 
-                    <div>
-                      <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Business Description *
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        required={!isLogin}
-                        rows={4}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                        placeholder="Describe your business..."
-                      />
+                    {/* Account Information Section */}
+                    <div className="space-y-4 pt-4 border-t border-gray-200">
+                      <h3 className="text-lg font-gilroy-extrabold text-black border-b border-gray-200 pb-2">
+                        Account Information
+                      </h3>
+
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Email Address *
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            placeholder="admin@yourrestaurant.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number *
+                        </label>
+                        <div className="relative">
+                          <style dangerouslySetInnerHTML={{__html: `
+                            .phone-input-wrapper .PhoneInput {
+                              display: flex !important;
+                              align-items: center !important;
+                              width: 100% !important;
+                              border: 1px solid #e5e7eb !important;
+                              border-radius: 0.75rem !important;
+                              padding: 0.625rem !important;
+                              transition: all 0.2s !important;
+                            }
+                            .phone-input-wrapper .PhoneInput:focus-within {
+                              outline: none !important;
+                              ring: 2px !important;
+                              ring-color: #7bc74d !important;
+                              border-color: transparent !important;
+                            }
+                            .phone-input-wrapper .PhoneInputCountry {
+                              margin-right: 0 !important;
+                              padding-right: 0 !important;
+                              padding-left: 0.5rem !important;
+                            }
+                            .phone-input-wrapper .PhoneInputCountryIcon {
+                              width: 1.5em;
+                              height: 1.5em;
+                            }
+                            .phone-input-wrapper .PhoneInputCountrySelectArrow {
+                              margin-left: 0.25rem !important;
+                              margin-right: 0.25rem !important;
+                            }
+                            .phone-input-wrapper .PhoneInputInput {
+                              flex: 1 !important;
+                              margin-left: 0 !important;
+                              padding-left: 0.5rem !important;
+                              border: none !important;
+                              outline: none !important;
+                              background: transparent !important;
+                            }
+                          `}} />
+                          <div className="phone-input-wrapper">
+                            <PhoneInput
+                              placeholder="Enter phone number"
+                              value={phoneValue}
+                              onChange={setPhoneValue}
+                              defaultCountry="MY"
+                              international
+                              className="w-full"
+                              style={{
+                                '--PhoneInput-color--focus': '#7bc74d',
+                                '--PhoneInputCountryFlag-borderColor': 'transparent',
+                                '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                              }}
+                              inputComponent={PhoneInputComponent}
+                            />
+                          </div>
+                        </div>
+                        {phoneValue && (
+                          <p className="mt-1 text-xs text-gray-500">Format: {phoneValue}</p>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -399,35 +471,101 @@ export default function RestaurantAuthScreen() {
                   </div>
                 )}
 
-                <div>
-                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password *
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                      placeholder="Enter your password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
+                {/* Password Section */}
                 {!isLogin && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                    <div className="sm:col-span-1">
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h3 className="text-lg font-gilroy-extrabold text-black border-b border-gray-200 pb-2">
+                      Security
+                    </h3>
+
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                          placeholder="Create a strong password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {formData.password && passwordErrors.length > 0 && (
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-xs font-semibold text-amber-800 mb-1">Password must contain:</p>
+                          <ul className="text-xs text-amber-700 space-y-1">
+                            {passwordErrors.map((error, index) => (
+                              <li key={index} className="flex items-center gap-2">
+                                <span className="text-amber-500">✗</span> {error}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {formData.password && passwordErrors.length === 0 && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-xs text-green-700 flex items-center gap-2">
+                            <span className="text-green-500">✓</span> Password meets all requirements
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Confirm Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          required={!isLogin}
+                          className={`w-full pl-10 pr-12 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 ${
+                            formData.confirmPassword && formData.password !== formData.confirmPassword
+                              ? "border-red-300"
+                              : formData.confirmPassword && formData.password === formData.confirmPassword
+                              ? "border-green-300"
+                              : "border-gray-200"
+                          }`}
+                          placeholder="Re-enter your password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                        <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+                      )}
+                      {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                        <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {isLogin && (
+                  <>
+                    <div>
                       <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                         Email Address *
                       </label>
@@ -446,32 +584,32 @@ export default function RestaurantAuthScreen() {
                       </div>
                     </div>
 
-                    <div className="sm:col-span-1">
-                      <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Confirm Password *
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password *
                       </label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          name="password"
+                          value={formData.password}
                           onChange={handleInputChange}
-                          required={!isLogin}
+                          required
                           className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                          placeholder="Confirm your password"
+                          placeholder="Enter your password"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
-                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {isLogin && (

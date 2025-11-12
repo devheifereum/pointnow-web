@@ -11,6 +11,7 @@ import {
   Trophy,
   LogOut,
   X,
+  Building2,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 import { useSidebar } from "./SidebarContext";
@@ -26,6 +27,7 @@ const sidebarItems: SidebarItem[] = [
   { label: "Analytics", href: (name) => `/${name}/analytics`, icon: BarChart3 },
   { label: "Transactions", href: (name) => `/${name}/transactions`, icon: History },
   { label: "Leaderboard", href: (name) => `/${name}/leaderboard`, icon: Trophy },
+  { label: "Branches", href: (name) => `/${name}/branches`, icon: Building2 },
   { label: "Settings", href: (name) => `/${name}/settings`, icon: Settings },
 ];
 

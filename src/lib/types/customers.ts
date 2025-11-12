@@ -65,6 +65,7 @@ export interface CreateCustomerWithUserPayload {
   metadata: Record<string, unknown>;
   business: {
     business_id: string;
+    branch_id: string;
     staff_id: string;
     metadata: Record<string, unknown>;
     is_active: boolean;
