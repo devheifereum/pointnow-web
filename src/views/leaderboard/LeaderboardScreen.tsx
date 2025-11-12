@@ -33,6 +33,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<CustomerPosition | null>(null);
   const [isLoadingPosition, setIsLoadingPosition] = useState(false);
+  const [isNotCustomer, setIsNotCustomer] = useState(false);
   const { user: authUser } = useAuthStore();
 
 
@@ -119,6 +120,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
     const fetchUserPosition = async () => {
       try {
         setIsLoadingPosition(true);
+        setIsNotCustomer(false);
         
         // First, get the user profile to retrieve the customer ID
         const profileResponse = await customersApi.getUserProfile(authUser.user.id);
@@ -127,6 +129,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         if (!customerId) {
           // User doesn't have a customer record yet
           setUserPosition(null);
+          setIsNotCustomer(true);
           return;
         }
         
@@ -135,13 +138,25 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
           customer_id: customerId,
         });
         setUserPosition(response.data.position);
+        setIsNotCustomer(false);
       } catch (err) {
-        // Silently fail - user might not be a customer for this business
-        // Only log if it's not a "Customer not found" error
-        if (err instanceof ApiClientError && err.message !== "Customer not found") {
+        // Check if user is not a customer for this business
+        if (err instanceof ApiClientError) {
+          const errorMessage = err.message.toLowerCase();
+          if (
+            errorMessage.includes("customer business not found") ||
+            errorMessage.includes("customer not found") ||
+            errorMessage.includes("not a customer") ||
+            err.status === 404
+          ) {
+            setIsNotCustomer(true);
+            setUserPosition(null);
+            return;
+          }
           console.error("Failed to fetch user position:", err);
         }
         setUserPosition(null);
+        setIsNotCustomer(false);
       } finally {
         setIsLoadingPosition(false);
       }
@@ -628,6 +643,23 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-white" />
                     <span className="ml-3 text-white text-sm sm:text-base">Loading your position...</span>
+                  </div>
+                </div>
+              ) : isNotCustomer ? (
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border-2 border-orange-200 p-6 sm:p-8">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="bg-orange-100 rounded-full p-4 mb-4">
+                      <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
+                    </div>
+                    <h4 className="text-lg sm:text-xl font-gilroy-extrabold text-gray-900 mb-2">
+                      You are not a customer for this restaurant
+                    </h4>
+                    <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md">
+                      Visit {restaurantData?.name || "this restaurant"} and make a purchase to join the leaderboard and start earning points!
+                    </p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700">
+                      💡 Start earning points by visiting the restaurant
+                    </div>
                   </div>
                 </div>
               ) : userPosition ? (

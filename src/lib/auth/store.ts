@@ -1,15 +1,51 @@
 "use client";
 
 import { create } from "zustand";
-import type { AuthUser, User, BackendTokens, UserRole } from "../types/auth";
+import type { AuthUser, User, BackendTokens, UserRole, PhoneRegisterUser } from "../types/auth";
 
 interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
   setAuth: (user: User, tokens: BackendTokens) => void;
+  setAuthFromPhone: (phoneUser: PhoneRegisterUser, token: string, refreshToken: string) => void;
   clearAuth: () => void;
   getAccessToken: () => string | null;
   initialize: () => void;
+}
+
+// Helper function to convert PhoneRegisterUser to User
+function convertPhoneUserToUser(phoneUser: PhoneRegisterUser): User {
+  try {
+    const emailPrefix = phoneUser.email ? phoneUser.email.split("@")[0] : "User";
+    
+    return {
+      id: phoneUser.id?.toString() || "",
+      email: phoneUser.email || "",
+      name: emailPrefix,
+      phone_number: phoneUser.phone_no || null,
+      created_at: phoneUser.created_at || new Date().toISOString(),
+      updated_at: phoneUser.updated_at || new Date().toISOString(),
+      metadata: null,
+      is_active: phoneUser.active === 1,
+      admin: null,
+      staff: null,
+      customer: {
+        name: emailPrefix,
+        phone_number: phoneUser.phone_no || "",
+        email: phoneUser.email || "",
+      },
+      user_roles: [
+        {
+          role: {
+            name: "CUSTOMER" as UserRole,
+          },
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Error converting PhoneRegisterUser to User:", error, phoneUser);
+    throw new Error("Failed to process user data");
+  }
 }
 
 // Helper function to extract roles and determine user type
@@ -64,6 +100,35 @@ export const useAuthStore = create<AuthState>()((set) => {
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token", tokens.access_token);
         localStorage.setItem("refresh_token", tokens.refresh_token);
+        
+        // Store auth state
+        localStorage.setItem(
+          "auth-storage",
+          JSON.stringify({
+            user: authUser,
+            isAuthenticated: true,
+          })
+        );
+      }
+
+      set({
+        user: authUser,
+        isAuthenticated: true,
+      });
+    },
+    setAuthFromPhone: (phoneUser: PhoneRegisterUser, token: string, refreshToken: string) => {
+      const user = convertPhoneUserToUser(phoneUser);
+      const tokens: BackendTokens = {
+        access_token: token,
+        refresh_token: refreshToken,
+        expires_in: 3600, // Default expiry, adjust if needed
+      };
+      const authUser = createAuthUser(user, tokens);
+      
+      // Store tokens in localStorage for API client
+      if (typeof window !== "undefined") {
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("refresh_token", refreshToken);
         
         // Store auth state
         localStorage.setItem(

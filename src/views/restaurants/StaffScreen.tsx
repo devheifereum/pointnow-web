@@ -282,7 +282,7 @@ export default function StaffScreen() {
       </div>
 
       {/* Create Modal */}
-      <Dialog open={showModal} onOpenChange={(open) => {
+      <Dialog open={showModal} onOpenChange={(open: boolean) => {
         if (!open) {
           setShowModal(false);
           setStaffName("");
@@ -395,7 +395,7 @@ export default function StaffScreen() {
       </Dialog>
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={!!deleteConfirm} onOpenChange={(open) => {
+      <Dialog open={!!deleteConfirm} onOpenChange={(open: boolean) => {
         if (!open) {
           setDeleteConfirm(null);
         }

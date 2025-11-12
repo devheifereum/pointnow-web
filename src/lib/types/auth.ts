@@ -75,6 +75,74 @@ export interface UserRegisterRequest {
   role: "CUSTOMER";
 }
 
+export interface PhoneRegisterRequest {
+  email: string;
+  phone_number: string;
+  role: string;
+}
+
+export interface PhoneLoginRequest {
+  phone_number: string;
+}
+
+export interface PhoneLoginResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    refresh_token: string;
+    user: PhoneRegisterUser;
+  };
+}
+
+export interface PhoneRegisterUser {
+  id: number;
+  guid: string;
+  email: string;
+  phone_no: string;
+  image_url: string | null;
+  last_login: string | null;
+  active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PhoneRegisterResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    refresh_token: string;
+    user: PhoneRegisterUser;
+  };
+}
+
+export interface VerifyOTPRequest {
+  otp_code: string;
+}
+
+export interface VerifyRegisterOTPResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    refresh_token: string;
+    user: PhoneRegisterUser;
+  };
+}
+
+export interface VerifyLoginOTPResponse {
+  message: string;
+  status: number;
+  data: {
+    user: User;
+    backend_tokens: BackendTokens;
+  };
+}
+
 export interface BusinessRegisterRequest {
   email: string;
   password: string;
