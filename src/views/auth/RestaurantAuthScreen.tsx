@@ -36,7 +36,7 @@ export default function RestaurantAuthScreen() {
 
   // Memoize the phone input component to prevent re-renders that cause focus loss
   const PhoneInputComponent = useMemo(() => {
-    return React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+    const Component = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
       (props, ref) => (
         <input
           {...props}
@@ -45,6 +45,8 @@ export default function RestaurantAuthScreen() {
         />
       )
     );
+    Component.displayName = "PhoneInputComponent";
+    return Component;
   }, []);
 
   const validatePassword = (password: string) => {
