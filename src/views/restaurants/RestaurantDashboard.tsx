@@ -13,6 +13,7 @@ import { ApiClientError } from "@/lib/api/client";
 import type { Customer } from "@/lib/types/customers";
 import type { Branch } from "@/lib/types/branches";
 import { Building2, ChevronDown } from "lucide-react";
+import { convertPhoneNumber } from "@/lib/utils";
 
 interface RestaurantDashboardProps {
   restaurantName?: string;
@@ -28,8 +29,6 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [newCustomerEmail, setNewCustomerEmail] = useState("");
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
@@ -144,8 +143,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   };
 
   const handleAddCustomer = async () => {
-    if (!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim()) {
-      setError("Please fill in all required fields");
+    if (!phoneValue?.trim()) {
+      setError("Please provide a phone number");
       return;
     }
 
@@ -159,9 +158,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
     try {
       const response = await customersApi.createWithUser({
-        name: newCustomerName.trim(),
-        email: newCustomerEmail.trim(),
-        phone_number: phoneValue || "",
+        phone_number: convertPhoneNumber(phoneValue?.trim() || ""),
         is_active: true,
         metadata: {},
         business: {
@@ -179,8 +176,6 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       setCurrentCustomer(newCustomer);
       setShowNewCustomerForm(false);
       setShowCustomerSearch(false);
-      setNewCustomerName("");
-      setNewCustomerEmail("");
       setPhoneValue(undefined);
       setSearchQuery("");
     } catch (err) {
@@ -539,7 +534,6 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                       <button
                         onClick={() => {
                           setShowNewCustomerForm(false);
-                          setNewCustomerName("");
                           setPhoneValue(undefined);
                         }}
                         className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
@@ -549,39 +543,6 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     </div>
 
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Customer Name *
-                        </label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="text"
-                            value={newCustomerName}
-                            onChange={(e) => setNewCustomerName(e.target.value)}
-                            placeholder="Enter customer name"
-                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                            autoFocus
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Email *
-                        </label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="email"
-                            value={newCustomerEmail}
-                            onChange={(e) => setNewCustomerEmail(e.target.value)}
-                            placeholder="Enter email address"
-                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                          />
-                        </div>
-                      </div>
-
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Phone Number *
@@ -646,7 +607,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
                       <button
                         onClick={handleAddCustomer}
-                        disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || !selectedBranchId || isProcessing}
+                        disabled={!phoneValue?.trim() || !selectedBranchId || isProcessing}
                         className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                       >
                         {isProcessing ? (

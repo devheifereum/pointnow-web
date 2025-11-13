@@ -43,7 +43,7 @@ export interface StaffsResponse {
 
 export interface CreateStaffPayload {
   email: string;
-  name: string;
+  password: string;
   phone_number: string;
   business_id: string;
 }

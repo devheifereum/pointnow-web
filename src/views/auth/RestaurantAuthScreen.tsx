@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import { authApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
+import { convertPhoneNumber } from "@/lib/utils";
 
 export default function RestaurantAuthScreen() {
   const router = useRouter();
@@ -136,7 +137,7 @@ export default function RestaurantAuthScreen() {
         const response = await authApi.registerBusiness({
           email: formData.email.trim(),
           password: formData.password,
-          phone_number: phoneValue.trim(),
+          phone_number: convertPhoneNumber(phoneValue.trim()),
           role: "ADMIN",
           is_active: true,
           metadata: {},

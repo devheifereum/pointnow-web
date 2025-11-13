@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Save, User, Mail, Phone } from "lucide-react";
+import { Plus, Trash2, Loader2, Save, User, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { staffApi } from "@/lib/api/staff";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
+import { convertPhoneNumber } from "@/lib/utils";
 import type { Staff } from "@/lib/types/staff";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -31,8 +33,9 @@ export default function StaffScreen() {
   
   // Create modal state
   const [showModal, setShowModal] = useState(false);
-  const [staffName, setStaffName] = useState("");
   const [staffEmail, setStaffEmail] = useState("");
+  const [staffPassword, setStaffPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -96,36 +99,49 @@ export default function StaffScreen() {
   };
 
   const handleCreate = () => {
-    setStaffName("");
     setStaffEmail("");
+    setStaffPassword("");
     setPhoneValue(undefined);
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!staffName.trim() || !staffEmail.trim() || !phoneValue?.trim() || !businessId) return;
+    if (!staffEmail.trim() || !staffPassword.trim() || !phoneValue?.trim() || !businessId) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
       await staffApi.create({
-        name: staffName.trim(),
         email: staffEmail.trim(),
-        phone_number: phoneValue.trim(),
+        password: staffPassword,
+        phone_number: convertPhoneNumber(phoneValue.trim()),
         business_id: businessId,
       });
 
+      toast.success("Staff added successfully!", {
+        description: `Staff member ${staffEmail} has been created`,
+        duration: 4000,
+      });
+
       setShowModal(false);
-      setStaffName("");
       setStaffEmail("");
+      setStaffPassword("");
       setPhoneValue(undefined);
       fetchStaffs();
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setError(err.message || "Failed to create staff");
+        const errorMessage = err.message || "Failed to create staff";
+        setError(errorMessage);
+        toast.error("Failed to create staff", {
+          description: errorMessage,
+        });
       } else {
-        setError("An unexpected error occurred");
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to create staff", {
+          description: errorMessage,
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -140,13 +156,27 @@ export default function StaffScreen() {
 
     try {
       await staffApi.delete(staffId);
+      
+      toast.success("Staff deleted successfully!", {
+        description: "Staff member has been removed from your business",
+        duration: 4000,
+      });
+
       setDeleteConfirm(null);
       fetchStaffs();
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setError(err.message || "Failed to delete staff");
+        const errorMessage = err.message || "Failed to delete staff";
+        setError(errorMessage);
+        toast.error("Failed to delete staff", {
+          description: errorMessage,
+        });
       } else {
-        setError("An unexpected error occurred");
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to delete staff", {
+          description: errorMessage,
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -285,8 +315,8 @@ export default function StaffScreen() {
       <Dialog open={showModal} onOpenChange={(open: boolean) => {
         if (!open) {
           setShowModal(false);
-          setStaffName("");
           setStaffEmail("");
+          setStaffPassword("");
           setPhoneValue(undefined);
         }
       }}>
@@ -301,23 +331,6 @@ export default function StaffScreen() {
           <div className="space-y-4 py-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Name *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={staffName}
-                  onChange={(e) => setStaffName(e.target.value)}
-                  placeholder="e.g., Bukhari"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email *
               </label>
               <div className="relative">
@@ -328,7 +341,31 @@ export default function StaffScreen() {
                   onChange={(e) => setStaffEmail(e.target.value)}
                   placeholder="e.g., bukhari@gmail.com"
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                  autoFocus
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password *
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={staffPassword}
+                  onChange={(e) => setStaffPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 
@@ -365,8 +402,8 @@ export default function StaffScreen() {
             <button
               onClick={() => {
                 setShowModal(false);
-                setStaffName("");
                 setStaffEmail("");
+                setStaffPassword("");
                 setPhoneValue(undefined);
               }}
               className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
@@ -375,7 +412,7 @@ export default function StaffScreen() {
             </button>
             <button
               onClick={handleSave}
-              disabled={!staffName.trim() || !staffEmail.trim() || !phoneValue?.trim() || isSubmitting}
+              disabled={!staffEmail.trim() || !staffPassword.trim() || !phoneValue?.trim() || isSubmitting}
               className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
