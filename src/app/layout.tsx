@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 // Note: Gilroy is not available on Google Fonts, so we'll use Inter as a fallback
 // and add Gilroy via CSS import
@@ -27,6 +28,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

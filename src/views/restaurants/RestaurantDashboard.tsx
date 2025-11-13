@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { User, Phone, X, Plus, Search, Mail, Loader2 } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { toast } from "sonner";
 import { customersApi } from "@/lib/api/customers";
 import { transactionsApi } from "@/lib/api/transactions";
 import { branchesApi } from "@/lib/api/branches";
@@ -219,6 +220,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setError(null);
 
     try {
+      // Create the transaction
       await transactionsApi.create({
         business_id: businessId,
         customer_id: currentCustomer.id,
@@ -227,22 +229,55 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         employee_id: staffId,
       });
 
-      // Refresh customer data to get updated points
-      const customersResponse = await customersApi.search({
-        business_id: businessId,
-        limit: 100,
-        query: searchQuery.trim() || undefined,
-      });
-      const updatedCustomers = customersResponse.data.customers || [];
-      setCustomers(updatedCustomers);
-      const updatedCustomer = updatedCustomers.find((c) => c.id === currentCustomer.id) || currentCustomer;
-      setCurrentCustomer(updatedCustomer);
-      setPointsInput("");
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message || "Failed to process transaction");
+      // Calculate the new points (current points + transaction amount)
+      const currentPoints = currentCustomer.total_points ?? currentCustomer.points ?? 0;
+      const finalPoints = currentPoints + amount;
+
+      // Show success toast IMMEDIATELY after transaction succeeds (most important)
+      if (type === "EARN") {
+        toast.success(`Successfully added ${Math.abs(amount)} points!`, {
+          description: `Customer now has ${finalPoints} points`,
+          duration: 4000,
+        });
       } else {
-        setError("An unexpected error occurred");
+        toast.success(`Successfully subtracted ${Math.abs(amount)} points!`, {
+          description: `Customer now has ${finalPoints} points`,
+          duration: 4000,
+        });
+      }
+
+      // Reset customer selection and input after showing toast
+      setCurrentCustomer(null);
+      setPointsInput("");
+      setSearchQuery("");
+      setShowCustomerSearch(false); // Close the customer search dropdown
+
+      // Refetch customers to refresh the list (use getAll since query is reset)
+      try {
+        const customersResponse = await customersApi.getAll({
+          business_id: businessId,
+          limit: 100,
+        });
+        const updatedCustomers = customersResponse.data.customers || [];
+        setCustomers(updatedCustomers);
+      } catch (refreshError) {
+        // Silently fail refresh - transaction already succeeded
+        console.log("Failed to refresh customer list, but transaction succeeded");
+      }
+    } catch (err) {
+      // Only show error if the transaction itself failed
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to process transaction";
+        setError(errorMessage);
+        toast.error("Transaction failed", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Transaction failed", {
+          description: errorMessage,
+        });
       }
     } finally {
       setIsProcessing(false);

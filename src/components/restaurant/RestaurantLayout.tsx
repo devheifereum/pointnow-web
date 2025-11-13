@@ -43,7 +43,7 @@ function RestaurantLayoutContent({ children }: RestaurantLayoutProps) {
                 <Menu className="w-5 h-5 text-gray-700" />
               </button>
               <h2 className="text-lg xl:text-xl font-gilroy-extrabold text-black truncate">
-                Restaurant Dashboard
+                Business Dashboard
               </h2>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
