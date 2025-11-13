@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import {
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 import { useSidebar } from "./SidebarContext";
+import { businessApi } from "@/lib/api/business";
 
 interface SidebarItem {
   label: string;
@@ -37,15 +38,40 @@ export default function RestaurantSidebar() {
   const pathname = usePathname();
   const params = useParams();
   const router = useRouter();
-  const { clearAuth } = useAuthStore();
+  const { clearAuth, user } = useAuthStore();
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useSidebar();
   const restaurantName = params?.["restaurant-name"] as string || "";
+  const [businessName, setBusinessName] = useState<string>("");
+  const businessId = user?.businessId || "";
+
+  useEffect(() => {
+    if (businessId) {
+      fetchBusinessName();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId]);
+
+  const fetchBusinessName = async () => {
+    if (!businessId) return;
+    
+    try {
+      const response = await businessApi.getById(businessId);
+      setBusinessName(response.data.business.name || "");
+    } catch (err) {
+      console.error("Failed to fetch business name:", err);
+      // Fallback to URL parameter if API fails
+      setBusinessName(restaurantName ? decodeURIComponent(restaurantName).replace(/-/g, " ") : "");
+    }
+  };
 
   const handleLogout = () => {
     clearAuth();
     setIsMobileMenuOpen(false);
     router.push("/home");
   };
+
+  // Use business name from API if available, otherwise fallback to URL parameter
+  const displayName = businessName || (restaurantName ? decodeURIComponent(restaurantName).replace(/-/g, " ") : "Restaurant");
 
   return (
     <>
@@ -75,7 +101,7 @@ export default function RestaurantSidebar() {
               <div className="ml-4 xl:hidden min-w-0 flex-1">
                 <h1 className="text-xl font-gilroy-black text-black truncate">PointNow</h1>
                 <p className="text-sm text-gray-500 truncate">
-                  {restaurantName ? decodeURIComponent(restaurantName).replace(/-/g, " ") : "Restaurant"}
+                  {displayName}
                 </p>
               </div>
             </Link>

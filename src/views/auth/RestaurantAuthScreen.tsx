@@ -265,7 +265,7 @@ export default function RestaurantAuthScreen() {
                           href="/auth?mode=restaurant"
                           className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer bg-[#7bc74d] text-white shadow-sm"
                         >
-                          Restaurant
+                          Business
                         </Link>
                       </div>
                     </div>
