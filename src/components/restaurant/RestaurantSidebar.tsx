@@ -20,7 +20,7 @@ import { businessApi } from "@/lib/api/business";
 
 interface SidebarItem {
   label: string;
-  href: (restaurantName: string) => string;
+  href: (businessName: string) => string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -40,7 +40,7 @@ export default function RestaurantSidebar() {
   const router = useRouter();
   const { clearAuth, user } = useAuthStore();
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useSidebar();
-  const restaurantName = params?.["restaurant-name"] as string || "";
+  const businessNameParam = params?.["business-name"] as string || "";
   const [businessName, setBusinessName] = useState<string>("");
   const businessId = user?.businessId || "";
 
@@ -60,7 +60,7 @@ export default function RestaurantSidebar() {
     } catch (err) {
       console.error("Failed to fetch business name:", err);
       // Fallback to URL parameter if API fails
-      setBusinessName(restaurantName ? decodeURIComponent(restaurantName).replace(/-/g, " ") : "");
+      setBusinessName(businessNameParam ? decodeURIComponent(businessNameParam).replace(/-/g, " ") : "");
     }
   };
 
@@ -71,7 +71,7 @@ export default function RestaurantSidebar() {
   };
 
   // Use business name from API if available, otherwise fallback to URL parameter
-  const displayName = businessName || (restaurantName ? decodeURIComponent(restaurantName).replace(/-/g, " ") : "Restaurant");
+  const displayName = businessName || (businessNameParam ? decodeURIComponent(businessNameParam).replace(/-/g, " ") : "Business");
 
   return (
     <>
@@ -91,7 +91,7 @@ export default function RestaurantSidebar() {
           {/* Logo/Header */}
           <div className="p-4 xl:p-6 border-b border-gray-200 flex items-center justify-between w-full min-w-0">
             <Link 
-              href={`/${restaurantName}/dashboard`} 
+              href={`/${businessNameParam}/dashboard`} 
               className="flex items-center flex-1 min-w-0"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -119,7 +119,7 @@ export default function RestaurantSidebar() {
           <nav className="flex-1 p-3 xl:p-4 space-y-1 xl:space-y-2 overflow-y-auto overflow-x-hidden w-full min-w-0">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
-              const href = item.href(restaurantName);
+              const href = item.href(businessNameParam);
               const isActive = pathname === href;
               return (
                 <Link

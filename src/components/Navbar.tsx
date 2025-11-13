@@ -17,40 +17,40 @@ export default function Navbar() {
   const router = useRouter();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
+  const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   
   // Initialize auth store on mount to ensure localStorage is loaded
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  // Fetch restaurant name from businessId if user is admin/staff
+  // Fetch business name from businessId if user is admin/staff
   useEffect(() => {
-    const fetchRestaurantSlug = async () => {
+    const fetchBusinessSlug = async () => {
       if (user?.businessId && (user.isAdmin || user.isStaff)) {
         try {
           const response = await businessApi.getAll({ limit: 100 });
           const businesses = response.data.businesses;
           const matchingBusiness = businesses.find(b => b.id === user.businessId);
           if (matchingBusiness) {
-            setRestaurantSlug(createSlug(matchingBusiness.name));
+            setBusinessSlug(createSlug(matchingBusiness.name));
           }
         } catch (err) {
-          console.error("Failed to fetch restaurant:", err);
+          console.error("Failed to fetch business:", err);
         }
       }
     };
 
     if (user?.businessId) {
-      fetchRestaurantSlug();
+      fetchBusinessSlug();
     } else {
-      setRestaurantSlug(null);
+      setBusinessSlug(null);
     }
   }, [user?.businessId, user?.isAdmin, user?.isStaff]);
 
   const handleDashboardClick = () => {
-    if (user?.businessId && restaurantSlug && (user.isAdmin || user.isStaff)) {
-      router.push(`/${restaurantSlug}/dashboard`);
+    if (user?.businessId && businessSlug && (user.isAdmin || user.isStaff)) {
+      router.push(`/${businessSlug}/dashboard`);
     } else {
       router.push("/dashboard");
     }
@@ -72,7 +72,7 @@ export default function Navbar() {
   
   const navLinks = [
     { label: "Home", href: "/home", icon: Home },
-    { label: "Businesses", href: "/restaurants", icon: Store },
+    { label: "Businesses", href: "/businesses", icon: Store },
     { label: "Pricing", href: "/pricing", icon: DollarSign },
   ];
 
@@ -222,7 +222,7 @@ export default function Navbar() {
                 <div className="flex-1 text-left">
                   <p className="font-gilroy-extrabold text-white">Dashboard</p>
                   <p className="text-xs text-white/80">
-                    {user?.businessId && (user.isAdmin || user.isStaff) ? "Restaurant dashboard" : "Merchant access"}
+                    {user?.businessId && (user.isAdmin || user.isStaff) ? "Business dashboard" : "Merchant access"}
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-white/80" />

@@ -232,7 +232,7 @@ export default function PricingScreen() {
 
                     {/* CTA Button */}
                     <Link
-                      href="/auth?mode=restaurant"
+                      href="/auth?mode=business"
                       className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 inline-block text-center ${
                         plan.highlighted
                           ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
@@ -315,13 +315,13 @@ export default function PricingScreen() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/auth?mode=restaurant"
+                  href="/auth?mode=business"
                   className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
                 >
                   Start Free Trial
                 </Link>
                 <Link
-                  href="/auth?mode=restaurant"
+                  href="/auth?mode=business"
                   className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20 inline-block text-center"
                 >
                   Schedule Demo

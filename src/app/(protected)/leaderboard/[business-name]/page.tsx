@@ -2,13 +2,13 @@ import LeaderboardScreen from "@/views/leaderboard/LeaderboardScreen";
 
 interface LeaderboardPageProps {
   params: Promise<{
-    "restaurant-name": string;
+    "business-name": string;
   }>;
 }
 
 export default async function LeaderboardPage({ params }: LeaderboardPageProps) {
   const resolvedParams = await params;
-  const restaurantName = decodeURIComponent(resolvedParams["restaurant-name"]);
+  const businessName = decodeURIComponent(resolvedParams["business-name"]);
   
-  return <LeaderboardScreen restaurantName={restaurantName} />;
+  return <LeaderboardScreen restaurantName={businessName} />;
 }

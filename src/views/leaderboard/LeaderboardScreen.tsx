@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2, LogIn, ArrowRight } from "lucide-react";
+import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
@@ -27,7 +27,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   const [timeFilter, setTimeFilter] = useState<"all-time" | "monthly" | "weekly">("all-time");
   const [searchQuery, setSearchQuery] = useState("");
   const [leaderboardData, setLeaderboardData] = useState<Customer[]>([]);
-  const [restaurantData, setRestaurantData] = useState<Business | null>(null);
+  const [businessData, setBusinessData] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -48,15 +48,15 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         );
         
         if (matchingBusiness) {
-          setRestaurantData(matchingBusiness);
+          setBusinessData(matchingBusiness);
           setBusinessId(matchingBusiness.id);
         } else {
-          setError("Restaurant not found");
+          setError("Business not found");
           setIsLoading(false);
         }
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setError(err.message || "Failed to load restaurant");
+          setError(err.message || "Failed to load business");
         } else {
           setError("An unexpected error occurred");
         }
@@ -166,9 +166,23 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   }, [businessId, authUser?.user?.id]);
 
   // Helper functions for display
-  const getRestaurantEmoji = (name: string): string => {
-    const emojis = ["🏢", "🏪", "🏬", "🏭", "🏨", "🏦", "🏛️", "🏗️", "💼", "📊", "💰", "🎯", "📈"];
-    return emojis[name.length % emojis.length];
+  const getBusinessIconColor = (name: string): string => {
+    const colors = [
+      "text-blue-500",
+      "text-green-500",
+      "text-purple-500",
+      "text-orange-500",
+      "text-red-500",
+      "text-indigo-500",
+      "text-pink-500",
+      "text-cyan-500",
+      "text-yellow-500",
+      "text-teal-500",
+      "text-amber-500",
+      "text-violet-500",
+      "text-emerald-500",
+    ];
+    return colors[name.length % colors.length];
   };
 
   // Format date for display
@@ -194,10 +208,21 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
     return "Silver";
   };
 
-  // Get avatar emoji based on name
-  const getAvatar = (name: string): string => {
-    const avatars = ["👤", "👨", "👩", "🧔", "👱‍♀️", "👨‍💼", "👩‍💻", "👨‍🎓", "👩‍🔬", "👨‍⚕️"];
-    return avatars[name.length % avatars.length];
+  // Get avatar color based on name
+  const getAvatarColor = (name: string): string => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-orange-500",
+      "bg-red-500",
+      "bg-indigo-500",
+      "bg-pink-500",
+      "bg-cyan-500",
+      "bg-yellow-500",
+      "bg-teal-500",
+    ];
+    return colors[name.length % colors.length];
   };
 
   // Extended customer type for display
@@ -207,7 +232,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
     visits: number;
     lastVisit: string;
     badge: string;
-    avatar: string;
+    avatarColor: string;
     joinedDate: string;
   }
 
@@ -255,7 +280,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         visits: totalVisits,
         lastVisit: formatDate(lastVisitAt),
         badge: getBadge(totalPoints),
-        avatar: getAvatar(customer.name),
+        avatarColor: getAvatarColor(customer.name),
         joinedDate: customer.created_at 
           ? new Date(customer.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
           : "N/A",
@@ -296,15 +321,15 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Back Button */}
           <Link 
-            href="/restaurants"
+            href="/businesses"
             className="inline-flex items-center text-gray-600 hover:text-[#7bc74d] transition-colors mb-6"
           >
             <ChevronLeft className="w-5 h-5 mr-1" />
             Back to Businesses
           </Link>
 
-          {/* Restaurant Header */}
-          {isLoading && !restaurantData ? (
+          {/* Business Header */}
+          {isLoading && !businessData ? (
             <div className="relative bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-8 overflow-hidden">
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -314,7 +339,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
             <div className="bg-red-50 border border-red-200 rounded-3xl p-8 mb-8">
               <p className="text-red-600 text-center">{error}</p>
             </div>
-          ) : restaurantData ? (
+          ) : businessData ? (
             <div className="relative bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-3xl p-8 mb-8 overflow-hidden">
               <LightRays
                 count={8}
@@ -327,11 +352,11 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
               
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center">
-                  <div className="text-4xl sm:text-5xl md:text-6xl mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4">
-                    {getRestaurantEmoji(restaurantData.name)}
+                  <div className="mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                    <Building2 className={`w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 ${getBusinessIconColor(businessData.name)}`} />
                   </div>
                   <div className="text-white">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">{restaurantData.name}</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">{businessData.name}</h1>
                     <p className="text-base sm:text-lg md:text-xl opacity-90">Points Leaderboard</p>
                   </div>
                 </div>
@@ -441,7 +466,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-5xl mb-2">{filteredLeaderboard[1].avatar}</div>
+                          <div className={`w-16 h-16 rounded-full ${filteredLeaderboard[1].avatarColor} flex items-center justify-center mb-2`}>
+                            <User className="w-8 h-8 text-white" />
+                          </div>
                           <div className="absolute -top-2 -right-2">
                             {getMedalIcon(2)}
                           </div>
@@ -470,7 +497,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-6xl mb-2">{filteredLeaderboard[0].avatar}</div>
+                          <div className={`w-20 h-20 rounded-full ${filteredLeaderboard[0].avatarColor} flex items-center justify-center mb-2`}>
+                            <User className="w-10 h-10 text-white" />
+                          </div>
                           <div className="absolute -top-4 -right-4 animate-pulse">
                             {getMedalIcon(1)}
                           </div>
@@ -502,7 +531,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     <div className="relative z-10">
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="text-5xl mb-2">{filteredLeaderboard[2].avatar}</div>
+                          <div className={`w-16 h-16 rounded-full ${filteredLeaderboard[2].avatarColor} flex items-center justify-center mb-2`}>
+                            <User className="w-8 h-8 text-white" />
+                          </div>
                           <div className="absolute -top-2 -right-2">
                             {getMedalIcon(3)}
                           </div>
@@ -552,7 +583,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                           </td>
                           <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="text-2xl lg:text-3xl mr-3">{customer.avatar}</div>
+                              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full ${customer.avatarColor} flex items-center justify-center mr-3 flex-shrink-0`}>
+                                <User className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                              </div>
                               <div>
                                 <div className="text-sm font-gilroy-extrabold text-gray-900">{customer.name}</div>
                                 <div className="text-xs text-gray-500">Joined {customer.joinedDate}</div>
@@ -589,7 +622,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                         <div className="flex-shrink-0">
                           {getMedalIcon(customer.rank)}
                         </div>
-                        <div className="text-3xl">{customer.avatar}</div>
+                        <div className={`w-12 h-12 rounded-full ${customer.avatarColor} flex items-center justify-center flex-shrink-0`}>
+                          <User className="w-6 h-6 text-white" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-base font-gilroy-extrabold text-gray-900 truncate">{customer.name}</div>
                           <div className="text-xs text-gray-500">Joined {customer.joinedDate}</div>
@@ -622,7 +657,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
           {/* No Results */}
           {!isLoading && filteredLeaderboard.length === 0 && (
             <div className="text-center py-16 px-4">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="mb-4 flex justify-center">
+                <Search className="w-16 h-16 text-gray-400" />
+              </div>
               <h3 className="text-xl sm:text-2xl font-gilroy-extrabold text-black mb-2">No customers found</h3>
               <p className="text-gray-600 mb-6 text-sm sm:text-base">Try adjusting your search criteria</p>
               <button
@@ -648,7 +685,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     Login to see your position
                   </h4>
                   <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md">
-                    Sign in to check your ranking on the leaderboard and track your points at {restaurantData?.name || "this business"}!
+                    Sign in to check your ranking on the leaderboard and track your points at {businessData?.name || "this business"}!
                   </p>
                   <Link href="/auth?mode=user">
                     <button className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
@@ -682,10 +719,11 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                     You are not a customer for this business
                   </h4>
                   <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md">
-                    Visit {restaurantData?.name || "this business"} and make a purchase to join the leaderboard and start earning points!
+                    Visit {businessData?.name || "this business"} and make a purchase to join the leaderboard and start earning points!
                   </p>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700">
-                    💡 Start earning points by visiting the business
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-700 flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-yellow-500" />
+                    <span>Start earning points by visiting the business</span>
                   </div>
                 </div>
               </div>
@@ -698,7 +736,9 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                           <div className="text-2xl sm:text-3xl font-gilroy-black text-white">#{userPosition.position}</div>
                         </div>
                         <div className="flex items-center flex-1 min-w-0">
-                          <div className="text-3xl sm:text-4xl md:text-5xl mr-3 sm:mr-4 flex-shrink-0">👤</div>
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                            <User className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
+                          </div>
                           <div className="text-white min-w-0">
                             <div className="text-base sm:text-lg md:text-xl font-gilroy-extrabold mb-1 truncate">
                               {authUser.user.name || "You"}

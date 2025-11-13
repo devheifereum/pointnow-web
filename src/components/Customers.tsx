@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, Building2 } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { LightRays } from "@/components/ui/light-rays";
 import { businessApi } from "@/lib/api/business";
@@ -14,10 +14,24 @@ const createSlug = (name: string): string => {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 };
 
-// Helper function to get emoji based on business name
-const getBusinessEmoji = (name: string): string => {
-  const emojis = ["🏢", "🏪", "🏬", "🏭", "🏨", "🏦", "🏛️", "🏗️", "💼", "📊", "💰", "🎯", "📈"];
-  return emojis[name.length % emojis.length];
+// Helper function to get business icon color based on business name
+const getBusinessIconColor = (name: string): string => {
+  const colors = [
+    "text-blue-500",
+    "text-green-500",
+    "text-purple-500",
+    "text-orange-500",
+    "text-red-500",
+    "text-indigo-500",
+    "text-pink-500",
+    "text-cyan-500",
+    "text-yellow-500",
+    "text-teal-500",
+    "text-amber-500",
+    "text-violet-500",
+    "text-emerald-500",
+  ];
+  return colors[name.length % colors.length];
 };
 
 // Helper function to get ray color
@@ -34,22 +48,22 @@ const getRayColor = (index: number): string => {
 };
 
 export default function Restaurants() {
-  const [restaurants, setRestaurants] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRestaurants = async () => {
+    const fetchBusinesses = async () => {
       try {
         setIsLoading(true);
         setError(null);
         const response = await businessApi.getAll({ page: 1, limit: 6 });
         // Only show active businesses
         const activeBusinesses = response.data.businesses.filter(business => business.is_active);
-        setRestaurants(activeBusinesses);
+        setBusinesses(activeBusinesses);
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setError(err.message || "Failed to load restaurants");
+          setError(err.message || "Failed to load businesses");
         } else {
           setError("An unexpected error occurred");
         }
@@ -58,7 +72,7 @@ export default function Restaurants() {
       }
     };
 
-    fetchRestaurants();
+    fetchBusinesses();
   }, []);
 
   if (isLoading) {
@@ -67,7 +81,7 @@ export default function Restaurants() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#7bc74d]" />
-            <p className="mt-4 text-gray-600">Loading restaurants...</p>
+            <p className="mt-4 text-gray-600">Loading businesses...</p>
           </div>
         </div>
       </section>
@@ -109,19 +123,19 @@ export default function Restaurants() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {restaurants.map((restaurant, index) => {
-            const slug = createSlug(restaurant.name);
-            const emoji = getBusinessEmoji(restaurant.name);
+          {businesses.map((business, index) => {
+            const slug = createSlug(business.name);
+            const iconColor = getBusinessIconColor(business.name);
             const rayColor = getRayColor(index);
             
             return (
               <Link
-                key={restaurant.id}
+                key={business.id}
                 href={`/leaderboard/${slug}`}
                 className="block"
               >
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-white/20">
-                  {/* Restaurant Image with Light Rays */}
+                  {/* Business Image with Light Rays */}
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                     {/* Light Rays Effect */}
                     <LightRays
@@ -133,31 +147,33 @@ export default function Restaurants() {
                       className="absolute inset-0"
                     />
                     
-                    <div className="text-6xl relative z-10">{emoji}</div>
+                    <div className={`relative z-10 ${iconColor}`}>
+                      <Building2 className="w-16 h-16" />
+                    </div>
                     
                     <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full z-20">
-                      <span className="text-sm font-semibold text-gray-700">{restaurant.registration_number}</span>
+                      <span className="text-sm font-semibold text-gray-700">{business.registration_number}</span>
                     </div>
                   </div>
 
-                  {/* Restaurant Info */}
+                  {/* Business Info */}
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="text-xl font-gilroy-extrabold text-black mb-1">
-                          {restaurant.name}
+                          {business.name}
                         </h3>
-                        {restaurant.description && (
-                          <p className="text-gray-600 text-sm line-clamp-2">{restaurant.description}</p>
+                        {business.description && (
+                          <p className="text-gray-600 text-sm line-clamp-2">{business.description}</p>
                         )}
                       </div>
                     </div>
 
                     {/* Address */}
-                    {restaurant.address && (
+                    {business.address && (
                       <div className="flex items-start gap-1 mb-4 text-sm text-gray-600">
                         <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{restaurant.address}</span>
+                        <span className="line-clamp-1">{business.address}</span>
                       </div>
                     )}
 
@@ -174,7 +190,7 @@ export default function Restaurants() {
 
         {/* View All Button */}
         <div className="text-center mt-12">
-          <Link href="/restaurants">
+          <Link href="/businesses">
             <button className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white font-semibold px-8 py-3 rounded-xl transition-colors">
               View All Partner Merchants
             </button>

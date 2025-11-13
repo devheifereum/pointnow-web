@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "PointNow - Loyalty Points Management",
-  description: "Loyalty points management for restaurants and retail stores. Customers check points, merchants reward loyalty. It's free for unlimited customers.",
+  description: "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. It's free for unlimited customers.",
 };
 
 export default function RootLayout({

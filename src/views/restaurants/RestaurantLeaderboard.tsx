@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Medal, Award, Crown, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Trophy, Medal, Award, Crown, Search, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
@@ -124,6 +124,21 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
     // Use total_visits from leaderboard API
     const visits = customer.total_visits ?? customer.visits ?? 0;
 
+    // Get avatar color based on name
+    const avatarColors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-orange-500",
+      "bg-red-500",
+      "bg-indigo-500",
+      "bg-pink-500",
+      "bg-cyan-500",
+      "bg-yellow-500",
+      "bg-teal-500",
+    ];
+    const avatarColor = avatarColors[(customer.name || "").length % avatarColors.length];
+
     return {
       rank,
       name: customer.name || "Unknown Customer",
@@ -133,7 +148,7 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
       joinedDate,
       lastVisit,
       badge,
-      avatar: "👤", // Default avatar, you can customize based on customer data
+      avatarColor,
     };
   };
 
@@ -246,7 +261,9 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
                           </td>
                           <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="text-2xl lg:text-3xl mr-2 lg:mr-3">{entry.avatar}</div>
+                              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full ${entry.avatarColor} flex items-center justify-center mr-2 lg:mr-3 flex-shrink-0`}>
+                                <User className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                              </div>
                               <div>
                                 <div className="text-sm font-gilroy-extrabold text-black">{entry.name}</div>
                                 <div className="text-xs text-gray-500">{entry.phone}</div>
@@ -291,7 +308,9 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
                         <div className="flex-shrink-0">
                           {getMedalIcon(entry.rank)}
                         </div>
-                        <div className="text-2xl">{entry.avatar}</div>
+                        <div className={`w-10 h-10 rounded-full ${entry.avatarColor} flex items-center justify-center flex-shrink-0`}>
+                          <User className="w-5 h-5 text-white" />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-base font-semibold text-black truncate">{entry.name}</h3>
                           <p className="text-xs text-gray-600">{entry.phone}</p>

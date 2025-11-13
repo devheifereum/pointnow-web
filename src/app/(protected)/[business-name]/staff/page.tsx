@@ -1,13 +1,13 @@
 import RestaurantLayout from "@/components/restaurant/RestaurantLayout";
 import StaffScreen from "@/views/restaurants/StaffScreen";
 
-interface RestaurantStaffPageProps {
+interface BusinessStaffPageProps {
   params: Promise<{
-    "restaurant-name": string;
+    "business-name": string;
   }>;
 }
 
-export default async function RestaurantStaffPage({ params }: RestaurantStaffPageProps) {
+export default async function BusinessStaffPage({ params }: BusinessStaffPageProps) {
   await params; // Resolve params for Next.js
   
   return (

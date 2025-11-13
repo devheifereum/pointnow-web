@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, MapPin, ChevronLeft, ChevronRight, Building2, Store, ShoppingBag } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import Navbar from "@/components/Navbar";
@@ -128,8 +128,8 @@ export default function RestaurantProfile({ restaurantName }: RestaurantProfileP
                       key={index}
                       className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                     >
-                      <div className="w-full h-full flex items-center justify-center text-2xl">
-                        {index === 0 ? "🏢" : index === 1 ? "🏪" : "🏬"}
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        {index === 0 ? <Building2 className="w-8 h-8" /> : index === 1 ? <Store className="w-8 h-8" /> : <ShoppingBag className="w-8 h-8" />}
                       </div>
                     </div>
                   ))}

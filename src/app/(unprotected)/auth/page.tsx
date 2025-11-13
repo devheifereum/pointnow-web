@@ -7,7 +7,7 @@ import UserAuthScreen from "@/views/auth/UserAuthScreen";
 
 function AuthContent() {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") || "restaurant"; // Default to restaurant mode
+  const mode = searchParams.get("mode") || "business"; // Default to business mode
 
   return mode === "user" ? <UserAuthScreen /> : <RestaurantAuthScreen />;
 }

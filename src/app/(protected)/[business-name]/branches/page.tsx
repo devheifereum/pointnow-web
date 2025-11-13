@@ -1,13 +1,13 @@
 import RestaurantLayout from "@/components/restaurant/RestaurantLayout";
 import BranchesScreen from "@/views/restaurants/BranchesScreen";
 
-interface RestaurantBranchesPageProps {
+interface BusinessBranchesPageProps {
   params: Promise<{
-    "restaurant-name": string;
+    "business-name": string;
   }>;
 }
 
-export default async function RestaurantBranchesPage({ params }: RestaurantBranchesPageProps) {
+export default async function BusinessBranchesPage({ params }: BusinessBranchesPageProps) {
   await params; // Resolve params for Next.js
   
   return (

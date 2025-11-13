@@ -469,10 +469,10 @@ export default function UserAuthScreen() {
                             User
                           </Link>
                           <Link
-                            href="/auth?mode=restaurant"
+                            href="/auth?mode=business"
                             className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer text-gray-600 hover:text-gray-900"
                           >
-                            Restaurant
+                            Business
                           </Link>
                         </div>
                       </div>
