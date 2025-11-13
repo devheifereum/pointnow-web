@@ -27,11 +27,11 @@ function RestaurantLayoutContent({ children }: RestaurantLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       <RestaurantSidebar />
-      <main className="xl:ml-20 min-h-screen">
+      <main className="xl:ml-20 h-screen flex flex-col overflow-hidden">
         {/* Top Header with Logout */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between pl-3 sm:pl-4 xl:pl-4 pr-3 sm:pr-4 xl:pr-8 py-3 sm:py-4">
             <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
               {/* Mobile Menu Button */}
@@ -62,7 +62,7 @@ function RestaurantLayoutContent({ children }: RestaurantLayoutProps) {
             </div>
           </div>
         </header>
-        <div className="p-3 sm:p-4 md:p-6 xl:p-8">
+        <div className="p-3 sm:p-4 md:p-6 xl:p-8 overflow-y-auto flex-1">
           {children}
         </div>
       </main>

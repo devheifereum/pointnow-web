@@ -270,9 +270,9 @@ export default function BranchesScreen() {
       {/* Create/Edit Modal */}
       <Dialog open={showModal} onOpenChange={(open) => {
         if (!open) {
-          setShowModal(false);
-          setBranchName("");
-          setEditingBranch(null);
+                  setShowModal(false);
+                  setBranchName("");
+                  setEditingBranch(null);
         }
       }}>
         <DialogContent className="sm:max-w-md">
@@ -286,25 +286,25 @@ export default function BranchesScreen() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Branch Name *
-              </label>
-              <input
-                type="text"
-                value={branchName}
-                onChange={(e) => setBranchName(e.target.value)}
-                placeholder="e.g., Gombak"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
-                autoFocus
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Branch Name *
+                </label>
+                <input
+                  type="text"
+                  value={branchName}
+                  onChange={(e) => setBranchName(e.target.value)}
+                  placeholder="e.g., Gombak"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                  autoFocus
+                />
               </div>
-            )}
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
           </div>
 
           <DialogFooter>
@@ -318,23 +318,23 @@ export default function BranchesScreen() {
             >
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              disabled={!branchName.trim() || isSubmitting}
+                <button
+                  onClick={handleSave}
+                  disabled={!branchName.trim() || isSubmitting}
               className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {editingBranch ? "Update" : "Create"}
-                </>
-              )}
-            </button>
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {editingBranch ? "Update" : "Create"}
+                    </>
+                  )}
+                </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -354,30 +354,30 @@ export default function BranchesScreen() {
           </DialogHeader>
 
           <DialogFooter>
-            <button
+                <button
               onClick={() => setDeleteConfirm(null)}
               disabled={isSubmitting}
               className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
-              disabled={isSubmitting || !deleteConfirm}
+                >
+                  Cancel
+                </button>
+              <button
+                onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+                disabled={isSubmitting || !deleteConfirm}
               className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </>
-              )}
-            </button>
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

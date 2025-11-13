@@ -208,14 +208,14 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
                     : stat.changeType === "negative" 
                     ? "text-red-600" 
                     : "text-gray-600"
-                }`}>
-                  {stat.changeType === "positive" ? (
+                  }`}>
+                    {stat.changeType === "positive" ? (
                     <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : stat.changeType === "negative" ? (
                     <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : null}
-                  {stat.change}
-                </div>
+                    {stat.change}
+                  </div>
               </div>
               <h3 className="text-xl sm:text-2xl font-gilroy-black text-black mb-1">{stat.value}</h3>
               <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
@@ -270,7 +270,7 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
                     date: date.toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric' 
-                    }),
+                  }),
                     fullDate: date.toLocaleDateString('en-US', { 
                       year: 'numeric',
                       month: 'short', 
@@ -283,17 +283,17 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
@@ -310,13 +310,13 @@ export default function RestaurantAnalytics({ restaurantName }: RestaurantAnalyt
                   }}
                   labelFormatter={(label) => `Date: ${label}`}
                 />
-                <Legend 
+                <Legend
                   wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="totalPoints" 
-                  stroke="#7bc74d" 
+                <Line
+                  type="monotone"
+                  dataKey="totalPoints"
+                  stroke="#7bc74d"
                   strokeWidth={3}
                   dot={{ fill: '#7bc74d', r: 4 }}
                   activeDot={{ r: 6 }}

@@ -254,12 +254,12 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
       // Refetch customers to refresh the list (use getAll since query is reset)
       try {
-        const customersResponse = await customersApi.getAll({
-          business_id: businessId,
-          limit: 100,
-        });
-        const updatedCustomers = customersResponse.data.customers || [];
-        setCustomers(updatedCustomers);
+      const customersResponse = await customersApi.getAll({
+        business_id: businessId,
+        limit: 100,
+      });
+      const updatedCustomers = customersResponse.data.customers || [];
+      setCustomers(updatedCustomers);
       } catch (refreshError) {
         // Silently fail refresh - transaction already succeeded
         console.log("Failed to refresh customer list, but transaction succeeded");
@@ -626,20 +626,20 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                             }
                           `}} />
                           <div className="phone-input-wrapper">
-                            <PhoneInput
-                              placeholder="Enter phone number"
-                              value={phoneValue}
-                              onChange={setPhoneValue}
-                              defaultCountry="MY"
+                          <PhoneInput
+                            placeholder="Enter phone number"
+                            value={phoneValue}
+                            onChange={setPhoneValue}
+                            defaultCountry="MY"
                               international
-                              className="w-full"
-                              style={{
-                                '--PhoneInput-color--focus': '#7bc74d',
-                                '--PhoneInputCountryFlag-borderColor': 'transparent',
-                                '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                              }}
+                            className="w-full"
+                            style={{
+                              '--PhoneInput-color--focus': '#7bc74d',
+                              '--PhoneInputCountryFlag-borderColor': 'transparent',
+                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                            }}
                               inputComponent={PhoneInputComponent}
-                            />
+                          />
                           </div>
                         </div>
                       </div>
@@ -668,28 +668,28 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     <h3 className="text-xl font-gilroy-extrabold text-black mb-2">No Customer Selected</h3>
                     <p className="text-gray-600 mb-6">Select an existing customer or add a new one</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button
-                      onClick={() => {
-                        setShowCustomerSearch(true);
-                        setShowNewCustomerForm(false);
-                      }}
+                      <button
+                        onClick={() => {
+                          setShowCustomerSearch(true);
+                          setShowNewCustomerForm(false);
+                        }}
                       disabled={!selectedBranchId}
                       className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                    >
-                      <Search className="w-5 h-5" />
-                      Select Customer
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowNewCustomerForm(true);
-                        setShowCustomerSearch(false);
-                      }}
+                      >
+                        <Search className="w-5 h-5" />
+                        Select Customer
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowNewCustomerForm(true);
+                          setShowCustomerSearch(false);
+                        }}
                       disabled={!selectedBranchId}
                       className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-400 font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Add New Customer
-                    </button>
+                      >
+                        <Plus className="w-5 h-5" />
+                        Add New Customer
+                      </button>
                     </div>
                   </div>
                 )}
