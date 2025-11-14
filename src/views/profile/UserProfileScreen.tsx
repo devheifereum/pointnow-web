@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth/store";
 // import { useRouter } from "next/navigation";
-import { User, MapPin, Phone, Mail, Trophy, Store, Gift, TrendingUp, Edit2, Lock } from "lucide-react";
+import { User, MapPin, Phone, Mail, Trophy, Store, Gift, TrendingUp, Edit2, Lock, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { customersApi } from "@/lib/api/customers";
 import { usersApi } from "@/lib/api/users";
@@ -56,6 +56,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<{
     current?: string;
     new?: string;
@@ -148,6 +151,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     setPasswordErrors({});
     setIsPasswordDialogOpen(true);
   };
@@ -496,23 +502,33 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
                   Current Password
                 </label>
-                <input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => {
-                    setCurrentPassword(e.target.value);
-                    if (passwordErrors.current) {
-                      setPasswordErrors({ ...passwordErrors, current: undefined });
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.current ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Enter current password"
-                  disabled={isUpdatingPassword}
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value);
+                      if (passwordErrors.current) {
+                        setPasswordErrors({ ...passwordErrors, current: undefined });
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.current ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter current password"
+                    disabled={isUpdatingPassword}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.current && (
                   <p className="text-sm text-red-600">{passwordErrors.current}</p>
                 )}
@@ -522,26 +538,36 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
                   New Password
                 </label>
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    if (passwordErrors.new) {
-                      setPasswordErrors({ ...passwordErrors, new: undefined });
-                    }
-                    // Clear confirm error if passwords match
-                    if (passwordErrors.confirm && e.target.value === confirmPassword) {
-                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.new ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Enter new password"
-                  disabled={isUpdatingPassword}
-                />
+                <div className="relative">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (passwordErrors.new) {
+                        setPasswordErrors({ ...passwordErrors, new: undefined });
+                      }
+                      // Clear confirm error if passwords match
+                      if (passwordErrors.confirm && e.target.value === confirmPassword) {
+                        setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.new ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter new password"
+                    disabled={isUpdatingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.new && (
                   <p className="text-sm text-red-600">{passwordErrors.new}</p>
                 )}
@@ -551,27 +577,37 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
                   Confirm New Password
                 </label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (passwordErrors.confirm) {
-                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isUpdatingPassword) {
-                      handleUpdatePassword();
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.confirm ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Confirm new password"
-                  disabled={isUpdatingPassword}
-                />
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (passwordErrors.confirm) {
+                        setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !isUpdatingPassword) {
+                        handleUpdatePassword();
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.confirm ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Confirm new password"
+                    disabled={isUpdatingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.confirm && (
                   <p className="text-sm text-red-600">{passwordErrors.confirm}</p>
                 )}
@@ -585,6 +621,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   setCurrentPassword("");
                   setNewPassword("");
                   setConfirmPassword("");
+                  setShowCurrentPassword(false);
+                  setShowNewPassword(false);
+                  setShowConfirmPassword(false);
                   setPasswordErrors({});
                 }}
                 disabled={isUpdatingPassword}
@@ -854,23 +893,33 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
                   Current Password
                 </label>
-                <input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => {
-                    setCurrentPassword(e.target.value);
-                    if (passwordErrors.current) {
-                      setPasswordErrors({ ...passwordErrors, current: undefined });
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.current ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Enter current password"
-                  disabled={isUpdatingPassword}
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value);
+                      if (passwordErrors.current) {
+                        setPasswordErrors({ ...passwordErrors, current: undefined });
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.current ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter current password"
+                    disabled={isUpdatingPassword}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.current && (
                   <p className="text-sm text-red-600">{passwordErrors.current}</p>
                 )}
@@ -880,26 +929,36 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
                   New Password
                 </label>
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    if (passwordErrors.new) {
-                      setPasswordErrors({ ...passwordErrors, new: undefined });
-                    }
-                    // Clear confirm error if passwords match
-                    if (passwordErrors.confirm && e.target.value === confirmPassword) {
-                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.new ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Enter new password"
-                  disabled={isUpdatingPassword}
-                />
+                <div className="relative">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (passwordErrors.new) {
+                        setPasswordErrors({ ...passwordErrors, new: undefined });
+                      }
+                      // Clear confirm error if passwords match
+                      if (passwordErrors.confirm && e.target.value === confirmPassword) {
+                        setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.new ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Enter new password"
+                    disabled={isUpdatingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.new && (
                   <p className="text-sm text-red-600">{passwordErrors.new}</p>
                 )}
@@ -909,27 +968,37 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
                   Confirm New Password
                 </label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (passwordErrors.confirm) {
-                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isUpdatingPassword) {
-                      handleUpdatePassword();
-                    }
-                  }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
-                    passwordErrors.confirm ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Confirm new password"
-                  disabled={isUpdatingPassword}
-                />
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (passwordErrors.confirm) {
+                        setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !isUpdatingPassword) {
+                        handleUpdatePassword();
+                      }
+                    }}
+                    className={`w-full px-4 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                      passwordErrors.confirm ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="Confirm new password"
+                    disabled={isUpdatingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isUpdatingPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordErrors.confirm && (
                   <p className="text-sm text-red-600">{passwordErrors.confirm}</p>
                 )}
@@ -943,6 +1012,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   setCurrentPassword("");
                   setNewPassword("");
                   setConfirmPassword("");
+                  setShowCurrentPassword(false);
+                  setShowNewPassword(false);
+                  setShowConfirmPassword(false);
                   setPasswordErrors({});
                 }}
                 disabled={isUpdatingPassword}
