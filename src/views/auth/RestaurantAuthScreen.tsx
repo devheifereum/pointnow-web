@@ -96,15 +96,39 @@ export default function RestaurantAuthScreen() {
     try {
       if (isLogin) {
         // Login
+        const trimmedEmail = formData.email.trim();
+        if (!trimmedEmail) {
+          setError("Please provide a valid email address");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!formData.password) {
+          setError("Please enter your password");
+          setIsLoading(false);
+          return;
+        }
+
         const response = await authApi.login({
-          email: formData.email,
+          email: trimmedEmail,
           password: formData.password,
         });
 
-        setAuth(response.data.user, response.data.backend_tokens);
+        // Validate response structure
+        if (!response.data || !response.data.user || !response.data.backend_tokens) {
+          throw new Error("Invalid response from server");
+        }
+
+        const { user, backend_tokens } = response.data;
+        
+        // Validate required fields
+        if (!user.id || !backend_tokens.access_token || !backend_tokens.refresh_token) {
+          throw new Error("Invalid response from server - missing required fields");
+        }
+
+        setAuth(user, backend_tokens);
 
         // Check if user is admin or staff
-        const user = response.data.user;
         const isAdminOrStaff = user.admin || user.staff;
 
         if (isAdminOrStaff) {
@@ -122,6 +146,13 @@ export default function RestaurantAuthScreen() {
           return;
         }
 
+        const trimmedEmail = formData.email.trim();
+        if (!trimmedEmail) {
+          setError("Please provide a valid email address");
+          setIsLoading(false);
+          return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
           setError("Passwords do not match");
           setIsLoading(false);
@@ -135,7 +166,7 @@ export default function RestaurantAuthScreen() {
         }
 
         const response = await authApi.registerBusiness({
-          email: formData.email.trim(),
+          email: trimmedEmail,
           password: formData.password,
           phone_number: convertPhoneNumber(phoneValue.trim()),
           role: "ADMIN",
@@ -151,16 +182,65 @@ export default function RestaurantAuthScreen() {
           },
         });
 
-        setAuth(response.data.user, response.data.backend_tokens);
+        // Validate response structure
+        if (!response.data || !response.data.user || !response.data.backend_tokens) {
+          throw new Error("Invalid response from server");
+        }
+
+        const { user, backend_tokens } = response.data;
+        
+        // Validate required fields
+        if (!user.id || !backend_tokens.access_token || !backend_tokens.refresh_token) {
+          throw new Error("Invalid response from server - missing required fields");
+        }
+
+        setAuth(user, backend_tokens);
         
         // Redirect to restaurant dashboard
         router.push("/my-restaurant/dashboard");
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setError(err.message || "An error occurred. Please try again.");
+        const errorMessage = err.message || "";
+        const lowerErrorMessage = errorMessage.toLowerCase();
+        
+        // Check for unique constraint violation on phone_number or email
+        const isPhoneNumberExists = 
+          lowerErrorMessage.includes("unique constraint") && 
+          lowerErrorMessage.includes("phone_number");
+        
+        const isEmailExists = 
+          lowerErrorMessage.includes("unique constraint") && 
+          lowerErrorMessage.includes("email");
+        
+        // Check for duplicate account
+        const isDuplicateAccount = 
+          err.status === 409 || 
+          lowerErrorMessage.includes("already exists") ||
+          lowerErrorMessage.includes("duplicate") ||
+          isPhoneNumberExists ||
+          isEmailExists;
+
+        // Provide more specific error messages
+        if (isDuplicateAccount || isPhoneNumberExists || isEmailExists) {
+          setError("An account with this email or phone number already exists. Please try logging in instead.");
+        } else if (err.status === 400) {
+          setError("Invalid input. Please check your information and try again.");
+        } else if (err.status === 401) {
+          setError("Invalid email or password. Please try again.");
+        } else if (err.status >= 500) {
+          // Check if it's a unique constraint error in 500 response
+          if (isPhoneNumberExists || isEmailExists) {
+            setError("An account with this email or phone number already exists. Please try logging in instead.");
+          } else {
+            setError("Server error. Please try again later.");
+          }
+        } else {
+          setError(err.message || "An error occurred. Please try again.");
+        }
       } else {
-        setError("An unexpected error occurred. Please try again.");
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage || "An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);

@@ -50,7 +50,7 @@ export const authApi = {
 
   registerBusiness: async (
     data: BusinessRegisterRequest
-  ): Promise<RegisterResponse> => {
-    return api.post<RegisterResponse>("/auth/register/business", data);
+  ): Promise<EmailPasswordRegisterResponse> => {
+    return api.post<EmailPasswordRegisterResponse>("/auth/register/business", data);
   },
 };
