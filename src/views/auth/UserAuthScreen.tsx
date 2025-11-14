@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Gift, Shield } from "lucide-react";
+import { Mail, Gift, Shield, Lock } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
@@ -70,8 +70,12 @@ export default function UserAuthScreen() {
   const [showOTPScreen, setShowOTPScreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
+  const [registrationMethod, setRegistrationMethod] = useState<"phone" | "email">("phone");
   const [formData, setFormData] = useState({
     email: "",
+    password: "",
+    confirmPassword: "",
     otp: "",
     role: "CUSTOMER",
   });
@@ -124,8 +128,8 @@ export default function UserAuthScreen() {
   };
 
   /**
-   * Handles initial form submission (before OTP verification)
-   * Validates input and transitions to OTP screen
+   * Handles initial form submission (before OTP verification for phone, or direct registration for email/password)
+   * Validates input and transitions to OTP screen (phone) or completes registration (email/password)
    */
   const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,72 +138,188 @@ export default function UserAuthScreen() {
 
     try {
       if (isLogin) {
-        // Login flow - validate phone number
-        if (!isValidPhoneNumber(loginPhoneValue)) {
-          setError("Please provide a valid phone number");
-          setIsLoading(false);
-          return;
+        // Login flow
+        if (loginMethod === "phone") {
+          // Phone OTP login
+          if (!isValidPhoneNumber(loginPhoneValue)) {
+            setError("Please provide a valid phone number");
+            setIsLoading(false);
+            return;
+          }
+
+          // Extract only digits (remove + and country code)
+          const phoneDigits = extractPhoneDigits(loginPhoneValue);
+          
+          // Call login endpoint to send OTP - API: POST /auth/login/phone_number
+          await authApi.loginWithPhone({
+            phone_number: phoneDigits,
+          });
+
+          // Store data and show OTP screen
+          setPendingAuthData({
+            phone: phoneDigits,
+            isLogin: true,
+          });
+          setShowOTPScreen(true);
+        } else {
+          // Email/Password login
+          const trimmedEmail = formData.email.trim();
+          if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
+            setError("Please provide a valid email address");
+            setIsLoading(false);
+            return;
+          }
+
+          if (!formData.password || formData.password.length < 6) {
+            setError("Please enter your password");
+            setIsLoading(false);
+            return;
+          }
+
+          // Call email/password login endpoint - API: POST /auth/login
+          const response = await authApi.login({
+            email: trimmedEmail,
+            password: formData.password,
+          });
+
+          // Handle response - returns User format with backend_tokens, so use setAuth
+          if (response.data && response.data.user && response.data.backend_tokens) {
+            const { user, backend_tokens } = response.data;
+            
+            // Validate required fields
+            if (!user.id || !backend_tokens.access_token || !backend_tokens.refresh_token) {
+              throw new Error("Invalid response from server - missing required fields");
+            }
+            
+            // Log in the user
+            setAuth(user, backend_tokens);
+            router.push("/home");
+          } else {
+            throw new Error("Invalid response from server");
+          }
         }
-
-        // Extract only digits (remove + and country code)
-        const phoneDigits = extractPhoneDigits(loginPhoneValue);
-        
-        // Call login endpoint to send OTP - API: POST /auth/login/phone_number
-        await authApi.loginWithPhone({
-          phone_number: phoneDigits,
-        });
-
-        // Store data and show OTP screen
-        setPendingAuthData({
-          phone: phoneDigits,
-          isLogin: true,
-        });
-        setShowOTPScreen(true);
       } else {
-        // Registration flow - validate phone and email
-        if (!isValidPhoneNumber(phoneValue)) {
-          setError("Please provide a valid phone number");
-          setIsLoading(false);
-          return;
+        // Registration flow
+        if (registrationMethod === "phone") {
+          // Phone OTP registration
+          if (!isValidPhoneNumber(phoneValue)) {
+            setError("Please provide a valid phone number");
+            setIsLoading(false);
+            return;
+          }
+
+          const trimmedEmail = formData.email.trim();
+          if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
+            setError("Please provide a valid email address");
+            setIsLoading(false);
+            return;
+          }
+
+          // Extract only digits (remove + and country code)
+          const phoneDigits = extractPhoneDigits(phoneValue);
+          
+          // Call register endpoint to send OTP - API: POST /auth/register/phone_number
+          await authApi.registerUserWithPhone({
+            email: trimmedEmail,
+            phone_number: phoneDigits,
+            role: formData.role,
+          });
+
+          // Store data and show OTP screen
+          setPendingAuthData({
+            phone: phoneDigits,
+            email: trimmedEmail,
+            role: formData.role,
+            isLogin: false,
+          });
+          setShowOTPScreen(true);
+        } else {
+          // Email/Password registration
+          const trimmedEmail = formData.email.trim();
+          if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
+            setError("Please provide a valid email address");
+            setIsLoading(false);
+            return;
+          }
+
+          if (!formData.password || formData.password.length < 6) {
+            setError("Password must be at least 6 characters long");
+            setIsLoading(false);
+            return;
+          }
+
+          if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            setIsLoading(false);
+            return;
+          }
+
+          if (!isValidPhoneNumber(phoneValue)) {
+            setError("Please provide a valid phone number");
+            setIsLoading(false);
+            return;
+          }
+
+          // Extract only digits (remove + and country code)
+          const phoneDigits = extractPhoneDigits(phoneValue);
+
+          // Call email/password register endpoint - API: POST /auth/register
+          const response = await authApi.registerUser({
+            email: trimmedEmail,
+            password: formData.password,
+            phone_number: phoneDigits,
+            role: formData.role,
+            is_active: true,
+          });
+
+          // Handle response - returns User format with backend_tokens, so use setAuth
+          if (response.data && response.data.user && response.data.backend_tokens) {
+            const { user, backend_tokens } = response.data;
+            
+            // Validate required fields
+            if (!user.id || !backend_tokens.access_token || !backend_tokens.refresh_token) {
+              throw new Error("Invalid response from server - missing required fields");
+            }
+            
+            // Automatically log in the user after successful registration
+            setAuth(user, backend_tokens);
+            router.push("/home");
+          } else {
+            throw new Error("Invalid response from server");
+          }
         }
-
-        const trimmedEmail = formData.email.trim();
-        if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
-          setError("Please provide a valid email address");
-          setIsLoading(false);
-          return;
-        }
-
-        // Extract only digits (remove + and country code)
-        const phoneDigits = extractPhoneDigits(phoneValue);
-        
-        // Call register endpoint to send OTP - API: POST /auth/register/phone_number
-        await authApi.registerUserWithPhone({
-          email: trimmedEmail,
-          phone_number: phoneDigits,
-          role: formData.role,
-        });
-
-        // Store data and show OTP screen
-        setPendingAuthData({
-          phone: phoneDigits,
-          email: trimmedEmail,
-          role: formData.role,
-          isLogin: false,
-        });
-        setShowOTPScreen(true);
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        // Provide more specific error messages based on status code
-        if (err.status === 400) {
+        const errorMessage = err.message || "";
+        const lowerErrorMessage = errorMessage.toLowerCase();
+        
+        // Check for unique constraint violation on phone_number
+        const isPhoneNumberExists = 
+          lowerErrorMessage.includes("unique constraint") && 
+          lowerErrorMessage.includes("phone_number");
+        
+        // Check for duplicate phone number or email
+        const isDuplicateAccount = 
+          err.status === 409 || 
+          lowerErrorMessage.includes("already exists") ||
+          lowerErrorMessage.includes("duplicate") ||
+          isPhoneNumberExists;
+
+        // Provide more specific error messages based on status code and error content
+        if (isDuplicateAccount || isPhoneNumberExists) {
+          setError("An account with this phone number or email already exists. Please try logging in instead.");
+        } else if (err.status === 400) {
           setError("Invalid phone number or email. Please check your input.");
         } else if (err.status === 404 && isLogin) {
           setError("Phone number not found. Please register first.");
-        } else if (err.status === 409 && !isLogin) {
-          setError("An account with this phone number or email already exists.");
         } else if (err.status >= 500) {
-          setError("Server error. Please try again later.");
+          // Check if it's a unique constraint error in 500 response
+          if (isPhoneNumberExists) {
+            setError("An account with this phone number already exists. Please try logging in instead.");
+          } else {
+            setError("Server error. Please try again later.");
+          }
         } else {
           setError(err.message || "An error occurred. Please try again.");
         }
@@ -362,6 +482,32 @@ export default function UserAuthScreen() {
     setError(null);
   };
 
+  const handleRegistrationMethodChange = (method: "phone" | "email") => {
+    setRegistrationMethod(method);
+    setError(null);
+    // Reset form data when switching methods
+    setFormData({
+      email: "",
+      password: "",
+      confirmPassword: "",
+      otp: "",
+      role: "CUSTOMER",
+    });
+    setPhoneValue(undefined);
+  };
+
+  const handleLoginMethodChange = (method: "phone" | "email") => {
+    setLoginMethod(method);
+    setError(null);
+    // Reset form data when switching methods
+    setFormData({
+      ...formData,
+      email: "",
+      password: "",
+    });
+    setLoginPhoneValue(undefined);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
       <FlickeringGrid
@@ -447,33 +593,104 @@ export default function UserAuthScreen() {
                   <div className="p-6 sm:p-8 lg:p-12 xl:p-16">
                     {/* Header */}
                     {!showOTPScreen && (
-                      <div className="text-center mb-6">
-                        <h1 className="text-2xl font-gilroy-black text-black mb-2">
-                          {isLogin ? "Login to Your Account" : "Create Your Account"}
-                        </h1>
-                        <p className="text-gray-600 text-sm">
-                          {isLogin
-                            ? "Enter your phone number to sign in"
-                            : "Get started with PointNow and start earning rewards"}
-                        </p>
-                      </div>
-                    )}
-                    {/* Toggle */}
-                    {!showOTPScreen && (
-                      <div className="flex items-center justify-center mb-6 relative z-10">
-                        <div className="bg-gray-100 rounded-xl p-1 inline-flex">
-                          <Link
-                            href="/auth?mode=user"
-                            className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer bg-[#7bc74d] text-white shadow-sm"
-                          >
-                            User
-                          </Link>
-                          <Link
-                            href="/auth?mode=business"
-                            className="px-5 py-2 rounded-lg font-semibold transition-all text-sm cursor-pointer text-gray-600 hover:text-gray-900"
-                          >
-                            Business
-                          </Link>
+                      <div className="mb-6">
+                        <div className="text-center mb-6">
+                          <h1 className="text-2xl font-gilroy-black text-black mb-2">
+                            {isLogin ? "Login to Your Account" : "Create Your Account"}
+                          </h1>
+                          <p className="text-gray-600 text-sm">
+                            {isLogin
+                              ? loginMethod === "phone"
+                                ? "Enter your phone number to sign in"
+                                : "Enter your email and password to sign in"
+                              : "Get started with PointNow and start earning rewards"}
+                          </p>
+                        </div>
+                        
+                        {/* Enhanced Tab Design */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm mb-6">
+                          <div className="space-y-4">
+                            {/* Account Type Section */}
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                Account Type
+                              </label>
+                              <div className="bg-gray-50 rounded-xl p-1 inline-flex w-full">
+                                <Link
+                                  href="/auth?mode=user"
+                                  className="flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center cursor-pointer bg-[#7bc74d] text-white shadow-sm"
+                                >
+                                  User
+                                </Link>
+                                <Link
+                                  href="/auth?mode=business"
+                                  className="flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center cursor-pointer text-gray-600 hover:text-gray-900"
+                                >
+                                  Business
+                                </Link>
+                              </div>
+                            </div>
+
+                            {/* Auth Method Section */}
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                {isLogin ? "Login Method" : "Registration Method"}
+                              </label>
+                              <div className="bg-gray-50 rounded-xl p-1 inline-flex w-full">
+                                {isLogin ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleLoginMethodChange("phone")}
+                                      className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center ${
+                                        loginMethod === "phone"
+                                          ? "bg-[#7bc74d] text-white shadow-sm"
+                                          : "text-gray-600 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      Phone OTP
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleLoginMethodChange("email")}
+                                      className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center ${
+                                        loginMethod === "email"
+                                          ? "bg-[#7bc74d] text-white shadow-sm"
+                                          : "text-gray-600 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      Email & Password
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRegistrationMethodChange("phone")}
+                                      className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center ${
+                                        registrationMethod === "phone"
+                                          ? "bg-[#7bc74d] text-white shadow-sm"
+                                          : "text-gray-600 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      Phone OTP
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRegistrationMethodChange("email")}
+                                      className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all text-sm text-center ${
+                                        registrationMethod === "email"
+                                          ? "bg-[#7bc74d] text-white shadow-sm"
+                                          : "text-gray-600 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      Email & Password
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -575,7 +792,19 @@ export default function UserAuthScreen() {
                                   setError(null);
                                 } catch (err) {
                                   if (err instanceof ApiClientError) {
-                                    setError(err.message || "Failed to resend OTP. Please try again.");
+                                    const errorMessage = err.message || "";
+                                    const lowerErrorMessage = errorMessage.toLowerCase();
+                                    
+                                    // Check for unique constraint violation on phone_number
+                                    const isPhoneNumberExists = 
+                                      lowerErrorMessage.includes("unique constraint") && 
+                                      lowerErrorMessage.includes("phone_number");
+                                    
+                                    if (isPhoneNumberExists || err.status === 409) {
+                                      setError("An account with this phone number already exists. Please try logging in instead.");
+                                    } else {
+                                      setError(err.message || "Failed to resend OTP. Please try again.");
+                                    }
                                   } else {
                                     setError("Failed to resend OTP. Please try again.");
                                   }
@@ -594,29 +823,73 @@ export default function UserAuthScreen() {
                     ) : (
                       /* Main Form */
                       <form onSubmit={handleInitialSubmit} className="space-y-4 lg:space-y-5">
-                        {/* Login: Phone Number */}
+                        {/* Login: Phone Number or Email/Password */}
                         {isLogin && (
-                          <div>
-                            <label htmlFor="loginPhone" className="block text-sm font-semibold text-gray-700 mb-2">
-                              Phone Number *
-                            </label>
-                            <style dangerouslySetInnerHTML={{__html: PHONE_INPUT_STYLES}} />
-                            <div className="phone-input-wrapper">
-                              <PhoneInput
-                                placeholder="Enter phone number"
-                                value={loginPhoneValue}
-                                onChange={setLoginPhoneValue}
-                                defaultCountry="MY"
-                                international
-                                className="w-full"
-                                style={{
-                                  '--PhoneInput-color--focus': '#7bc74d',
-                                  '--PhoneInputCountryFlag-borderColor': 'transparent',
-                                  '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                                }}
-                              />
-                            </div>
-                          </div>
+                          <>
+                            {loginMethod === "phone" ? (
+                              <div>
+                                <label htmlFor="loginPhone" className="block text-sm font-semibold text-gray-700 mb-2">
+                                  Phone Number *
+                                </label>
+                                <style dangerouslySetInnerHTML={{__html: PHONE_INPUT_STYLES}} />
+                                <div className="phone-input-wrapper">
+                                  <PhoneInput
+                                    placeholder="Enter phone number"
+                                    value={loginPhoneValue}
+                                    onChange={setLoginPhoneValue}
+                                    defaultCountry="MY"
+                                    international
+                                    className="w-full"
+                                    style={{
+                                      '--PhoneInput-color--focus': '#7bc74d',
+                                      '--PhoneInputCountryFlag-borderColor': 'transparent',
+                                      '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div>
+                                  <label htmlFor="loginEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Email Address *
+                                  </label>
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                      type="email"
+                                      id="loginEmail"
+                                      name="email"
+                                      value={formData.email}
+                                      onChange={handleInputChange}
+                                      required
+                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      placeholder="Enter your email"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label htmlFor="loginPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Password *
+                                  </label>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                      type="password"
+                                      id="loginPassword"
+                                      name="password"
+                                      value={formData.password}
+                                      onChange={handleInputChange}
+                                      required
+                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      placeholder="Enter your password"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </>
                         )}
 
                         {/* Registration: Phone Number, Email, Role */}
@@ -662,6 +935,51 @@ export default function UserAuthScreen() {
                                 />
                               </div>
                             </div>
+
+                            {/* Password fields for email/password registration */}
+                            {registrationMethod === "email" && (
+                              <>
+                                <div>
+                                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Password *
+                                  </label>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                      type="password"
+                                      id="password"
+                                      name="password"
+                                      value={formData.password}
+                                      onChange={handleInputChange}
+                                      required
+                                      minLength={6}
+                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      placeholder="Enter password (min 6 characters)"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Confirm Password *
+                                  </label>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                      type="password"
+                                      id="confirmPassword"
+                                      name="confirmPassword"
+                                      value={formData.confirmPassword}
+                                      onChange={handleInputChange}
+                                      required
+                                      minLength={6}
+                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      placeholder="Confirm your password"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
 
                             <div>
                               <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -712,11 +1030,23 @@ export default function UserAuthScreen() {
                           type="submit"
                           disabled={
                             isLoading ||
-                            (isLogin ? !loginPhoneValue : !phoneValue || !formData.email)
+                            (isLogin 
+                              ? loginMethod === "phone"
+                                ? !loginPhoneValue
+                                : !formData.email || !formData.password
+                              : !phoneValue || !formData.email || 
+                                (registrationMethod === "email" && (!formData.password || !formData.confirmPassword))
+                            )
                           }
                           className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
                         >
-                          {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+                          {isLoading 
+                            ? "Please wait..." 
+                            : isLogin 
+                              ? "Sign In" 
+                              : registrationMethod === "email" 
+                                ? "Create Account" 
+                                : "Send OTP"}
                         </button>
                       </form>
                     )}
@@ -761,8 +1091,12 @@ export default function UserAuthScreen() {
                             onClick={() => {
                               setIsLogin(!isLogin);
                               setError(null);
+                              setLoginMethod("phone");
+                              setRegistrationMethod("phone");
                               setFormData({
                                 email: "",
+                                password: "",
+                                confirmPassword: "",
                                 otp: "",
                                 role: "CUSTOMER",
                               });

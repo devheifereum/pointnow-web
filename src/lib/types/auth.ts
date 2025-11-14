@@ -53,6 +53,17 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    refresh_token: string;
+    user: PhoneRegisterUser;
+  };
+}
+
+export interface EmailPasswordRegisterResponse {
   message: string;
   status: number;
   data: {
@@ -72,7 +83,7 @@ export interface UserRegisterRequest {
   phone_number: string;
   is_active?: boolean;
   metadata?: Record<string, unknown>;
-  role: "CUSTOMER";
+  role: string;
 }
 
 export interface PhoneRegisterRequest {
@@ -168,4 +179,19 @@ export interface AuthUser {
   isAdmin: boolean;
   isStaff: boolean;
   isCustomer: boolean;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+  current_password?: string;
+}
+
+export interface UpdateUserResponse {
+  message: string;
+  status_code: number;
+  data: {
+    user: User;
+  };
 }

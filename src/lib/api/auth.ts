@@ -4,6 +4,7 @@ import type {
   LoginResponse,
   UserRegisterRequest,
   RegisterResponse,
+  EmailPasswordRegisterResponse,
   BusinessRegisterRequest,
   PhoneRegisterRequest,
   PhoneRegisterResponse,
@@ -31,8 +32,8 @@ export const authApi = {
     return api.post<VerifyLoginOTPResponse>("/auth/verify/login/phone_number/otp", data);
   },
 
-  registerUser: async (data: UserRegisterRequest): Promise<RegisterResponse> => {
-    return api.post<RegisterResponse>("/auth/register", data);
+  registerUser: async (data: UserRegisterRequest): Promise<EmailPasswordRegisterResponse> => {
+    return api.post<EmailPasswordRegisterResponse>("/auth/register", data);
   },
 
   registerUserWithPhone: async (

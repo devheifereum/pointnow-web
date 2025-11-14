@@ -4,10 +4,21 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth/store";
 // import { useRouter } from "next/navigation";
-import { User, MapPin, Phone, Mail, Trophy, Store, Gift, TrendingUp } from "lucide-react";
+import { User, MapPin, Phone, Mail, Trophy, Store, Gift, TrendingUp, Edit2, Lock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { customersApi } from "@/lib/api/customers";
+import { usersApi } from "@/lib/api/users";
 import { ApiClientError } from "@/lib/api/client";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 
 interface UserProfileScreenProps {
@@ -37,6 +48,19 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<{
+    current?: string;
+    new?: string;
+    confirm?: string;
+  }>({});
 
   const loadProfileData = useCallback(async () => {
     setIsLoading(true);
@@ -70,6 +94,124 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       setIsLoading(false);
     }
   }, [userId]);
+
+  const handleOpenEditDialog = () => {
+    const currentUser = profileData?.user || authUser?.user || mockUser;
+    setEditName(currentUser.name || "");
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateName = async () => {
+    if (!editName.trim()) {
+      toast.error("Name cannot be empty");
+      return;
+    }
+
+    const currentUser = profileData?.user || authUser?.user || mockUser;
+    if (editName.trim() === currentUser.name) {
+      setIsEditDialogOpen(false);
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const response = await usersApi.updateUser(userId, { name: editName.trim() });
+      
+      // Update local state
+      if (profileData) {
+        setProfileData({
+          ...profileData,
+          user: {
+            ...profileData.user,
+            name: response.data.user.name,
+          },
+        });
+      }
+
+      // Reload profile data to ensure consistency
+      await loadProfileData();
+
+      toast.success("Name updated successfully!");
+      setIsEditDialogOpen(false);
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        toast.error(err.message || "Failed to update name");
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleOpenPasswordDialog = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordErrors({});
+    setIsPasswordDialogOpen(true);
+  };
+
+  const validatePasswordForm = () => {
+    const errors: typeof passwordErrors = {};
+
+    if (!currentPassword.trim()) {
+      errors.current = "Current password is required";
+    }
+
+    if (!newPassword.trim()) {
+      errors.new = "New password is required";
+    } else if (newPassword.length < 6) {
+      errors.new = "New password must be at least 6 characters";
+    }
+
+    if (!confirmPassword.trim()) {
+      errors.confirm = "Please confirm your new password";
+    } else if (newPassword !== confirmPassword) {
+      errors.confirm = "Passwords do not match";
+    }
+
+    if (currentPassword && newPassword && currentPassword === newPassword) {
+      errors.new = "New password must be different from current password";
+    }
+
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!validatePasswordForm()) {
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      await usersApi.updateUser(userId, { 
+        password: newPassword,
+        current_password: currentPassword 
+      });
+      
+      toast.success("Password updated successfully!");
+      setIsPasswordDialogOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordErrors({});
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to update password";
+        if (errorMessage.toLowerCase().includes("current password") || errorMessage.toLowerCase().includes("incorrect")) {
+          setPasswordErrors({ current: "Current password is incorrect" });
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   useEffect(() => {
     // Disable auth check for UI development
@@ -132,10 +274,32 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <div className="w-24 h-24 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="w-12 h-12 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-gilroy-black text-black mb-2">
+                  <div className="flex-1 w-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                      <h2 className="text-2xl font-gilroy-black text-black">
                       {user.name || user.email.split("@")[0]}
                     </h2>
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button
+                          onClick={handleOpenEditDialog}
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          <span>Edit Name</span>
+                        </Button>
+                        <Button
+                          onClick={handleOpenPasswordDialog}
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Lock className="w-4 h-4" />
+                          <span>Change Password</span>
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Mail className="w-4 h-4" />
@@ -266,6 +430,178 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             </>
           )}
         </div>
+
+        {/* Edit Name Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Name</DialogTitle>
+              <DialogDescription>
+                Update your display name. This will be visible to businesses you connect with.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isUpdating) {
+                      handleUpdateName();
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                  placeholder="Enter your name"
+                  disabled={isUpdating}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isUpdating}
+                className="w-full sm:w-auto text-white hover:text-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateName}
+                disabled={isUpdating || !editName.trim()}
+                className="w-full sm:w-auto bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+              >
+                {isUpdating ? "Updating..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Password Dialog */}
+        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>
+                Enter your current password and choose a new password. Make sure it&apos;s at least 6 characters long.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
+                  Current Password
+                </label>
+                <input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (passwordErrors.current) {
+                      setPasswordErrors({ ...passwordErrors, current: undefined });
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.current ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Enter current password"
+                  disabled={isUpdatingPassword}
+                  autoFocus
+                />
+                {passwordErrors.current && (
+                  <p className="text-sm text-red-600">{passwordErrors.current}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (passwordErrors.new) {
+                      setPasswordErrors({ ...passwordErrors, new: undefined });
+                    }
+                    // Clear confirm error if passwords match
+                    if (passwordErrors.confirm && e.target.value === confirmPassword) {
+                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.new ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Enter new password"
+                  disabled={isUpdatingPassword}
+                />
+                {passwordErrors.new && (
+                  <p className="text-sm text-red-600">{passwordErrors.new}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
+                  Confirm New Password
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (passwordErrors.confirm) {
+                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isUpdatingPassword) {
+                      handleUpdatePassword();
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.confirm ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Confirm new password"
+                  disabled={isUpdatingPassword}
+                />
+                {passwordErrors.confirm && (
+                  <p className="text-sm text-red-600">{passwordErrors.confirm}</p>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPasswordDialogOpen(false);
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setPasswordErrors({});
+                }}
+                disabled={isUpdatingPassword}
+                className="w-full sm:w-auto text-white hover:text-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdatePassword}
+                disabled={isUpdatingPassword}
+                className="w-full sm:w-auto bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+              >
+                {isUpdatingPassword ? "Updating..." : "Update Password"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -297,10 +633,32 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <div className="w-24 h-24 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
                   <User className="w-12 h-12 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-gilroy-black text-black mb-2">
+                <div className="flex-1 w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                    <h2 className="text-2xl font-gilroy-black text-black">
                     {user.name || user.email.split("@")[0]}
                   </h2>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      <Button
+                        onClick={handleOpenEditDialog}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>Edit Name</span>
+                      </Button>
+                      <Button
+                        onClick={handleOpenPasswordDialog}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Lock className="w-4 h-4" />
+                        <span>Change Password</span>
+                      </Button>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-gray-600">
                       <Mail className="w-4 h-4" />
@@ -430,6 +788,178 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             </div>
           </>
         )}
+
+        {/* Edit Name Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Name</DialogTitle>
+              <DialogDescription>
+                Update your display name. This will be visible to businesses you connect with.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isUpdating) {
+                      handleUpdateName();
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                  placeholder="Enter your name"
+                  disabled={isUpdating}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isUpdating}
+                className="w-full sm:w-auto text-white hover:text-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateName}
+                disabled={isUpdating || !editName.trim()}
+                className="w-full sm:w-auto bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+              >
+                {isUpdating ? "Updating..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Password Dialog */}
+        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>
+                Enter your current password and choose a new password. Make sure it&apos;s at least 6 characters long.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
+                  Current Password
+                </label>
+                <input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (passwordErrors.current) {
+                      setPasswordErrors({ ...passwordErrors, current: undefined });
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.current ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Enter current password"
+                  disabled={isUpdatingPassword}
+                  autoFocus
+                />
+                {passwordErrors.current && (
+                  <p className="text-sm text-red-600">{passwordErrors.current}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (passwordErrors.new) {
+                      setPasswordErrors({ ...passwordErrors, new: undefined });
+                    }
+                    // Clear confirm error if passwords match
+                    if (passwordErrors.confirm && e.target.value === confirmPassword) {
+                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.new ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Enter new password"
+                  disabled={isUpdatingPassword}
+                />
+                {passwordErrors.new && (
+                  <p className="text-sm text-red-600">{passwordErrors.new}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
+                  Confirm New Password
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (passwordErrors.confirm) {
+                      setPasswordErrors({ ...passwordErrors, confirm: undefined });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isUpdatingPassword) {
+                      handleUpdatePassword();
+                    }
+                  }}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black ${
+                    passwordErrors.confirm ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Confirm new password"
+                  disabled={isUpdatingPassword}
+                />
+                {passwordErrors.confirm && (
+                  <p className="text-sm text-red-600">{passwordErrors.confirm}</p>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPasswordDialogOpen(false);
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setPasswordErrors({});
+                }}
+                disabled={isUpdatingPassword}
+                className="w-full sm:w-auto text-white hover:text-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdatePassword}
+                disabled={isUpdatingPassword}
+                className="w-full sm:w-auto bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+              >
+                {isUpdatingPassword ? "Updating..." : "Update Password"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
