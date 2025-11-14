@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { BusinessesResponse, BusinessesParams, BusinessDetailResponse } from "../types/business";
+import type { BusinessesResponse, BusinessesParams, BusinessDetailResponse, UpdateBusinessPayload, UpdateBusinessResponse } from "../types/business";
 
 export const businessApi = {
   getAll: async (params?: BusinessesParams): Promise<BusinessesResponse> => {
@@ -35,5 +35,9 @@ export const businessApi = {
 
   getById: async (businessId: string): Promise<BusinessDetailResponse> => {
     return api.get<BusinessDetailResponse>(`/business/${businessId}`);
+  },
+
+  update: async (businessId: string, payload: UpdateBusinessPayload): Promise<UpdateBusinessResponse> => {
+    return api.patch<UpdateBusinessResponse>(`/business/${businessId}`, payload);
   },
 };

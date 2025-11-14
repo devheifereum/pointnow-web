@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Building2,
   MapPin,
@@ -11,8 +11,13 @@ import {
   Calendar,
   Clock,
   Check,
+  Upload,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { businessApi } from "@/lib/api/business";
+import { fileApi } from "@/lib/api/file";
 import { subscriptionApi } from "@/lib/api/subscription";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
@@ -35,6 +40,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const businessId = user?.businessId || "";
 
@@ -115,6 +122,118 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       maximumFractionDigits: 0,
     }).format(price); // Price is already in base currency
   };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Invalid file type", {
+        description: "Please upload an image file",
+      });
+      return;
+    }
+
+    // Validate file size (e.g., 5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error("File too large", {
+        description: "Please upload an image smaller than 5MB",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      // Step 1: Upload file
+      const uploadResponse = await fileApi.upload(file);
+      const imageUrl = uploadResponse.data.image_url;
+
+      // Step 2: Update business with the image URL
+      // Get existing images from business metadata or create new array
+      const existingImages = (business?.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
+      
+      await businessApi.update(businessId, {
+        business_images: [
+          ...existingImages.map((img: { image_url: string }) => ({ image_url: img.image_url })),
+          { image_url: imageUrl }
+        ],
+      });
+
+      toast.success("Image uploaded successfully!", {
+        description: "Business image has been updated",
+        duration: 4000,
+      });
+
+      // Refresh business data
+      await fetchBusiness();
+    } catch (err) {
+      if (err instanceof ApiClientError || err instanceof Error) {
+        const errorMessage = err.message || "Failed to upload image";
+        setError(errorMessage);
+        toast.error("Failed to upload image", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to upload image", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = async (imageUrl: string) => {
+    if (!business) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const existingImages = (business.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
+      const updatedImages = existingImages.filter((img: { image_url: string }) => img.image_url !== imageUrl);
+
+      await businessApi.update(businessId, {
+        business_images: updatedImages.map((img: { image_url: string }) => ({ image_url: img.image_url })),
+      });
+
+      toast.success("Image removed successfully!", {
+        description: "Business image has been removed",
+        duration: 4000,
+      });
+
+      // Refresh business data
+      await fetchBusiness();
+    } catch (err) {
+      if (err instanceof ApiClientError || err instanceof Error) {
+        const errorMessage = err.message || "Failed to remove image";
+        setError(errorMessage);
+        toast.error("Failed to remove image", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to remove image", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const businessImages = (business?.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
 
   const monthlyProduct = subscriptionProducts.find(p => p.duration === "MONTHLY");
   const yearlyProduct = subscriptionProducts.find(p => p.duration === "YEARLY");
@@ -233,6 +352,79 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-800 rounded-lg text-xs font-semibold">
                       <XCircle className="w-3 h-3" />
                       INACTIVE
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                  Business Images
+                </label>
+                <div className="space-y-4">
+                  {/* Upload Button */}
+                  <div className="flex items-center gap-4">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                      disabled={isUploading}
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className={`flex items-center gap-2 px-4 py-2.5 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold rounded-lg sm:rounded-xl transition-colors cursor-pointer ${
+                        isUploading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span>Upload Image</span>
+                        </>
+                      )}
+                    </label>
+                    <p className="text-xs text-gray-500">Max 5MB, JPG/PNG</p>
+                  </div>
+
+                  {/* Display Images */}
+                  {businessImages.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {businessImages.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                            <img
+                              src={img.image_url}
+                              alt={`Business image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleRemoveImage(img.image_url)}
+                            disabled={isUploading}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                            title="Remove image"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {businessImages.length === 0 && (
+                    <div className="flex items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="text-center">
+                        <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">No images uploaded yet</p>
+                      </div>
                     </div>
                   )}
                 </div>

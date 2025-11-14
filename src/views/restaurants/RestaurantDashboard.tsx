@@ -29,6 +29,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerEmail, setNewCustomerEmail] = useState("");
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
@@ -65,13 +67,20 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
 
-  // Fetch customers when search is opened or search query changes
+  // Fetch customers when search query changes (debounced)
   useEffect(() => {
-    if (showCustomerSearch && businessId) {
-      fetchCustomers();
+    if (businessId && searchQuery.trim().length > 0) {
+      const timeoutId = setTimeout(() => {
+        fetchCustomers();
+      }, 300); // Debounce search by 300ms
+
+      return () => clearTimeout(timeoutId);
+    } else if (searchQuery.trim().length === 0) {
+      setCustomers([]);
+      setShowCustomerSearch(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCustomerSearch, businessId, searchQuery]);
+  }, [searchQuery, businessId]);
 
   const fetchBranches = async () => {
     if (!businessId) return;
@@ -102,7 +111,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   };
 
   const fetchCustomers = async () => {
-    if (!businessId) return;
+    if (!businessId || !searchQuery.trim()) return;
 
     setIsLoadingCustomers(true);
     setError(null);
@@ -110,16 +119,19 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     try {
       const response = await customersApi.search({
         business_id: businessId,
-        limit: 100, // Get more customers for search
-        query: searchQuery.trim() || undefined, // Use search query if available, otherwise get all
+        limit: 100,
+        query: searchQuery.trim(),
       });
-      setCustomers(response.data.customers || []);
+      const customersList = response.data.customers || [];
+      setCustomers(customersList);
+      setShowCustomerSearch(customersList.length > 0 || searchQuery.trim().length > 0);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message || "Failed to load customers");
       } else {
         setError("An unexpected error occurred");
       }
+      setShowCustomerSearch(true);
     } finally {
       setIsLoadingCustomers(false);
     }
@@ -143,8 +155,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   };
 
   const handleAddCustomer = async () => {
-    if (!phoneValue?.trim()) {
-      setError("Please provide a phone number");
+    if (!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim()) {
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -158,6 +170,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
     try {
       const response = await customersApi.createWithUser({
+        name: newCustomerName.trim(),
+        email: newCustomerEmail.trim(),
         phone_number: convertPhoneNumber(phoneValue?.trim() || ""),
         is_active: true,
         metadata: {},
@@ -172,17 +186,32 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       });
 
       const newCustomer = response.data.customer;
-      setCustomers((prev) => [...prev, newCustomer]);
       setCurrentCustomer(newCustomer);
       setShowNewCustomerForm(false);
       setShowCustomerSearch(false);
+      setNewCustomerName("");
+      setNewCustomerEmail("");
       setPhoneValue(undefined);
       setSearchQuery("");
+      setPointsInput("");
+      
+      toast.success("Customer created successfully!", {
+        description: `${newCustomer.name} has been added`,
+        duration: 4000,
+      });
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setError(err.message || "Failed to create customer");
+        const errorMessage = err.message || "Failed to create customer";
+        setError(errorMessage);
+        toast.error("Failed to create customer", {
+          description: errorMessage,
+        });
       } else {
-        setError("An unexpected error occurred");
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to create customer", {
+          description: errorMessage,
+        });
       }
     } finally {
       setIsProcessing(false);
@@ -438,20 +467,142 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                   </div>
                 )}
               </div>
-            ) : showCustomerSearch ? (
-              /* Customer Search */
+            ) : showNewCustomerForm ? (
+              /* New Customer Form */
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <h2 className="text-xl sm:text-2xl font-gilroy-black text-black">Select Customer</h2>
+                  <h2 className="text-xl sm:text-2xl font-gilroy-black text-black">New Customer</h2>
                   <button
                     onClick={() => {
-                      setShowCustomerSearch(false);
+                      setShowNewCustomerForm(false);
+                      setNewCustomerName("");
+                      setNewCustomerEmail("");
+                      setPhoneValue(undefined);
                       setSearchQuery("");
                     }}
                     className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
                   >
                     <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Customer Name *
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={newCustomerName}
+                        onChange={(e) => setNewCustomerName(e.target.value)}
+                        placeholder="Enter customer name"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="email"
+                        value={newCustomerEmail}
+                        onChange={(e) => setNewCustomerEmail(e.target.value)}
+                        placeholder="Enter email address"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <div className="relative">
+                      <style dangerouslySetInnerHTML={{__html: `
+                        .phone-input-wrapper .PhoneInput {
+                          display: flex !important;
+                          align-items: center !important;
+                          width: 100% !important;
+                          border: 1px solid #e5e7eb !important;
+                          border-radius: 0.75rem !important;
+                          padding: 0.625rem !important;
+                          transition: all 0.2s !important;
+                        }
+                        .phone-input-wrapper .PhoneInput:focus-within {
+                          outline: none !important;
+                          ring: 2px !important;
+                          ring-color: #7bc74d !important;
+                          border-color: transparent !important;
+                        }
+                        .phone-input-wrapper .PhoneInputCountry {
+                          margin-right: 0 !important;
+                          padding-right: 0 !important;
+                          padding-left: 0.5rem !important;
+                        }
+                        .phone-input-wrapper .PhoneInputCountryIcon {
+                          width: 1.5em;
+                          height: 1.5em;
+                        }
+                        .phone-input-wrapper .PhoneInputCountrySelectArrow {
+                          margin-left: 0.25rem !important;
+                          margin-right: 0.25rem !important;
+                        }
+                        .phone-input-wrapper .PhoneInputInput {
+                          flex: 1 !important;
+                          margin-left: 0 !important;
+                          padding-left: 0.5rem !important;
+                          border: none !important;
+                          outline: none !important;
+                          background: transparent !important;
+                        }
+                      `}} />
+                      <div className="phone-input-wrapper">
+                        <PhoneInput
+                          placeholder="Enter phone number"
+                          value={phoneValue}
+                          onChange={setPhoneValue}
+                          defaultCountry="MY"
+                          international
+                          className="w-full"
+                          style={{
+                            '--PhoneInput-color--focus': '#7bc74d',
+                            '--PhoneInputCountryFlag-borderColor': 'transparent',
+                            '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                          }}
+                          inputComponent={PhoneInputComponent}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleAddCustomer}
+                    disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || !selectedBranchId || isProcessing}
+                    className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Add Customer"
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Customer Search - Always visible */
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-gilroy-black text-black">Search Customer</h2>
                 </div>
 
                 {/* Error Message - Query related errors inside the card */}
@@ -467,191 +618,75 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name or phone..."
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (e.target.value.trim().length > 0) {
+                        setShowCustomerSearch(true);
+                      }
+                    }}
+                    placeholder="Search by name, email, or phone..."
                     className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                     autoFocus
                   />
                 </div>
 
-                {/* Customer List */}
-                <div className="space-y-2 max-h-80 sm:max-h-96 overflow-y-auto">
-                  {isLoadingCustomers ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-[#7bc74d]" />
-                      <span className="ml-3 text-gray-600">Loading customers...</span>
-                    </div>
-                  ) : filteredCustomers.length > 0 ? (
-                    filteredCustomers.map((customer) => (
-                      <button
-                        key={customer.id}
-                        onClick={() => handleSelectCustomer(customer)}
-                        className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200 hover:border-[#7bc74d]"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
-                              <User className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-black">{customer.name}</p>
-                              <p className="text-sm text-gray-600 flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
-                                {customer.phone_number || "-"}
-                              </p>
-                              {customer.email && (
-                                <p className="text-sm text-gray-600 flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  {customer.email}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.total_points ?? customer.points ?? 0}</p>
-                            <p className="text-xs text-gray-500">points</p>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No customers found</p>
-                      {searchQuery && (
-                        <p className="text-sm text-gray-400 mt-2">Try a different search term</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* New Customer Form */
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-                {showNewCustomerForm ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-4 sm:mb-6">
-                      <h2 className="text-xl sm:text-2xl font-gilroy-black text-black">New Customer</h2>
-                      <button
-                        onClick={() => {
-                          setShowNewCustomerForm(false);
-                          setPhoneValue(undefined);
-                        }}
-                        className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
-                      >
-                        <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Phone Number *
-                        </label>
-                        <div className="relative">
-                          <style dangerouslySetInnerHTML={{__html: `
-                            .phone-input-wrapper .PhoneInput {
-                              display: flex !important;
-                              align-items: center !important;
-                              width: 100% !important;
-                              border: 1px solid #e5e7eb !important;
-                              border-radius: 0.75rem !important;
-                              padding: 0.625rem !important;
-                              transition: all 0.2s !important;
-                            }
-                            .phone-input-wrapper .PhoneInput:focus-within {
-                              outline: none !important;
-                              ring: 2px !important;
-                              ring-color: #7bc74d !important;
-                              border-color: transparent !important;
-                            }
-                            .phone-input-wrapper .PhoneInputCountry {
-                              margin-right: 0 !important;
-                              padding-right: 0 !important;
-                              padding-left: 0.5rem !important;
-                            }
-                            .phone-input-wrapper .PhoneInputCountryIcon {
-                              width: 1.5em;
-                              height: 1.5em;
-                            }
-                            .phone-input-wrapper .PhoneInputCountrySelectArrow {
-                              margin-left: 0.25rem !important;
-                              margin-right: 0.25rem !important;
-                            }
-                            .phone-input-wrapper .PhoneInputInput {
-                              flex: 1 !important;
-                              margin-left: 0 !important;
-                              padding-left: 0.5rem !important;
-                              border: none !important;
-                              outline: none !important;
-                              background: transparent !important;
-                            }
-                          `}} />
-                          <div className="phone-input-wrapper">
-                          <PhoneInput
-                            placeholder="Enter phone number"
-                            value={phoneValue}
-                            onChange={setPhoneValue}
-                            defaultCountry="MY"
-                              international
-                            className="w-full"
-                            style={{
-                              '--PhoneInput-color--focus': '#7bc74d',
-                              '--PhoneInputCountryFlag-borderColor': 'transparent',
-                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                            }}
-                              inputComponent={PhoneInputComponent}
-                          />
-                          </div>
-                        </div>
+                {/* Customer List or Add New Button */}
+                {showCustomerSearch && (
+                  <div className="space-y-2 max-h-80 sm:max-h-96 overflow-y-auto">
+                    {isLoadingCustomers ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#7bc74d]" />
+                        <span className="ml-3 text-gray-600">Loading customers...</span>
                       </div>
-
-                      <button
-                        onClick={handleAddCustomer}
-                        disabled={!phoneValue?.trim() || !selectedBranchId || isProcessing}
-                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Creating...
-                          </>
-                        ) : (
-                          "Add Customer"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="w-10 h-10 text-gray-400" />
-                    </div>
-                    <h3 className="text-xl font-gilroy-extrabold text-black mb-2">No Customer Selected</h3>
-                    <p className="text-gray-600 mb-6">Select an existing customer or add a new one</p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        onClick={() => {
-                          setShowCustomerSearch(true);
-                          setShowNewCustomerForm(false);
-                        }}
-                      disabled={!selectedBranchId}
-                      className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                      >
-                        <Search className="w-5 h-5" />
-                        Select Customer
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowNewCustomerForm(true);
-                          setShowCustomerSearch(false);
-                        }}
-                      disabled={!selectedBranchId}
-                      className="bg-white border-2 border-[#7bc74d] text-[#7bc74d] hover:bg-[#7bc74d] hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-400 font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center"
-                      >
-                        <Plus className="w-5 h-5" />
-                        Add New Customer
-                      </button>
-                    </div>
+                    ) : filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((customer) => (
+                        <button
+                          key={customer.id}
+                          onClick={() => handleSelectCustomer(customer)}
+                          className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200 hover:border-[#7bc74d]"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-black">{customer.name}</p>
+                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <Phone className="w-3 h-3" />
+                                  {customer.phone_number || "-"}
+                                </p>
+                                {customer.email && (
+                                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                                    <Mail className="w-3 h-3" />
+                                    {customer.email}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.total_points ?? customer.points ?? 0}</p>
+                              <p className="text-xs text-gray-500">points</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    ) : searchQuery.trim().length > 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 mb-4">No customers found</p>
+                        <button
+                          onClick={() => {
+                            setShowNewCustomerForm(true);
+                            setShowCustomerSearch(false);
+                          }}
+                          disabled={!selectedBranchId}
+                          className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center mx-auto"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Add New Customer
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </div>

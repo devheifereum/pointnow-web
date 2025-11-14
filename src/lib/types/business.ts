@@ -71,3 +71,19 @@ export interface BusinessDetailResponse {
   };
 }
 
+export interface BusinessImage {
+  image_url: string;
+}
+
+export interface UpdateBusinessPayload {
+  business_images?: BusinessImage[];
+}
+
+export interface UpdateBusinessResponse {
+  message: string;
+  status_code: number;
+  data: {
+    business: BusinessDetail;
+  };
+}
+

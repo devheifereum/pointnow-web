@@ -68,6 +68,8 @@ export interface LeaderboardParams {
 }
 
 export interface CreateCustomerWithUserPayload {
+  name: string;
+  email: string;
   phone_number: string;
   is_active: boolean;
   metadata: Record<string, unknown>;
