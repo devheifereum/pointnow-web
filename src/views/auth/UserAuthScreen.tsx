@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Gift, Shield, Lock } from "lucide-react";
+import { Mail, Gift, Shield, Lock, Eye, EyeOff } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
@@ -70,6 +70,8 @@ export default function UserAuthScreen() {
   const [showOTPScreen, setShowOTPScreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
   const [registrationMethod, setRegistrationMethod] = useState<"phone" | "email">("phone");
   const [formData, setFormData] = useState({
@@ -485,6 +487,8 @@ export default function UserAuthScreen() {
   const handleRegistrationMethodChange = (method: "phone" | "email") => {
     setRegistrationMethod(method);
     setError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     // Reset form data when switching methods
     setFormData({
       email: "",
@@ -499,6 +503,7 @@ export default function UserAuthScreen() {
   const handleLoginMethodChange = (method: "phone" | "email") => {
     setLoginMethod(method);
     setError(null);
+    setShowPassword(false);
     // Reset form data when switching methods
     setFormData({
       ...formData,
@@ -876,15 +881,22 @@ export default function UserAuthScreen() {
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
-                                      type="password"
+                                      type={showPassword ? "text" : "password"}
                                       id="loginPassword"
                                       name="password"
                                       value={formData.password}
                                       onChange={handleInputChange}
                                       required
-                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                                       placeholder="Enter your password"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
                                   </div>
                                 </div>
                               </>
@@ -946,16 +958,23 @@ export default function UserAuthScreen() {
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
-                                      type="password"
+                                      type={showPassword ? "text" : "password"}
                                       id="password"
                                       name="password"
                                       value={formData.password}
                                       onChange={handleInputChange}
                                       required
                                       minLength={6}
-                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                                       placeholder="Enter password (min 6 characters)"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
                                   </div>
                                 </div>
 
@@ -966,16 +985,23 @@ export default function UserAuthScreen() {
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
-                                      type="password"
+                                      type={showConfirmPassword ? "text" : "password"}
                                       id="confirmPassword"
                                       name="confirmPassword"
                                       value={formData.confirmPassword}
                                       onChange={handleInputChange}
                                       required
                                       minLength={6}
-                                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                                      className="w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                                       placeholder="Confirm your password"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
                                   </div>
                                 </div>
                               </>
@@ -1093,6 +1119,8 @@ export default function UserAuthScreen() {
                               setError(null);
                               setLoginMethod("phone");
                               setRegistrationMethod("phone");
+                              setShowPassword(false);
+                              setShowConfirmPassword(false);
                               setFormData({
                                 email: "",
                                 password: "",
