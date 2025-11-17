@@ -185,9 +185,11 @@ export default function Restaurants() {
                             >
                               <ChevronRight className="w-4 h-4 text-black" />
                             </button>
-                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full z-20">
-                              {currentImageIndex + 1} / {business.business_images.length}
-                            </div>
+                            {business.business_images && (
+                              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full z-20">
+                                {currentImageIndex + 1} / {business.business_images.length}
+                              </div>
+                            )}
                           </>
                         )}
                       </>
