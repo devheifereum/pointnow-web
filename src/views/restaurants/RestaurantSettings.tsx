@@ -16,6 +16,14 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { businessApi } from "@/lib/api/business";
 import { fileApi } from "@/lib/api/file";
 import { subscriptionApi } from "@/lib/api/subscription";
@@ -41,6 +49,9 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const businessId = user?.businessId || "";
@@ -125,7 +136,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }).format(price); // Price is already in base currency
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -134,6 +145,10 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       toast.error("Invalid file type", {
         description: "Please upload an image file",
       });
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
@@ -143,24 +158,48 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       toast.error("File too large", {
         description: "Please upload an image smaller than 5MB",
       });
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
+
+    // Set selected file and create preview
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCancelPreview = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!selectedFile) return;
 
     setIsUploading(true);
     setError(null);
 
     try {
       // Step 1: Upload file
-      const uploadResponse = await fileApi.upload(file);
+      const uploadResponse = await fileApi.upload(selectedFile);
       const imageUrl = uploadResponse.data.image_url;
 
       // Step 2: Update business with the image URL
-      // Get existing images from business metadata or create new array
-      const existingImages = (business?.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
+      // Get existing images from business or create new array
+      const existingImages = business?.business_images || [];
       
       await businessApi.update(businessId, {
         business_images: [
-          ...existingImages.map((img: { image_url: string }) => ({ image_url: img.image_url })),
+          ...existingImages.map((img) => ({ image_url: img.image_url })),
           { image_url: imageUrl }
         ],
       });
@@ -169,6 +208,13 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
         description: "Business image has been updated",
         duration: 4000,
       });
+
+      // Clear preview and reset
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
 
       // Refresh business data
       await fetchBusiness();
@@ -195,10 +241,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       }
     } finally {
       setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
@@ -209,11 +251,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     setError(null);
 
     try {
-      const existingImages = (business.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
-      const updatedImages = existingImages.filter((img: { image_url: string }) => img.image_url !== imageUrl);
+      const existingImages = business.business_images || [];
+      const updatedImages = existingImages.filter((img) => img.image_url !== imageUrl);
 
       await businessApi.update(businessId, {
-        business_images: updatedImages.map((img: { image_url: string }) => ({ image_url: img.image_url })),
+        business_images: updatedImages.map((img) => ({ image_url: img.image_url })),
       });
 
       toast.success("Image removed successfully!", {
@@ -221,6 +263,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
         duration: 4000,
       });
 
+      setDeleteConfirm(null);
       // Refresh business data
       await fetchBusiness();
     } catch (err) {
@@ -249,7 +292,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }
   };
 
-  const businessImages = (business?.metadata as { business_images?: { image_url: string }[] })?.business_images || [];
+  const businessImages = business?.business_images || [];
 
   const monthlyProduct = subscriptionProducts.find(p => p.duration === "MONTHLY");
   const yearlyProduct = subscriptionProducts.find(p => p.duration === "YEARLY");
@@ -379,36 +422,78 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                 </label>
                 <div className="space-y-4">
                   {/* Upload Button */}
-                  <div className="flex items-center gap-4">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="image-upload"
-                      disabled={isUploading}
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className={`flex items-center gap-2 px-4 py-2.5 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold rounded-lg sm:rounded-xl transition-colors cursor-pointer ${
-                        isUploading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Uploading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          <span>Upload Image</span>
-                        </>
-                      )}
-                    </label>
-                    <p className="text-xs text-gray-500">Max 5MB, JPG/PNG</p>
-                  </div>
+                  {!previewUrl && (
+                    <div className="flex items-center gap-4">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={isUploading}
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className={`flex items-center gap-2 px-4 py-2.5 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold rounded-lg sm:rounded-xl transition-colors cursor-pointer ${
+                          isUploading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Image</span>
+                      </label>
+                      <p className="text-xs text-gray-500">Max 5MB, JPG/PNG</p>
+                    </div>
+                  )}
+
+                  {/* Preview Section */}
+                  {previewUrl && (
+                    <div className="space-y-4">
+                      <div className="relative inline-block">
+                        <div className="aspect-square rounded-lg overflow-hidden border-2 border-[#7bc74d] max-w-xs">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          onClick={handleCancelPreview}
+                          disabled={isUploading}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-opacity disabled:opacity-50"
+                          title="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleConfirmUpload}
+                          disabled={isUploading}
+                          className="flex items-center gap-2 px-4 py-2.5 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg sm:rounded-xl transition-colors"
+                        >
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4" />
+                              <span>Confirm Upload</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleCancelPreview}
+                          disabled={isUploading}
+                          className="px-4 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-lg sm:rounded-xl transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Display Images */}
                   {businessImages.length > 0 && (
@@ -423,7 +508,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                             />
                           </div>
                           <button
-                            onClick={() => handleRemoveImage(img.image_url)}
+                            onClick={() => setDeleteConfirm(img.image_url)}
                             disabled={isUploading}
                             className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                             title="Remove image"
@@ -634,6 +719,46 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
           </div>
         </div>
       ) : null}
+
+      {/* Delete Image Confirmation Dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(open: boolean) => {
+        if (!open) {
+          setDeleteConfirm(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-black">Delete Image</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this image? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              disabled={isUploading}
+              className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteConfirm && handleRemoveImage(deleteConfirm)}
+              disabled={isUploading || !deleteConfirm}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <span>Delete</span>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

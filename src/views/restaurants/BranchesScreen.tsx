@@ -69,9 +69,11 @@ export default function BranchesScreen() {
       });
     } catch (err) {
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         setError(err.message || "Failed to load branches");
       } else {
-        setError("An unexpected error occurred");
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
       }
     } finally {
       setIsLoading(false);

@@ -437,20 +437,20 @@ export default function RestaurantAuthScreen() {
                             }
                           `}} />
                           <div className="business-phone-input-wrapper">
-                            <PhoneInput
+                          <PhoneInput
                               placeholder="Enter business phone number"
                               value={businessPhoneValue}
                               onChange={setBusinessPhoneValue}
-                              defaultCountry="MY"
+                            defaultCountry="MY"
                               international
-                              className="w-full"
-                              style={{
-                                '--PhoneInput-color--focus': '#7bc74d',
-                                '--PhoneInputCountryFlag-borderColor': 'transparent',
-                                '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                              }}
+                            className="w-full"
+                            style={{
+                              '--PhoneInput-color--focus': '#7bc74d',
+                              '--PhoneInputCountryFlag-borderColor': 'transparent',
+                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                            }}
                               inputComponent={PhoneInputComponent}
-                            />
+                          />
                           </div>
                         </div>
                         {businessPhoneValue && (
@@ -480,17 +480,17 @@ export default function RestaurantAuthScreen() {
                       <div>
                         <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
                           Restaurant Description *
-                        </label>
-                        <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
-                          onChange={handleInputChange}
-                          required={!isLogin}
-                          rows={4}
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        required={!isLogin}
+                        rows={4}
                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 resize-none"
                           placeholder="Tell us about your restaurant, cuisine type, specialties, and what makes it unique..."
-                        />
+                      />
                         <p className="mt-1 text-xs text-gray-500">This helps customers discover your restaurant</p>
                       </div>
                     </div>
@@ -501,20 +501,20 @@ export default function RestaurantAuthScreen() {
                         Account Information
                       </h3>
 
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Email Address *
-                        </label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                             placeholder="admin@yourrestaurant.com"
                           />
                         </div>
@@ -577,9 +577,9 @@ export default function RestaurantAuthScreen() {
                                 '--PhoneInputCountrySelectArrow-color': '#9ca3af',
                               }}
                               inputComponent={PhoneInputComponent}
-                            />
-                          </div>
-                        </div>
+                      />
+                    </div>
+                  </div>
                         {phoneValue && (
                           <p className="mt-1 text-xs text-gray-500">Format: {phoneValue}</p>
                         )}

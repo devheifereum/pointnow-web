@@ -59,6 +59,9 @@ export interface BusinessStaff {
 
 export interface BusinessDetail extends Business {
   status?: string;
+  email?: string | null;
+  phone_number?: string | null;
+  business_images?: BusinessImage[];
   admins?: BusinessAdmin[];
   staffs?: BusinessStaff[];
 }
@@ -72,6 +75,7 @@ export interface BusinessDetailResponse {
 }
 
 export interface BusinessImage {
+  id?: string;
   image_url: string;
 }
 

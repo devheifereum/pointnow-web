@@ -71,7 +71,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
       const timeoutId = setTimeout(() => {
-        fetchCustomers();
+      fetchCustomers();
       }, 300); // Debounce search by 300ms
 
       return () => clearTimeout(timeoutId);
@@ -247,10 +247,10 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
       const registeredCustomer = response.data.customer;
       setCurrentCustomer(registeredCustomer);
-      setShowCustomerSearch(false);
-      setSearchQuery("");
-      setPointsInput("");
-      setError(null);
+    setShowCustomerSearch(false);
+    setSearchQuery("");
+    setPointsInput("");
+    setError(null);
 
       toast.success("Customer registered successfully!", {
         description: `${customer.name} has been registered to your business`,
@@ -530,14 +530,14 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                       setNewCustomerEmail("");
                       setPhoneValue(undefined);
                       setSearchQuery("");
-                    }}
-                    className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
-                  >
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                  </button>
-                </div>
+                        }}
+                        className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
+                      >
+                        <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                      </button>
+                    </div>
 
-                <div className="space-y-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Customer Name *
