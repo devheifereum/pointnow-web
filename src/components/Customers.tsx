@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { MapPin, Loader2, Building2 } from "lucide-react";
+import { MapPin, Loader2, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { LightRays } from "@/components/ui/light-rays";
 import { businessApi } from "@/lib/api/business";
@@ -51,6 +51,7 @@ export default function Restaurants() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -127,6 +128,29 @@ export default function Restaurants() {
             const slug = createSlug(business.name);
             const iconColor = getBusinessIconColor(business.name);
             const rayColor = getRayColor(index);
+            const currentImageIndex = imageIndices[business.id] || 0;
+            const hasMultipleImages = business.business_images && business.business_images.length > 1;
+            const currentImage = business.business_images?.[currentImageIndex];
+            
+            const handlePreviousImage = (e: React.MouseEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (business.business_images && business.business_images.length > 0) {
+                const newIndex = currentImageIndex === 0 
+                  ? business.business_images.length - 1 
+                  : currentImageIndex - 1;
+                setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
+              }
+            };
+            
+            const handleNextImage = (e: React.MouseEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (business.business_images && business.business_images.length > 0) {
+                const newIndex = (currentImageIndex + 1) % business.business_images.length;
+                setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
+              }
+            };
             
             return (
               <Link
@@ -137,19 +161,52 @@ export default function Restaurants() {
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-white/20">
                   {/* Business Image with Light Rays */}
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                    {/* Light Rays Effect */}
-                    <LightRays
-                      count={4}
-                      color={rayColor}
-                      blur={20}
-                      speed={6}
-                      length="70%"
-                      className="absolute inset-0"
-                    />
-                    
-                    <div className={`relative z-10 ${iconColor}`}>
-                      <Building2 className="w-16 h-16" />
-                    </div>
+                    {currentImage ? (
+                      <>
+                        <img
+                          src={currentImage.image_url}
+                          alt={business.name}
+                          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/20" />
+                        {hasMultipleImages && (
+                          <>
+                            <button
+                              onClick={handlePreviousImage}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                              aria-label="Previous image"
+                            >
+                              <ChevronLeft className="w-4 h-4 text-black" />
+                            </button>
+                            <button
+                              onClick={handleNextImage}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                              aria-label="Next image"
+                            >
+                              <ChevronRight className="w-4 h-4 text-black" />
+                            </button>
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full z-20">
+                              {currentImageIndex + 1} / {business.business_images.length}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Light Rays Effect */}
+                        <LightRays
+                          count={4}
+                          color={rayColor}
+                          blur={20}
+                          speed={6}
+                          length="70%"
+                          className="absolute inset-0"
+                        />
+                        <div className={`relative z-10 ${iconColor}`}>
+                          <Building2 className="w-16 h-16" />
+                        </div>
+                      </>
+                    )}
                     
                     <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full z-20">
                       <span className="text-sm font-semibold text-gray-700">{business.registration_number}</span>

@@ -10,6 +10,7 @@ export interface Business {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  business_images?: BusinessImage[];
 }
 
 export interface BusinessesMetadata {

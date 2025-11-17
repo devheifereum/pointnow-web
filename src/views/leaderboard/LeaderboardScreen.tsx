@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
+import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, ChevronRight, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
@@ -34,6 +34,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   const [userPosition, setUserPosition] = useState<CustomerPosition | null>(null);
   const [isLoadingPosition, setIsLoadingPosition] = useState(false);
   const [isNotCustomer, setIsNotCustomer] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { user: authUser } = useAuthStore();
 
 
@@ -50,6 +51,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         if (matchingBusiness) {
           setBusinessData(matchingBusiness);
           setBusinessId(matchingBusiness.id);
+          setCurrentImageIndex(0); // Reset image index when business changes
         } else {
           setError("Business not found");
           setIsLoading(false);
@@ -352,8 +354,51 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
               
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center">
-                  <div className="mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4">
-                    <Building2 className={`w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 ${getBusinessIconColor(businessData.name)}`} />
+                  <div className="relative mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 overflow-hidden group">
+                    {businessData.business_images && businessData.business_images.length > 0 ? (
+                      <>
+                        <img
+                          src={businessData.business_images[currentImageIndex]?.image_url || businessData.business_images[0].image_url}
+                          alt={businessData.name}
+                          className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-cover rounded-lg transition-opacity duration-300"
+                        />
+                        {businessData.business_images.length > 1 && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const newIndex = currentImageIndex === 0 
+                                  ? businessData.business_images!.length - 1 
+                                  : currentImageIndex - 1;
+                                setCurrentImageIndex(newIndex);
+                              }}
+                              className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                              aria-label="Previous image"
+                            >
+                              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 text-black" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const newIndex = (currentImageIndex + 1) % businessData.business_images!.length;
+                                setCurrentImageIndex(newIndex);
+                              }}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                              aria-label="Next image"
+                            >
+                              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-black" />
+                            </button>
+                            <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full z-20">
+                              {currentImageIndex + 1} / {businessData.business_images.length}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <Building2 className={`w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 ${getBusinessIconColor(businessData.name)}`} />
+                    )}
                   </div>
                   <div className="text-white">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">{businessData.name}</h1>
