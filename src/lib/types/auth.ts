@@ -163,9 +163,13 @@ export interface BusinessRegisterRequest {
   role: "ADMIN";
   business: {
     name: string;
+    email?: string;
+    phone_number?: string;
     description: string;
     address: string;
     registration_number?: string;
+    latitude?: number;
+    longitude?: number;
     metadata?: Record<string, unknown>;
     is_active?: boolean;
   };

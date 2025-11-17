@@ -71,9 +71,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       setBusiness(response.data.business);
     } catch (err) {
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         setError(err.message || "Failed to load business information");
       } else {
-        setError("An unexpected error occurred");
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -171,11 +173,18 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       // Refresh business data
       await fetchBusiness();
     } catch (err) {
-      if (err instanceof ApiClientError || err instanceof Error) {
+      if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to upload image";
         setError(errorMessage);
         toast.error("Failed to upload image", {
           description: errorMessage,
+        });
+      } else if (err instanceof Error) {
+        // Use the error message directly
+        setError(err.message);
+        toast.error("Failed to upload image", {
+          description: err.message,
         });
       } else {
         const errorMessage = "An unexpected error occurred";
@@ -215,11 +224,18 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       // Refresh business data
       await fetchBusiness();
     } catch (err) {
-      if (err instanceof ApiClientError || err instanceof Error) {
+      if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to remove image";
         setError(errorMessage);
         toast.error("Failed to remove image", {
           description: errorMessage,
+        });
+      } else if (err instanceof Error) {
+        // Use the error message directly
+        setError(err.message);
+        toast.error("Failed to remove image", {
+          description: err.message,
         });
       } else {
         const errorMessage = "An unexpected error occurred";

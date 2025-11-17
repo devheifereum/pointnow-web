@@ -69,7 +69,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
   // Fetch customers when search query changes (debounced)
   useEffect(() => {
-    if (businessId && searchQuery.trim().length > 0) {
+    if (searchQuery.trim().length > 0) {
       const timeoutId = setTimeout(() => {
         fetchCustomers();
       }, 300); // Debounce search by 300ms
@@ -80,7 +80,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       setShowCustomerSearch(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, businessId]);
+  }, [searchQuery]);
 
   const fetchBranches = async () => {
     if (!businessId) return;
@@ -111,16 +111,15 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
   };
 
   const fetchCustomers = async () => {
-    if (!businessId || !searchQuery.trim()) return;
+    if (!searchQuery.trim()) return;
 
     setIsLoadingCustomers(true);
     setError(null);
 
     try {
       const response = await customersApi.search({
-        business_id: businessId,
-        limit: 100,
         query: searchQuery.trim(),
+        limit: 100,
       });
       const customersList = response.data.customers || [];
       setCustomers(customersList);
@@ -201,13 +200,14 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       });
     } catch (err) {
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to create customer";
         setError(errorMessage);
         toast.error("Failed to create customer", {
           description: errorMessage,
         });
       } else {
-        const errorMessage = "An unexpected error occurred";
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
         setError(errorMessage);
         toast.error("Failed to create customer", {
           description: errorMessage,
@@ -218,12 +218,62 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     }
   };
 
-  const handleSelectCustomer = (customer: Customer) => {
-    setCurrentCustomer(customer);
-    setShowCustomerSearch(false);
-    setSearchQuery("");
-    setPointsInput("");
+  const handleSelectCustomer = async (customer: Customer) => {
+    if (!businessId || !staffId || !selectedBranchId) {
+      setError("Please select a branch first");
+      return;
+    }
+
+    setIsProcessing(true);
     setError(null);
+
+    try {
+      // Register the customer to this business using the customer's info from search
+      const response = await customersApi.createWithUser({
+        name: customer.name,
+        email: customer.email || "",
+        phone_number: customer.phone_number || "",
+        is_active: true,
+        metadata: {},
+        business: {
+          business_id: businessId,
+          branch_id: selectedBranchId,
+          employee_id: staffId,
+          metadata: {},
+          is_active: true,
+          total_points: 0,
+        },
+      });
+
+      const registeredCustomer = response.data.customer;
+      setCurrentCustomer(registeredCustomer);
+      setShowCustomerSearch(false);
+      setSearchQuery("");
+      setPointsInput("");
+      setError(null);
+
+      toast.success("Customer registered successfully!", {
+        description: `${customer.name} has been registered to your business`,
+        duration: 4000,
+      });
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        // Use the server's error message directly
+        const errorMessage = err.message || "Failed to register customer";
+        setError(errorMessage);
+        toast.error("Failed to register customer", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to register customer", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleClearCustomer = () => {
@@ -291,13 +341,14 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     } catch (err) {
       // Only show error if the transaction itself failed
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to process transaction";
         setError(errorMessage);
         toast.error("Transaction failed", {
           description: errorMessage,
         });
       } else {
-        const errorMessage = "An unexpected error occurred";
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
         setError(errorMessage);
         toast.error("Transaction failed", {
           description: errorMessage,
@@ -487,44 +538,44 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Customer Name *
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={newCustomerName}
-                        onChange={(e) => setNewCustomerName(e.target.value)}
-                        placeholder="Enter customer name"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Customer Name *
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            value={newCustomerName}
+                            onChange={(e) => setNewCustomerName(e.target.value)}
+                            placeholder="Enter customer name"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email *
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="email"
-                        value={newCustomerEmail}
-                        onChange={(e) => setNewCustomerEmail(e.target.value)}
-                        placeholder="Enter email address"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Email *
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="email"
+                            value={newCustomerEmail}
+                            onChange={(e) => setNewCustomerEmail(e.target.value)}
+                            placeholder="Enter email address"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                          />
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <div className="relative">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number *
+                        </label>
+                        <div className="relative">
                       <style dangerouslySetInnerHTML={{__html: `
                         .phone-input-wrapper .PhoneInput {
                           display: flex !important;
@@ -564,41 +615,41 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                         }
                       `}} />
                       <div className="phone-input-wrapper">
-                        <PhoneInput
-                          placeholder="Enter phone number"
-                          value={phoneValue}
-                          onChange={setPhoneValue}
-                          defaultCountry="MY"
+                          <PhoneInput
+                            placeholder="Enter phone number"
+                            value={phoneValue}
+                            onChange={setPhoneValue}
+                            defaultCountry="MY"
                           international
-                          className="w-full"
-                          style={{
-                            '--PhoneInput-color--focus': '#7bc74d',
-                            '--PhoneInputCountryFlag-borderColor': 'transparent',
-                            '--PhoneInputCountrySelectArrow-color': '#9ca3af',
-                          }}
+                            className="w-full"
+                            style={{
+                              '--PhoneInput-color--focus': '#7bc74d',
+                              '--PhoneInputCountryFlag-borderColor': 'transparent',
+                              '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                            }}
                           inputComponent={PhoneInputComponent}
-                        />
+                          />
                       </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleAddCustomer}
+                    disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || !selectedBranchId || isProcessing}
+                        className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Add Customer"
+                        )}
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    onClick={handleAddCustomer}
-                    disabled={!newCustomerName.trim() || !newCustomerEmail.trim() || !phoneValue?.trim() || !selectedBranchId || isProcessing}
-                    className="w-full bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      "Add Customer"
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : (
+                ) : (
               /* Customer Search - Always visible */
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -609,7 +660,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 {error && (error.toLowerCase().includes("query") || error.toLowerCase().includes("search")) && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
                     <p className="text-sm text-red-600">{error}</p>
-                  </div>
+                    </div>
                 )}
 
                 {/* Search Input */}
@@ -621,7 +672,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       if (e.target.value.trim().length > 0) {
-                        setShowCustomerSearch(true);
+                          setShowCustomerSearch(true);
                       }
                     }}
                     placeholder="Search by name, email, or phone..."
@@ -643,49 +694,44 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                         <button
                           key={customer.id}
                           onClick={() => handleSelectCustomer(customer)}
-                          className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200 hover:border-[#7bc74d]"
+                          disabled={isProcessing || !selectedBranchId}
+                          className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200 hover:border-[#7bc74d] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
-                                <User className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-black">{customer.name}</p>
-                                <p className="text-sm text-gray-600 flex items-center gap-1">
-                                  <Phone className="w-3 h-3" />
-                                  {customer.phone_number || "-"}
-                                </p>
-                                {customer.email && (
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                                    <Mail className="w-3 h-3" />
-                                    {customer.email}
-                                  </p>
-                                )}
-                              </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center flex-shrink-0">
+                              <User className="w-5 h-5 text-white" />
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-gilroy-extrabold text-[#7bc74d]">{customer.total_points ?? customer.points ?? 0}</p>
-                              <p className="text-xs text-gray-500">points</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-black truncate">{customer.name}</p>
+                              <p className="text-sm text-gray-600 flex items-center gap-1 truncate">
+                                <Phone className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{customer.phone_number || "-"}</span>
+                              </p>
+                              {customer.email && (
+                                <p className="text-sm text-gray-600 flex items-center gap-1 truncate">
+                                  <Mail className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{customer.email}</span>
+                                </p>
+                              )}
                             </div>
                           </div>
-                        </button>
+                      </button>
                       ))
                     ) : searchQuery.trim().length > 0 ? (
                       <div className="text-center py-8">
                         <p className="text-gray-500 mb-4">No customers found</p>
-                        <button
-                          onClick={() => {
-                            setShowNewCustomerForm(true);
-                            setShowCustomerSearch(false);
-                          }}
+                      <button
+                        onClick={() => {
+                          setShowNewCustomerForm(true);
+                          setShowCustomerSearch(false);
+                        }}
                           disabled={!selectedBranchId}
                           className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg flex items-center gap-2 justify-center mx-auto"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add New Customer
-                        </button>
-                      </div>
+                      >
+                        <Plus className="w-5 h-5" />
+                        Add New Customer
+                      </button>
+                    </div>
                     ) : null}
                   </div>
                 )}

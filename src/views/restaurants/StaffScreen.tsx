@@ -131,13 +131,14 @@ export default function StaffScreen() {
       fetchStaffs();
     } catch (err) {
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to create staff";
         setError(errorMessage);
         toast.error("Failed to create staff", {
           description: errorMessage,
         });
       } else {
-        const errorMessage = "An unexpected error occurred";
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
         setError(errorMessage);
         toast.error("Failed to create staff", {
           description: errorMessage,
@@ -166,13 +167,14 @@ export default function StaffScreen() {
       fetchStaffs();
     } catch (err) {
       if (err instanceof ApiClientError) {
+        // Use the server's error message directly
         const errorMessage = err.message || "Failed to delete staff";
         setError(errorMessage);
         toast.error("Failed to delete staff", {
           description: errorMessage,
         });
       } else {
-        const errorMessage = "An unexpected error occurred";
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
         setError(errorMessage);
         toast.error("Failed to delete staff", {
           description: errorMessage,

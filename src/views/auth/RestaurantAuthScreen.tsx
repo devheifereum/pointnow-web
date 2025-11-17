@@ -24,6 +24,8 @@ export default function RestaurantAuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     businessName: "",
+    businessEmail: "",
+    businessPhone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -33,6 +35,7 @@ export default function RestaurantAuthScreen() {
     registrationNumber: "",
   });
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
+  const [businessPhoneValue, setBusinessPhoneValue] = useState<string | undefined>();
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
   // Memoize the phone input component to prevent re-renders that cause focus loss
@@ -174,6 +177,8 @@ export default function RestaurantAuthScreen() {
           metadata: {},
           business: {
             name: formData.businessName.trim(),
+            email: formData.businessEmail.trim() || undefined,
+            phone_number: businessPhoneValue ? convertPhoneNumber(businessPhoneValue.trim()) : undefined,
             description: formData.description.trim(),
             address: formData.address.trim(),
             registration_number: formData.registrationNumber.trim() || undefined,
@@ -201,43 +206,8 @@ export default function RestaurantAuthScreen() {
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        const errorMessage = err.message || "";
-        const lowerErrorMessage = errorMessage.toLowerCase();
-        
-        // Check for unique constraint violation on phone_number or email
-        const isPhoneNumberExists = 
-          lowerErrorMessage.includes("unique constraint") && 
-          lowerErrorMessage.includes("phone_number");
-        
-        const isEmailExists = 
-          lowerErrorMessage.includes("unique constraint") && 
-          lowerErrorMessage.includes("email");
-        
-        // Check for duplicate account
-        const isDuplicateAccount = 
-          err.status === 409 || 
-          lowerErrorMessage.includes("already exists") ||
-          lowerErrorMessage.includes("duplicate") ||
-          isPhoneNumberExists ||
-          isEmailExists;
-
-        // Provide more specific error messages
-        if (isDuplicateAccount || isPhoneNumberExists || isEmailExists) {
-          setError("An account with this email or phone number already exists. Please try logging in instead.");
-        } else if (err.status === 400) {
-          setError("Invalid input. Please check your information and try again.");
-        } else if (err.status === 401) {
-          setError("Invalid email or password. Please try again.");
-        } else if (err.status >= 500) {
-          // Check if it's a unique constraint error in 500 response
-          if (isPhoneNumberExists || isEmailExists) {
-            setError("An account with this email or phone number already exists. Please try logging in instead.");
-          } else {
-            setError("Server error. Please try again later.");
-          }
-        } else {
-          setError(err.message || "An error occurred. Please try again.");
-        }
+        // Use the server's error message directly
+        setError(err.message || "An error occurred. Please try again.");
       } else {
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(errorMessage || "An unexpected error occurred. Please try again.");
@@ -403,6 +373,89 @@ export default function RestaurantAuthScreen() {
                             placeholder="e.g., SSM2003"
                           />
                         </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="businessEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Business Email
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="email"
+                            id="businessEmail"
+                            name="businessEmail"
+                            value={formData.businessEmail}
+                            onChange={handleInputChange}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            placeholder="e.g., business@example.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="businessPhone" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Business Phone Number
+                        </label>
+                        <div className="relative">
+                          <style dangerouslySetInnerHTML={{__html: `
+                            .business-phone-input-wrapper .PhoneInput {
+                              display: flex !important;
+                              align-items: center !important;
+                              width: 100% !important;
+                              border: 1px solid #e5e7eb !important;
+                              border-radius: 0.75rem !important;
+                              padding: 0.625rem !important;
+                              transition: all 0.2s !important;
+                            }
+                            .business-phone-input-wrapper .PhoneInput:focus-within {
+                              outline: none !important;
+                              ring: 2px !important;
+                              ring-color: #7bc74d !important;
+                              border-color: transparent !important;
+                            }
+                            .business-phone-input-wrapper .PhoneInputCountry {
+                              margin-right: 0 !important;
+                              padding-right: 0 !important;
+                              padding-left: 0.5rem !important;
+                            }
+                            .business-phone-input-wrapper .PhoneInputCountryIcon {
+                              width: 1.5em;
+                              height: 1.5em;
+                            }
+                            .business-phone-input-wrapper .PhoneInputCountrySelectArrow {
+                              margin-left: 0.25rem !important;
+                              margin-right: 0.25rem !important;
+                            }
+                            .business-phone-input-wrapper .PhoneInputInput {
+                              flex: 1 !important;
+                              margin-left: 0 !important;
+                              padding-left: 0.5rem !important;
+                              border: none !important;
+                              outline: none !important;
+                              background: transparent !important;
+                            }
+                          `}} />
+                          <div className="business-phone-input-wrapper">
+                            <PhoneInput
+                              placeholder="Enter business phone number"
+                              value={businessPhoneValue}
+                              onChange={setBusinessPhoneValue}
+                              defaultCountry="MY"
+                              international
+                              className="w-full"
+                              style={{
+                                '--PhoneInput-color--focus': '#7bc74d',
+                                '--PhoneInputCountryFlag-borderColor': 'transparent',
+                                '--PhoneInputCountrySelectArrow-color': '#9ca3af',
+                              }}
+                              inputComponent={PhoneInputComponent}
+                            />
+                          </div>
+                        </div>
+                        {businessPhoneValue && (
+                          <p className="mt-1 text-xs text-gray-500">Format: {businessPhoneValue}</p>
+                        )}
                       </div>
 
                       <div>

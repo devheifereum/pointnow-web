@@ -37,7 +37,7 @@ export const customersApi = {
 
   search: async (params: CustomersSearchParams): Promise<CustomersResponse> => {
     const queryParams = new URLSearchParams({
-      business_id: params.business_id,
+      query: params.query,
     });
 
     if (params.page) {
@@ -45,9 +45,6 @@ export const customersApi = {
     }
     if (params.limit) {
       queryParams.append("limit", params.limit.toString());
-    }
-    if (params.query) {
-      queryParams.append("query", params.query);
     }
 
     return api.get<CustomersResponse>(`/customers/search?${queryParams}`);
