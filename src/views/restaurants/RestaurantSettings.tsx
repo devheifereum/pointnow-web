@@ -52,6 +52,9 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string>("");
+  const [businessDescription, setBusinessDescription] = useState<string>("");
+  const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const businessId = user?.businessId || "";
@@ -79,7 +82,10 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
 
     try {
       const response = await businessApi.getById(businessId);
-      setBusiness(response.data.business);
+      const businessData = response.data.business;
+      setBusiness(businessData);
+      setBusinessName(businessData.name || "");
+      setBusinessDescription(businessData.description || "");
     } catch (err) {
       if (err instanceof ApiClientError) {
         // Use the server's error message directly
@@ -292,7 +298,58 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }
   };
 
+  const handleSaveBusinessInfo = async () => {
+    if (!businessId) return;
+
+    setIsSavingBusinessInfo(true);
+    setError(null);
+
+    try {
+      await businessApi.update(businessId, {
+        name: businessName.trim(),
+        description: businessDescription.trim(),
+      });
+
+      toast.success("Business information updated successfully!", {
+        description: "Your business name and description have been updated",
+        duration: 4000,
+      });
+
+      // Refresh business data
+      await fetchBusiness();
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        // Use the server's error message directly
+        const errorMessage = err.message || "Failed to update business information";
+        setError(errorMessage);
+        toast.error("Failed to update business information", {
+          description: errorMessage,
+        });
+      } else if (err instanceof Error) {
+        // Use the error message directly
+        setError(err.message);
+        toast.error("Failed to update business information", {
+          description: err.message,
+        });
+      } else {
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to update business information", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsSavingBusinessInfo(false);
+    }
+  };
+
   const businessImages = business?.business_images || [];
+
+  // Check if there are changes to business name or description
+  const hasChanges = business && (
+    businessName.trim() !== (business.name || "").trim() ||
+    businessDescription.trim() !== (business.description || "").trim()
+  );
 
   const monthlyProduct = subscriptionProducts.find(p => p.duration === "MONTHLY");
   const yearlyProduct = subscriptionProducts.find(p => p.duration === "YEARLY");
@@ -339,10 +396,10 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                   <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <input
                     type="text"
-                    value={business.name || ""}
-                    readOnly
-                    disabled
-                    className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black"
+                    placeholder="Enter business name"
                   />
                 </div>
               </div>
@@ -368,13 +425,35 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                   Description
                 </label>
                 <textarea
-                  value={business.description || "No description provided"}
-                  readOnly
-                  disabled
+                  value={businessDescription}
+                  onChange={(e) => setBusinessDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed resize-none"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black resize-none"
+                  placeholder="Enter business description"
                 />
               </div>
+
+              {hasChanges && (
+                <div className="md:col-span-2 flex justify-end">
+                  <button
+                    onClick={handleSaveBusinessInfo}
+                    disabled={isSavingBusinessInfo || !businessName.trim()}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg sm:rounded-xl transition-colors"
+                  >
+                    {isSavingBusinessInfo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Save Changes</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">

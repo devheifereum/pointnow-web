@@ -81,6 +81,8 @@ export interface BusinessImage {
 }
 
 export interface UpdateBusinessPayload {
+  name?: string;
+  description?: string;
   business_images?: BusinessImage[];
 }
 
