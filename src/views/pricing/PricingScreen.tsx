@@ -8,17 +8,16 @@ import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
 
 export default function PricingScreen() {
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
 
   const plans = [
     {
-      name: "Free Forever",
-      price: 0,
-      yearlyPrice: 0,
+      name: "Professional",
+      price: 73,
+      priceMYR: 300,
       badge: "Most Popular",
-      icon: Star,
-      iconColor: "text-yellow-500",
-      description: "Perfect for small businesses getting started with loyalty programs",
+      icon: TrendingUp,
+      iconColor: "text-[#7bc74d]",
+      description: "For growing businesses ready to scale their loyalty programs",
       features: [
         { text: "Unlimited customers", included: true },
         { text: "Basic points system", included: true },
@@ -27,24 +26,6 @@ export default function PricingScreen() {
         { text: "Email support", included: true },
         { text: "Basic analytics", included: true },
         { text: "QR code generation", included: true },
-        { text: "Advanced analytics", included: false },
-        { text: "Custom branding", included: false },
-        { text: "API access", included: false },
-        { text: "Priority support", included: false },
-      ],
-      cta: "Get Started Free",
-      highlighted: false,
-    },
-    {
-      name: "Professional",
-      price: 49,
-      yearlyPrice: 470,
-      badge: "Best Value",
-      icon: TrendingUp,
-      iconColor: "text-[#7bc74d]",
-      description: "For growing businesses ready to scale their loyalty programs",
-      features: [
-        { text: "Everything in Free", included: true },
         { text: "Advanced analytics & insights", included: true },
         { text: "Custom branding & logo", included: true },
         { text: "Multiple store locations", included: true },
@@ -53,16 +34,14 @@ export default function PricingScreen() {
         { text: "Export customer data", included: true },
         { text: "Priority email support", included: true },
         { text: "Custom point rules", included: true },
-        { text: "API access", included: false },
-        { text: "Dedicated account manager", included: false },
       ],
-      cta: "Start Free Trial",
+      cta: "Get Started",
       highlighted: true,
     },
     {
       name: "Enterprise",
-      price: 199,
-      yearlyPrice: 1910,
+      price: null,
+      priceMYR: null,
       badge: "Premium",
       icon: Crown,
       iconColor: "text-purple-500",
@@ -80,16 +59,12 @@ export default function PricingScreen() {
         { text: "Onboarding & training", included: true },
         { text: "SLA guarantee", included: true },
       ],
-      cta: "Contact Sales",
+      cta: "Contact Us",
       highlighted: false,
     },
   ];
 
   const faqs = [
-    {
-      question: "Is the Free plan really free forever?",
-      answer: "Yes! Our Free plan is completely free with no time limits and no credit card required. It includes unlimited customers and all the essential features to run a successful loyalty program.",
-    },
     {
       question: "Can I upgrade or downgrade my plan anytime?",
       answer: "Absolutely! You can upgrade, downgrade, or cancel your plan at any time. Changes take effect immediately and we'll prorate any charges accordingly.",
@@ -99,22 +74,15 @@ export default function PricingScreen() {
       answer: "We accept all major credit cards (Visa, Mastercard, American Express) and bank transfers for Enterprise plans. All payments are processed securely through Stripe.",
     },
     {
-      question: "Do you offer discounts for yearly subscriptions?",
-      answer: "Yes! Save up to 20% when you choose yearly billing. The discount is automatically applied when you switch to annual payments.",
-    },
-    {
       question: "What happens if I exceed my plan limits?",
-      answer: "For the Free plan, there are no customer limits. For paid plans, we'll notify you before you reach any limits and help you upgrade smoothly without any service interruption.",
+      answer: "We'll notify you before you reach any limits and help you upgrade smoothly without any service interruption.",
     },
     {
-      question: "Is there a free trial for paid plans?",
-      answer: "Yes! Both Professional and Enterprise plans come with a 14-day free trial. No credit card required to start your trial.",
+      question: "How do I contact you for Enterprise pricing?",
+      answer: "Please reach out to our sales team through the contact form or email us directly. We'll work with you to create a custom plan that fits your business needs.",
     },
   ];
 
-  const getSavingsPercentage = () => {
-    return Math.round(((12 - (plans[1].yearlyPrice / plans[1].price)) / 12) * 100);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -148,40 +116,16 @@ export default function PricingScreen() {
               Simple, Transparent Pricing
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Choose the perfect plan for your business. Start free and scale as you grow.
+              Choose the perfect plan for your business.
             </p>
-
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <span className={`text-lg font-semibold ${billingPeriod === "monthly" ? "text-black" : "text-gray-500"}`}>
-                Monthly
-              </span>
-              <button
-                onClick={() => setBillingPeriod(billingPeriod === "monthly" ? "yearly" : "monthly")}
-                className="relative w-16 h-8 bg-gray-200 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:ring-offset-2"
-              >
-                <div
-                  className={`absolute top-1 left-1 w-6 h-6 bg-[#7bc74d] rounded-full transition-transform ${
-                    billingPeriod === "yearly" ? "translate-x-8" : ""
-                  }`}
-                />
-              </button>
-              <span className={`text-lg font-semibold ${billingPeriod === "yearly" ? "text-black" : "text-gray-500"}`}>
-                Yearly
-              </span>
-              {billingPeriod === "yearly" && (
-                <span className="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
-                  Save {getSavingsPercentage()}%
-                </span>
-              )}
-            </div>
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12 md:mb-16 max-w-5xl mx-auto">
             {plans.map((plan, index) => {
               const Icon = plan.icon;
-              const displayPrice = billingPeriod === "monthly" ? plan.price : Math.round(plan.yearlyPrice / 12);
+              const displayPrice = plan.price || null;
+              const displayPriceMYR = plan.priceMYR || null;
               
               return (
                 <div
@@ -213,26 +157,40 @@ export default function PricingScreen() {
 
                     {/* Price */}
                     <div className="mb-6">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-gilroy-black text-black">
-                          ${displayPrice}
-                        </span>
-                        {plan.price > 0 && (
-                          <span className="text-gray-600">
-                            /month
+                      {displayPrice !== null ? (
+                        <>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-5xl font-gilroy-black text-black">
+                              ${displayPrice}
+                            </span>
+                            <span className="text-gray-600">
+                              /month
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2 mt-2">
+                            <span className="text-2xl font-gilroy-black text-gray-700">
+                              RM{displayPriceMYR}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                              /month
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="mb-6">
+                          <span className="text-3xl font-gilroy-black text-black">
+                            Contact Us
                           </span>
-                        )}
-                      </div>
-                      {billingPeriod === "yearly" && plan.price > 0 && (
-                        <p className="text-sm text-gray-500 mt-2">
-                          Billed ${plan.yearlyPrice} annually
-                        </p>
+                          <p className="text-gray-600 text-sm mt-2">
+                            Custom pricing for your business needs
+                          </p>
+                        </div>
                       )}
                     </div>
 
                     {/* CTA Button */}
                     <Link
-                      href="/auth?mode=business"
+                      href={plan.name === "Enterprise" ? "/auth?mode=business&plan=enterprise" : "/auth?mode=business"}
                       className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 inline-block text-center ${
                         plan.highlighted
                           ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
@@ -261,28 +219,6 @@ export default function PricingScreen() {
                 </div>
               );
             })}
-          </div>
-
-          {/* Stats Section */}
-          <div className="bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-12 md:mb-16">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 text-white text-center">
-              <div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">300+</div>
-                <div className="text-xs sm:text-sm opacity-90">Active Merchants</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">RM136M</div>
-                <div className="text-xs sm:text-sm opacity-90">Additional Sales Generated</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">2.8M</div>
-                <div className="text-xs sm:text-sm opacity-90">Member Visits</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-1 sm:mb-2">98%</div>
-                <div className="text-xs sm:text-sm opacity-90">Customer Satisfaction</div>
-              </div>
-            </div>
           </div>
 
           {/* FAQs */}
@@ -318,7 +254,7 @@ export default function PricingScreen() {
                   href="/auth?mode=business"
                   className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
                 >
-                  Start Free Trial
+                  Get Started
                 </Link>
                 <Link
                   href="/auth?mode=business"
@@ -328,7 +264,7 @@ export default function PricingScreen() {
                 </Link>
               </div>
               <p className="text-sm opacity-75 mt-6">
-                No credit card required • 14-day free trial • Cancel anytime
+                Cancel anytime
               </p>
             </div>
           </div>
