@@ -1,0 +1,17 @@
+{
+  "name": "PointNow - Loyalty Points Management",
+  "short_name": "PointNow",
+  "description": "Free loyalty points management for businesses and retail stores",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7bc74d",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
+

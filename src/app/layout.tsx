@@ -12,8 +12,78 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PointNow - Loyalty Points Management",
-  description: "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. It's free for unlimited customers.",
+  metadataBase: new URL("https://pointnow.io"),
+  title: {
+    default: "PointNow - Free Loyalty Points Management System",
+    template: "%s | PointNow",
+  },
+  description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+  keywords: [
+    "loyalty points",
+    "loyalty program",
+    "customer rewards",
+    "points management",
+    "retail loyalty",
+    "business loyalty",
+    "customer retention",
+    "loyalty system",
+    "rewards program",
+    "points tracking",
+    "free loyalty software",
+    "loyalty points app",
+  ],
+  authors: [{ name: "PointNow" }],
+  creator: "PointNow",
+  publisher: "PointNow",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://pointnow.io",
+    siteName: "PointNow",
+    title: "PointNow - Free Loyalty Points Management System",
+    description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PointNow - Loyalty Points Management",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PointNow - Free Loyalty Points Management System",
+    description: "Free loyalty points management for businesses. Go live in 2 minutes. Free forever for unlimited customers.",
+    images: ["/og-image.png"],
+    creator: "@pointnow",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  alternates: {
+    canonical: "https://pointnow.io",
+  },
+  category: "business",
 };
 
 export default function RootLayout({
