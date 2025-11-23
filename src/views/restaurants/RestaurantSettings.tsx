@@ -614,10 +614,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                           <button
                             onClick={() => setDeleteConfirm(img.image_url)}
                             disabled={isUploading}
-                            className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                            className="absolute top-2 right-2 p-2 sm:p-1.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity disabled:opacity-50 shadow-lg sm:shadow-none"
                             title="Remove image"
+                            aria-label="Remove image"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-5 h-5 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       ))}
