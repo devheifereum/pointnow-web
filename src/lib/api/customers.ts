@@ -7,6 +7,8 @@ import type {
   LeaderboardParams,
   CreateCustomerWithUserPayload,
   CreateCustomerWithUserResponse,
+  UpdateCustomerPayload,
+  UpdateCustomerResponse,
   CustomerPositionResponse,
   CustomerPositionParams,
   UserProfileResponse,
@@ -33,6 +35,20 @@ export const customersApi = {
     }
 
     return api.get<CustomersResponse>(`/customers?${queryParams}`);
+  },
+
+  getByBusiness: async (businessId: string, params?: { page?: number; limit?: number }): Promise<CustomersResponse> => {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) {
+      queryParams.append("page", params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append("limit", params.limit.toString());
+    }
+
+    const queryString = queryParams.toString();
+    return api.get<CustomersResponse>(`/customers/business/${businessId}${queryString ? `?${queryString}` : ""}`);
   },
 
   search: async (params: CustomersSearchParams): Promise<CustomersResponse> => {
@@ -85,5 +101,13 @@ export const customersApi = {
 
   getUserProfile: async (userId: string): Promise<UserProfileResponse> => {
     return api.get<UserProfileResponse>(`/users/profile/${userId}`);
+  },
+
+  update: async (customerId: string, payload: UpdateCustomerPayload): Promise<UpdateCustomerResponse> => {
+    return api.patch<UpdateCustomerResponse>(`/customers/${customerId}`, payload);
+  },
+
+  updateByBusiness: async (customerId: string, businessId: string, payload: UpdateCustomerPayload): Promise<UpdateCustomerResponse> => {
+    return api.patch<UpdateCustomerResponse>(`/customers/${customerId}/business/${businessId}`, payload);
   },
 };

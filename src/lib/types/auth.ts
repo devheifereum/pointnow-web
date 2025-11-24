@@ -188,6 +188,7 @@ export interface AuthUser {
 export interface UpdateUserRequest {
   name?: string;
   email?: string;
+  phone_number?: string;
   password?: string;
   current_password?: string;
 }

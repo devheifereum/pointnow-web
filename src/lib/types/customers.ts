@@ -17,6 +17,7 @@ export interface Customer {
   name: string;
   email?: string;
   phone_number?: string;
+  user_id?: string; // User ID for updating user information
   points?: number; // Legacy field, use total_points for leaderboard
   total_points?: number; // From leaderboard API
   visits?: number; // Legacy field, use total_visits for leaderboard
@@ -88,6 +89,20 @@ export interface CreateCustomerWithUserResponse {
   data: {
     customer: Customer;
     [key: string]: unknown;
+  };
+}
+
+export interface UpdateCustomerPayload {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+}
+
+export interface UpdateCustomerResponse {
+  message: string;
+  status_code: number;
+  data: {
+    customer: Customer;
   };
 }
 
