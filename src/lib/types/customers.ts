@@ -12,12 +12,26 @@ export interface LeaderboardMetadataResponse {
   };
 }
 
+export interface CustomerBusiness {
+  id: string;
+  customer_id: string;
+  business: {
+    id: string;
+    name: string;
+  };
+  total_points: number;
+  total_visits: number;
+  last_transaction_at?: string;
+  last_visit_at?: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
   email?: string;
   phone_number?: string;
   user_id?: string; // User ID for updating user information
+  customer_businesses?: CustomerBusiness[]; // From search API
   points?: number; // Legacy field, use total_points for leaderboard
   total_points?: number; // From leaderboard API
   visits?: number; // Legacy field, use total_visits for leaderboard

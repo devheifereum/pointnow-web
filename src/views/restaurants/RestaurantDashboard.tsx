@@ -228,34 +228,58 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setError(null);
 
     try {
-      // Register the customer to this business using the customer's info from search
-      const response = await customersApi.createWithUser({
-        name: customer.name,
-        email: customer.email || "",
-        phone_number: customer.phone_number || "",
-        is_active: true,
-        metadata: {},
-        business: {
-          business_id: businessId,
-          branch_id: selectedBranchId,
-          employee_id: staffId,
-          metadata: {},
+      // Check if customer already has a customer_business entry for this business
+      const existingCustomerBusiness = customer.customer_businesses?.find(
+        (cb) => cb.business.id === businessId
+      );
+
+      if (existingCustomerBusiness) {
+        // Customer already registered with this business - use existing data
+        const customerWithPoints: Customer = {
+          ...customer,
+          total_points: existingCustomerBusiness.total_points,
+          points: existingCustomerBusiness.total_points,
+        };
+        setCurrentCustomer(customerWithPoints);
+        setShowCustomerSearch(false);
+        setSearchQuery("");
+        setPointsInput("");
+        setError(null);
+
+        toast.success("Customer selected!", {
+          description: `${customer.name} is already registered with your business`,
+          duration: 4000,
+        });
+      } else {
+        // Customer not registered with this business - register them
+        const response = await customersApi.createWithUser({
+          name: customer.name,
+          email: customer.email || "",
+          phone_number: customer.phone_number || "",
           is_active: true,
-          total_points: 0,
-        },
-      });
+          metadata: {},
+          business: {
+            business_id: businessId,
+            branch_id: selectedBranchId,
+            employee_id: staffId,
+            metadata: {},
+            is_active: true,
+            total_points: 0,
+          },
+        });
 
-      const registeredCustomer = response.data.customer;
-      setCurrentCustomer(registeredCustomer);
-    setShowCustomerSearch(false);
-    setSearchQuery("");
-    setPointsInput("");
-    setError(null);
+        const registeredCustomer = response.data.customer;
+        setCurrentCustomer(registeredCustomer);
+        setShowCustomerSearch(false);
+        setSearchQuery("");
+        setPointsInput("");
+        setError(null);
 
-      toast.success("Customer registered successfully!", {
-        description: `${customer.name} has been registered to your business`,
-        duration: 4000,
-      });
+        toast.success("Customer registered successfully!", {
+          description: `${customer.name} has been registered to your business`,
+          duration: 4000,
+        });
+      }
     } catch (err) {
       if (err instanceof ApiClientError) {
         // Use the server's error message directly
