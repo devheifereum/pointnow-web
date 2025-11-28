@@ -9,7 +9,7 @@ import { constructMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = constructMetadata({
   title: "Free Loyalty Points Management System for Businesses",
   description: "PointNow helps businesses create and manage loyalty programs in minutes. Free forever for unlimited customers. Customers can check points, businesses reward loyalty.",
-  canonical: "https://pointnow.io/home",
+  canonical: "https://www.pointnow.io/home",
 });
 
 export default function Home() {

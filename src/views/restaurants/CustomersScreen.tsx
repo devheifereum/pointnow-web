@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Edit2, Loader2, Save, User, Mail, Phone, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";

@@ -1,16 +1,15 @@
-"use client";
-
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import RestaurantAuthScreen from "@/views/auth/RestaurantAuthScreen";
-import UserAuthScreen from "@/views/auth/UserAuthScreen";
+import type { Metadata } from "next";
+import AuthContent from "./AuthContent";
 
-function AuthContent() {
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") || "business"; // Default to business mode
-
-  return mode === "user" ? <UserAuthScreen /> : <RestaurantAuthScreen />;
-}
+export const metadata: Metadata = {
+  title: "Login or Sign Up | PointNow",
+  description: "Sign in to your PointNow account or create a new account. Manage your loyalty points and rewards.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function AuthPage() {
   return (
@@ -19,4 +18,3 @@ export default function AuthPage() {
     </Suspense>
   );
 }
-

@@ -1,5 +1,3 @@
-import { api } from "./client";
-
 export interface FileUploadResponse {
   message: string;
   status: number;

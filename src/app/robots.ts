@@ -16,6 +16,8 @@ export default function robots(): MetadataRoute.Robots {
           "/*/staff/",
           "/*/analytics/",
           "/*/transactions/",
+          "/*/branches/",
+          "/*/customers/",
         ],
       },
       {
@@ -31,10 +33,11 @@ export default function robots(): MetadataRoute.Robots {
           "/*/staff/",
           "/*/analytics/",
           "/*/transactions/",
+          "/*/branches/",
+          "/*/customers/",
         ],
       },
     ],
-    sitemap: "https://pointnow.io/sitemap.xml",
+    sitemap: "https://www.pointnow.io/sitemap.xml",
   };
 }
-

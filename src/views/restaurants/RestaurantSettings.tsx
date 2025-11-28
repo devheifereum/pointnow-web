@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Building2,
   MapPin,
@@ -554,13 +555,15 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                   {previewUrl && (
                     <div className="space-y-4">
                       <div className="relative inline-block">
-                        <div className="aspect-square rounded-lg overflow-hidden border-2 border-[#7bc74d] max-w-xs">
-                          <img
+                        <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#7bc74d] max-w-xs">
+                          <Image
                             src={previewUrl}
                             alt="Preview"
-                            className="w-full h-full object-cover"
-                />
-              </div>
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
                         <button
                           onClick={handleCancelPreview}
                           disabled={isUploading}
@@ -604,11 +607,13 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {businessImages.map((img, index) => (
                         <div key={index} className="relative group">
-                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                            <img
+                          <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                            <Image
                               src={img.image_url}
                               alt={`Business image ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
+                              unoptimized
                             />
                           </div>
                           <button

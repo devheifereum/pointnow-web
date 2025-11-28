@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, ChevronRight, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
@@ -357,10 +358,13 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                   <div className="relative mr-4 sm:mr-6 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 overflow-hidden group">
                     {businessData.business_images && businessData.business_images.length > 0 ? (
                       <>
-                        <img
+                        <Image
                           src={businessData.business_images[currentImageIndex]?.image_url || businessData.business_images[0].image_url}
                           alt={businessData.name}
+                          width={80}
+                          height={80}
                           className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-cover rounded-lg transition-opacity duration-300"
+                          unoptimized
                         />
                         {businessData.business_images.length > 1 && (
                           <>

@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: LeaderboardPageProps): Promis
   return constructMetadata({
     title: `${businessName} - Points Leaderboard`,
     description: `View the loyalty points leaderboard for ${businessName}. Check your ranking, points, and compete with other customers.`,
-    canonical: `https://pointnow.io/leaderboard/${encodeURIComponent(businessName)}`,
+    canonical: `https://www.pointnow.io/leaderboard/${encodeURIComponent(businessName)}`,
   });
 }
 

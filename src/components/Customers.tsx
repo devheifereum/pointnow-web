@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Loader2, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { LightRays } from "@/components/ui/light-rays";
@@ -163,10 +164,12 @@ export default function Restaurants() {
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                     {currentImage ? (
                       <>
-                        <img
+                        <Image
                           src={currentImage.image_url}
                           alt={business.name}
-                          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                          fill
+                          className="object-cover transition-opacity duration-300"
+                          unoptimized
                         />
                         <div className="absolute inset-0 bg-black/20" />
                         {hasMultipleImages && (

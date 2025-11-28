@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pointnow.io"),
+  metadataBase: new URL("https://www.pointnow.io"),
   title: {
     default: "PointNow - Free Loyalty Points Management System",
     template: "%s | PointNow",
@@ -43,13 +43,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://pointnow.io",
+    url: "https://www.pointnow.io",
     siteName: "PointNow",
     title: "PointNow - Free Loyalty Points Management System",
     description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://www.pointnow.io/og-image.png",
         width: 1200,
         height: 630,
         alt: "PointNow - Loyalty Points Management",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PointNow - Free Loyalty Points Management System",
     description: "Free loyalty points management for businesses. Go live in 2 minutes. Free forever for unlimited customers.",
-    images: ["/og-image.png"],
+    images: ["https://www.pointnow.io/og-image.png"],
     creator: "@pointnow",
   },
   robots: {
@@ -77,11 +77,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
   alternates: {
-    canonical: "https://pointnow.io",
+    canonical: "https://www.pointnow.io",
   },
   category: "business",
 };

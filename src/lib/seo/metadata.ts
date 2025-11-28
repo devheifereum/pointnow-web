@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 const siteConfig = {
   name: "PointNow",
   description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
-  url: "https://pointnow.io",
-  ogImage: "https://pointnow.io/og-image.png",
+  url: "https://www.pointnow.io",
+  ogImage: "https://www.pointnow.io/og-image.png",
   links: {
     twitter: "https://twitter.com/pointnow",
     github: "https://github.com/pointnow",
@@ -97,4 +97,3 @@ export function constructMetadata({
     }),
   };
 }
-

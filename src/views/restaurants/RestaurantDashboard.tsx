@@ -358,7 +358,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
       });
       const updatedCustomers = customersResponse.data.customers || [];
       setCustomers(updatedCustomers);
-      } catch (refreshError) {
+      } catch {
         // Silently fail refresh - transaction already succeeded
         console.log("Failed to refresh customer list, but transaction succeeded");
       }

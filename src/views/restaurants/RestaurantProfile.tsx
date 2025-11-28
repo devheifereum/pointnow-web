@@ -15,7 +15,6 @@ export default function RestaurantProfile({ restaurantName }: RestaurantProfileP
   void restaurantName;
   
   const [activeTab, setActiveTab] = useState("description");
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Mock restaurant data
   const restaurant = {
