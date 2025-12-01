@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
+import fs from "fs";
+import path from "path";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export const alt = "PointNow - Free Loyalty Points Management System";
 export const size = {
@@ -10,6 +12,19 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
+  // Load the logo image from public folder
+  const logoPath = path.join(process.cwd(), "public", "pointnow-logo.png");
+  let logoData: string | null = null;
+  
+  try {
+    const logoBuffer = fs.readFileSync(logoPath);
+    const base64 = logoBuffer.toString("base64");
+    logoData = `data:image/png;base64,${base64}`;
+  } catch (error) {
+    // Silently fail and use fallback
+    console.error("Failed to load logo:", error);
+  }
+
   return new ImageResponse(
     (
       <div
@@ -57,20 +72,33 @@ export default async function Image() {
             marginBottom: "20px",
           }}
         >
-          <div
-            style={{
-              width: "60px",
-              height: "60px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, #7bc74d 0%, #6ab63d 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: "16px",
-            }}
-          >
-            <span style={{ color: "white", fontSize: "32px", fontWeight: "bold" }}>P</span>
-          </div>
+          {logoData ? (
+            <img
+              src={logoData}
+              alt="PointNow Logo"
+              width={80}
+              height={80}
+              style={{
+                marginRight: "16px",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, #7bc74d 0%, #6ab63d 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "16px",
+              }}
+            >
+              <span style={{ color: "white", fontSize: "32px", fontWeight: "bold" }}>P</span>
+            </div>
+          )}
           <span style={{ fontSize: "48px", fontWeight: "800", color: "#111" }}>
             PointNow
           </span>
@@ -126,5 +154,6 @@ export default async function Image() {
     }
   );
 }
+
 
 

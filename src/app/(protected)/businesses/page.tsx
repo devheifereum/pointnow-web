@@ -9,7 +9,40 @@ export const metadata: Metadata = constructMetadata({
   canonical: "https://www.pointnow.io/businesses",
 });
 
-export default function BusinessesPage() {
+// Server-side function to fetch initial businesses data for SEO
+async function getInitialBusinesses() {
+  try {
+    // Use the same API URL pattern as the client
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.pointnow.io";
+    // Construct URL - if API_URL already includes /api/v1, use it, otherwise add it
+    const baseUrl = API_URL.endsWith('/api/v1') ? API_URL : `${API_URL}/api/v1`;
+    const response = await fetch(`${baseUrl}/business?page=1&limit=19`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Add user-agent to identify server-side requests
+        "User-Agent": "PointNow-Server/1.0",
+      },
+      // Cache for 5 minutes to reduce API calls
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data?.data?.businesses || [];
+  } catch (error) {
+    // Silently fail - client-side will handle loading
+    return null;
+  }
+}
+
+export default async function BusinessesPage() {
+  // Fetch initial data server-side for SEO
+  const initialBusinesses = await getInitialBusinesses();
+
   // Server-rendered content for SEO - Google can see this immediately
   return (
     <>
@@ -26,6 +59,17 @@ export default function BusinessesPage() {
             mainEntity: {
               "@type": "ItemList",
               name: "Partner Businesses",
+              numberOfItems: initialBusinesses?.length || 0,
+              itemListElement: initialBusinesses?.slice(0, 10).map((business: any, index: number) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                item: {
+                  "@type": "LocalBusiness",
+                  name: business.name,
+                  description: business.description,
+                  url: `https://www.pointnow.io/leaderboard/${business.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+                },
+              })) || [],
             },
           }),
         }}
@@ -39,6 +83,18 @@ export default function BusinessesPage() {
         <p>
           Browse our directory of partner merchants who offer loyalty point programs. Search for businesses, check your loyalty points, and view leaderboards.
         </p>
+        {/* Server-rendered business list for SEO */}
+        {initialBusinesses && initialBusinesses.length > 0 && (
+          <ul>
+            {initialBusinesses.slice(0, 10).map((business: any) => (
+              <li key={business.id}>
+                <h2>{business.name}</h2>
+                {business.description && <p>{business.description}</p>}
+                {business.address && <p>Location: {business.address}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <Suspense fallback={<div>Loading...</div>}>
         <AllRestaurants />
