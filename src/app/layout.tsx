@@ -83,6 +83,9 @@ export const metadata: Metadata = {
     canonical: "https://www.pointnow.io",
   },
   category: "business",
+  verification: {
+    google: "xh0kZsRv-OWIQwcOh0DWEtrtIAK6HRsOoY16XgHJnxw",
+  },
 };
 
 export default function RootLayout({
