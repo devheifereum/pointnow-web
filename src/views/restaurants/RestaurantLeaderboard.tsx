@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Trophy, Medal, Award, Crown, Search, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
@@ -160,10 +161,69 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
     );
 
 
+  // Medal icon paths - Using local Flaticon images
+  const medalIcons = {
+    gold: "/medal-1.png", // 1st place - Gold medal
+    silver: "/medal-2.png", // 2nd place - Silver medal
+    bronze: "/medal-3.png", // 3rd place - Bronze medal
+  };
+
+  // Medal Icon Components using images from Flaticon
+  const GoldMedalIcon = ({ size = 24 }: { size?: number }) => (
+    <img
+      src={medalIcons.gold}
+      alt="Gold Medal - 1st Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
+  const SilverMedalIcon = ({ size = 24 }: { size?: number }) => (
+    <img
+      src={medalIcons.silver}
+      alt="Silver Medal - 2nd Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
+  const BronzeMedalIcon = ({ size = 24 }: { size?: number }) => (
+    <img
+      src={medalIcons.bronze}
+      alt="Bronze Medal - 3rd Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
   const getMedalIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />;
-    if (rank === 2) return <Medal className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />;
-    if (rank === 3) return <Medal className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />;
+    if (rank === 1) {
+      return (
+        <div className="relative">
+          <GoldMedalIcon size={24} />
+        </div>
+      );
+    }
+    if (rank === 2) {
+      return (
+        <div className="relative">
+          <SilverMedalIcon size={24} />
+        </div>
+      );
+    }
+    if (rank === 3) {
+      return (
+        <div className="relative">
+          <BronzeMedalIcon size={24} />
+        </div>
+      );
+    }
     return <span className="text-gray-400 font-bold text-sm sm:text-base">#{rank}</span>;
   };
 

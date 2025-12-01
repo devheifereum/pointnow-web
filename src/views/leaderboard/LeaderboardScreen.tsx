@@ -239,17 +239,74 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
     joinedDate: string;
   }
 
-  // Get medal component based on rank
+  // Medal icon paths - Using local Flaticon images
+  const medalIcons = {
+    gold: "/medal-1.png", // 1st place - Gold medal
+    silver: "/medal-2.png", // 2nd place - Silver medal
+    bronze: "/medal-3.png", // 3rd place - Bronze medal
+  };
+
+  // Medal Icon Components using images from Flaticon
+  const GoldMedalIcon = ({ size = 32 }: { size?: number }) => (
+    <img
+      src={medalIcons.gold}
+      alt="Gold Medal - 1st Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
+  const SilverMedalIcon = ({ size = 32 }: { size?: number }) => (
+    <img
+      src={medalIcons.silver}
+      alt="Silver Medal - 2nd Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
+  const BronzeMedalIcon = ({ size = 32 }: { size?: number }) => (
+    <img
+      src={medalIcons.bronze}
+      alt="Bronze Medal - 3rd Place"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ objectFit: 'contain' }}
+    />
+  );
+
+  // Get medal component based on rank - Enhanced design
   const getMedalIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Crown className="w-8 h-8 text-yellow-500 fill-yellow-500" />;
+        return (
+          <div className="relative">
+            <GoldMedalIcon size={32} />
+          </div>
+        );
       case 2:
-        return <Medal className="w-7 h-7 text-gray-400 fill-gray-400" />;
+        return (
+          <div className="relative">
+            <SilverMedalIcon size={32} />
+          </div>
+        );
       case 3:
-        return <Medal className="w-6 h-6 text-orange-600 fill-orange-600" />;
+        return (
+          <div className="relative">
+            <BronzeMedalIcon size={32} />
+          </div>
+        );
       default:
-        return <div className="w-8 h-8 flex items-center justify-center text-gray-500 font-gilroy-black text-lg">#{rank}</div>;
+        return (
+          <div className="w-8 h-8 flex items-center justify-center text-gray-500 font-gilroy-black text-lg bg-gray-100 rounded-full">
+            #{rank}
+          </div>
+        );
     }
   };
 
@@ -549,7 +606,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                           <div className={`w-20 h-20 rounded-full ${filteredLeaderboard[0].avatarColor} flex items-center justify-center mb-2`}>
                             <User className="w-10 h-10 text-white" />
                           </div>
-                          <div className="absolute -top-4 -right-4 animate-pulse">
+                          <div className="absolute -top-4 -right-4">
                             {getMedalIcon(1)}
                           </div>
                         </div>

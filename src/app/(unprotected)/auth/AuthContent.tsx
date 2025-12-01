@@ -11,3 +11,4 @@ export default function AuthContent() {
   return mode === "user" ? <UserAuthScreen /> : <RestaurantAuthScreen />;
 }
 
+

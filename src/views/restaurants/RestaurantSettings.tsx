@@ -562,8 +562,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                             fill
                             className="object-cover"
                             unoptimized
-                          />
-                        </div>
+                />
+              </div>
                         <button
                           onClick={handleCancelPreview}
                           disabled={isUploading}
