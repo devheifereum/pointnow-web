@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import AllRestaurants from "@/views/restaurants/AllRestaurants";
 import type { Metadata } from "next";
 import { constructMetadata } from "@/lib/seo/metadata";
+import type { Business } from "@/lib/types/business";
 
 export const metadata: Metadata = constructMetadata({
   title: "Find Businesses & Check Loyalty Points",
@@ -33,7 +34,7 @@ async function getInitialBusinesses() {
 
     const data = await response.json();
     return data?.data?.businesses || [];
-  } catch (error) {
+  } catch {
     // Silently fail - client-side will handle loading
     return null;
   }
@@ -60,7 +61,7 @@ export default async function BusinessesPage() {
               "@type": "ItemList",
               name: "Partner Businesses",
               numberOfItems: initialBusinesses?.length || 0,
-              itemListElement: initialBusinesses?.slice(0, 10).map((business: any, index: number) => ({
+              itemListElement: initialBusinesses?.slice(0, 10).map((business: Business, index: number) => ({
                 "@type": "ListItem",
                 position: index + 1,
                 item: {
@@ -86,7 +87,7 @@ export default async function BusinessesPage() {
         {/* Server-rendered business list for SEO */}
         {initialBusinesses && initialBusinesses.length > 0 && (
           <ul>
-            {initialBusinesses.slice(0, 10).map((business: any) => (
+            {initialBusinesses.slice(0, 10).map((business: Business) => (
               <li key={business.id}>
                 <h2>{business.name}</h2>
                 {business.description && <p>{business.description}</p>}
