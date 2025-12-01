@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { constructMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructMetadata({
-  title: "Pricing - Free Forever for Unlimited Customers",
-  description: "PointNow is free forever for unlimited customers. No hidden fees, no credit card required. Start your loyalty program today.",
+  title: "Pricing - Affordable Plans for Every Business",
+  description: "Simple, transparent pricing for loyalty programs. Choose the perfect plan for your business. Start your loyalty program today.",
   canonical: "https://www.pointnow.io/pricing",
 });
 
@@ -20,26 +20,26 @@ export default function PricingPage() {
             "@context": "https://schema.org",
             "@type": "WebPage",
             name: "Pricing - PointNow",
-            description: "PointNow is free forever for unlimited customers. No hidden fees, no credit card required.",
+            description: "Simple, transparent pricing for loyalty programs. Choose the perfect plan for your business.",
             url: "https://www.pointnow.io/pricing",
             mainEntity: {
               "@type": "Offer",
-              name: "Free Forever Plan",
-              price: "0",
+              name: "Professional Plan",
+              price: "73",
               priceCurrency: "USD",
-              description: "Free forever for unlimited customers",
+              description: "Affordable pricing for unlimited customers",
             },
           }),
         }}
       />
       {/* Initial content visible to Googlebot */}
       <div className="sr-only">
-        <h1>Pricing - Free Forever for Unlimited Customers</h1>
+        <h1>Pricing - Affordable Plans for Every Business</h1>
         <p>
-          PointNow is free forever for unlimited customers. No hidden fees, no credit card required. Start your loyalty program today.
+          Simple, transparent pricing for loyalty programs. Choose the perfect plan for your business. Start your loyalty program today.
         </p>
         <p>
-          Our pricing plans include a free forever plan with unlimited customers, professional plans for growing businesses, and enterprise solutions for large organizations.
+          Our pricing plans include professional plans for growing businesses and enterprise solutions for large organizations, all with unlimited customers.
         </p>
       </div>
       <PricingScreen />

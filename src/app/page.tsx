@@ -6,9 +6,9 @@ import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "PointNow - Free Loyalty Points Management System",
+  title: "PointNow - Loyalty Points Management System",
   description:
-    "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+    "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
   keywords: [
     "loyalty points",
     "loyalty program",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "loyalty system",
     "rewards program",
     "points tracking",
-    "free loyalty software",
+    "affordable loyalty software",
     "loyalty points app",
   ],
   openGraph: {
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://www.pointnow.io",
     siteName: "PointNow",
-    title: "PointNow - Free Loyalty Points Management System",
+    title: "PointNow - Loyalty Points Management System",
     description:
-      "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+      "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
     images: [
       {
         url: "https://www.pointnow.io/og-image.png",
@@ -42,9 +42,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PointNow - Free Loyalty Points Management System",
+    title: "PointNow - Loyalty Points Management System",
     description:
-      "Free loyalty points management for businesses. Go live in 2 minutes. Free forever for unlimited customers.",
+      "Loyalty points management for businesses. Go live in 2 minutes. Affordable pricing for unlimited customers.",
     images: ["https://www.pointnow.io/og-image.png"],
     creator: "@pointnow",
   },
@@ -63,11 +63,11 @@ export default function RootPage() {
     url: "https://www.pointnow.io",
     offers: {
       "@type": "Offer",
-      price: "0",
+      price: "73",
       priceCurrency: "USD",
     },
     description:
-      "Free loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
+      "Loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
     featureList: [
       "Loyalty Points Management",
       "Customer Rewards System",
@@ -75,8 +75,8 @@ export default function RootPage() {
       "Business Analytics",
       "Transaction Tracking",
       "Staff Management",
-      "Free Forever",
       "Unlimited Customers",
+      "Affordable Pricing",
     ],
     aggregateRating: {
       "@type": "AggregateRating",

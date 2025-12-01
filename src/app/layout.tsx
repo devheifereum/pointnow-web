@@ -14,10 +14,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.pointnow.io"),
   title: {
-    default: "PointNow - Free Loyalty Points Management System",
+    default: "PointNow - Loyalty Points Management System",
     template: "%s | PointNow",
   },
-  description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+  description: "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
   keywords: [
     "loyalty points",
     "loyalty program",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "loyalty system",
     "rewards program",
     "points tracking",
-    "free loyalty software",
+    "affordable loyalty software",
     "loyalty points app",
   ],
   authors: [{ name: "PointNow" }],
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://www.pointnow.io",
     siteName: "PointNow",
-    title: "PointNow - Free Loyalty Points Management System",
-    description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+    title: "PointNow - Loyalty Points Management System",
+    description: "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
     images: [
       {
         url: "https://www.pointnow.io/og-image.png",
@@ -58,8 +58,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PointNow - Free Loyalty Points Management System",
-    description: "Free loyalty points management for businesses. Go live in 2 minutes. Free forever for unlimited customers.",
+    title: "PointNow - Loyalty Points Management System",
+    description: "Loyalty points management for businesses. Go live in 2 minutes. Affordable pricing for unlimited customers.",
     images: ["https://www.pointnow.io/og-image.png"],
     creator: "@pointnow",
   },

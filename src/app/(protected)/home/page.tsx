@@ -7,8 +7,8 @@ import type { Metadata } from "next";
 import { constructMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructMetadata({
-  title: "Free Loyalty Points Management System for Businesses",
-  description: "PointNow helps businesses create and manage loyalty programs in minutes. Free forever for unlimited customers. Customers can check points, businesses reward loyalty.",
+  title: "Loyalty Points Management System for Businesses",
+  description: "PointNow helps businesses create and manage loyalty programs in minutes. Affordable pricing for unlimited customers. Customers can check points, businesses reward loyalty.",
   canonical: "https://www.pointnow.io/home",
 });
 
@@ -21,10 +21,10 @@ export default function Home() {
     operatingSystem: "Web",
     offers: {
       "@type": "Offer",
-      price: "0",
+      price: "73",
       priceCurrency: "USD",
     },
-    description: "Free loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
+    description: "Loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
     featureList: [
       "Loyalty Points Management",
       "Customer Rewards System",
@@ -32,8 +32,8 @@ export default function Home() {
       "Business Analytics",
       "Transaction Tracking",
       "Staff Management",
-      "Free Forever",
       "Unlimited Customers",
+      "Affordable Pricing",
     ],
     aggregateRating: {
       "@type": "AggregateRating",

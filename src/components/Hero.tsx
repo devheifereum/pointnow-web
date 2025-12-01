@@ -36,7 +36,7 @@ export default function Hero() {
     NEW
   </span>
   <span className="text-gray-900 font-medium text-sm md:text-base">
-    It&apos;s free FOREVER for unlimited customers
+    Start your loyalty program in minutes
   </span>
 </div>
 
@@ -56,7 +56,7 @@ export default function Hero() {
         <div className="mb-8 sm:mb-12 px-4">
           <Link href="/auth?mode=user">
             <button className="bg-[#7bc74d] text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-[#6ab63d] transition shadow-lg hover:shadow-xl w-full sm:w-auto">
-              Get Started - It&apos;s Free
+              Get Started
             </button>
           </Link>
         </div>

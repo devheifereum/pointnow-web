@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 const siteConfig = {
   name: "PointNow",
-  description: "Free loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Free forever for unlimited customers.",
+  description: "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
   url: "https://www.pointnow.io",
   ogImage: "https://www.pointnow.io/og-image.png",
   links: {
@@ -46,7 +46,7 @@ export function constructMetadata({
       "loyalty system",
       "rewards program",
       "points tracking",
-      "free loyalty software",
+      "affordable loyalty software",
       "loyalty points app",
     ],
     authors: [{ name: siteConfig.name }],

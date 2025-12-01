@@ -4,7 +4,7 @@ import path from "path";
 
 export const runtime = "nodejs";
 
-export const alt = "PointNow - Free Loyalty Points Management System";
+export const alt = "PointNow - Loyalty Points Management System";
 export const size = {
   width: 1200,
   height: 630,
@@ -116,7 +116,7 @@ export default async function Image() {
             marginBottom: "24px",
           }}
         >
-          Free Loyalty Points Management
+          Loyalty Points Management
         </div>
 
         {/* Subheading */}
@@ -129,7 +129,7 @@ export default async function Image() {
             marginBottom: "40px",
           }}
         >
-          Go live in 2 minutes. Free forever for unlimited customers.
+          Go live in 2 minutes. Affordable pricing for unlimited customers.
         </div>
 
         {/* CTA Badge */}
