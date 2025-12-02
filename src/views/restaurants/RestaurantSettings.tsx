@@ -36,7 +36,6 @@ import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
 import type { BusinessDetail } from "@/lib/types/business";
 import type { SubscriptionProduct } from "@/lib/types/subscription";
-import { Switch } from "@/components/ui/switch";
 
 interface RestaurantSettingsProps {
   restaurantName?: string;
@@ -51,7 +50,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [error, setError] = useState<string | null>(null);
   const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [isYearly, setIsYearly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -138,12 +136,17 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   };
 
   const formatPrice = (price: number) => {
+    // Return just the number without currency symbol
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(price); // Price is already in base currency
+    }).format(price);
+  };
+
+  const convertToUSD = (myrPrice: number) => {
+    // Using approximate conversion rate (1 USD ≈ 4.11 MYR)
+    // Rounding to nearest integer for cleaner display
+    return Math.round(myrPrice / 4.11);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -380,11 +383,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     businessDescription.trim() !== (business.description || "").trim()
   );
 
+  // Get monthly product for subscription (price is in MYR)
   const monthlyProduct = subscriptionProducts.find(p => p.duration === "MONTHLY");
-  const yearlyProduct = subscriptionProducts.find(p => p.duration === "YEARLY");
   
-  // Get the selected product based on toggle
-  const selectedProduct = isYearly ? yearlyProduct : monthlyProduct;
+  // Display price from API (in MYR)
+  const displayPriceMYR = monthlyProduct?.price || null;
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -703,26 +706,9 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
 
           {/* Subscription */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Subscription</h2>
-                <p className="text-sm text-gray-600 mt-1">Choose your plan</p>
-              </div>
-              
-              {/* Toggle Switch */}
-              <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-2">
-                <span className={`text-sm font-semibold transition-colors ${!isYearly ? 'text-black' : 'text-gray-500'}`}>
-                  Monthly
-                </span>
-                <Switch
-                  checked={isYearly}
-                  onCheckedChange={setIsYearly}
-                  className="data-[state=checked]:bg-[#7bc74d]"
-                />
-                <span className={`text-sm font-semibold transition-colors ${isYearly ? 'text-black' : 'text-gray-500'}`}>
-                  Annual
-                </span>
-              </div>
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Subscription</h2>
+              <p className="text-sm text-gray-600 mt-1">Choose your plan</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
@@ -749,29 +735,39 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                       <div className="flex items-center justify-center py-4">
                         <Loader2 className="w-5 h-5 animate-spin text-black" />
                       </div>
-                    ) : selectedProduct ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-gilroy-black text-black">
-                          {formatPrice(selectedProduct.price)}
-                        </span>
-                        <span className="text-gray-600">
-                          {isYearly ? "/year" : "/month"}
-                        </span>
-                      </div>
+                    ) : displayPriceMYR !== null ? (
+                      <>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-5xl font-gilroy-black text-black">
+                            ${formatPrice(convertToUSD(displayPriceMYR))}
+                          </span>
+                          <span className="text-gray-600">
+                            /month
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-2xl font-gilroy-black text-gray-700">
+                            RM{formatPrice(displayPriceMYR)}
+                          </span>
+                          <span className="text-gray-500 text-sm">
+                            /month
+                          </span>
+                        </div>
+                      </>
                     ) : (
                       <div className="flex items-baseline gap-2">
                         <span className="text-5xl font-gilroy-black text-black">-</span>
-                        <span className="text-gray-600">{isYearly ? "/year" : "/month"}</span>
+                        <span className="text-gray-600">/month</span>
                       </div>
                     )}
                   </div>
 
                   {/* CTA Button */}
                   <button
-                    onClick={() => selectedProduct && handleUpgrade(selectedProduct.link)}
-                    disabled={!selectedProduct || isLoadingProducts}
+                    onClick={() => monthlyProduct && handleUpgrade(monthlyProduct.link)}
+                    disabled={!monthlyProduct || isLoadingProducts}
                     className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 ${
-                      selectedProduct && !isLoadingProducts
+                      monthlyProduct && !isLoadingProducts
                         ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
                         : "bg-gray-200 text-gray-500 cursor-not-allowed"
                     }`}

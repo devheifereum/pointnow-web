@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { Trophy, Medal, Award, Crown, Search, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
+import { Trophy, Award, Search, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";

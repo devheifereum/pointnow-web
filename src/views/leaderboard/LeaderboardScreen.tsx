@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Trophy, Medal, Award, Crown, Calendar, Star, ChevronLeft, ChevronRight, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
+import { Trophy, Award, Calendar, Star, ChevronLeft, ChevronRight, Search, Loader2, LogIn, ArrowRight, Building2, User, Lightbulb } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
