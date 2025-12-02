@@ -15,6 +15,8 @@ import {
   Upload,
   Image as ImageIcon,
   X,
+  TrendingUp,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,6 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { businessApi } from "@/lib/api/business";
 import { fileApi } from "@/lib/api/file";
 import { subscriptionApi } from "@/lib/api/subscription";
@@ -33,7 +37,6 @@ import { ApiClientError } from "@/lib/api/client";
 import type { BusinessDetail } from "@/lib/types/business";
 import type { SubscriptionProduct } from "@/lib/types/subscription";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 
 interface RestaurantSettingsProps {
   restaurantName?: string;
@@ -384,33 +387,56 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const selectedProduct = isYearly ? yearlyProduct : monthlyProduct;
 
   return (
-    <>
-      {/* Page Header */}
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-gilroy-black text-black mb-2">Settings</h1>
-        <p className="text-xs sm:text-sm text-gray-600">View your business information</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Background Effects */}
+      <FlickeringGrid
+        className="absolute inset-0 opacity-10"
+        squareSize={6}
+        gridGap={8}
+        flickerChance={0.05}
+        color="#7bc74d"
+        maxOpacity={0.2}
+      />
+      
+      <AnimatedGridPattern
+        className="opacity-20"
+        width={60}
+        height={60}
+        numSquares={50}
+        maxOpacity={0.05}
+        duration={4}
+      />
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-red-600">{error}</p>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Page Header */}
+        <div className="mb-8 sm:mb-12 text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-gilroy-black text-black mb-4">Settings</h1>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">Manage your business information and subscription</p>
         </div>
-      )}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-[#7bc74d]" />
-          <span className="ml-3 text-gray-600">Loading business information...</span>
-        </div>
-      ) : business ? (
-      <div className="space-y-4 sm:space-y-6">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl max-w-4xl mx-auto">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-[#7bc74d]" />
+            <span className="ml-3 text-gray-600">Loading business information...</span>
+          </div>
+        ) : business ? (
+        <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto">
         {/* Business Information */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
+          <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-gilroy-black text-black">Business Information</h2>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Business Information</h2>
+              <p className="text-sm text-gray-600 mt-1">Update your business details</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -676,13 +702,16 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
         </div>
 
           {/* Subscription */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-gilroy-black text-black">Subscription</h2>
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Subscription</h2>
+                <p className="text-sm text-gray-600 mt-1">Choose your plan</p>
+              </div>
               
               {/* Toggle Switch */}
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${!isYearly ? 'text-black' : 'text-gray-500'}`}>
+              <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-2">
+                <span className={`text-sm font-semibold transition-colors ${!isYearly ? 'text-black' : 'text-gray-500'}`}>
                   Monthly
                 </span>
                 <Switch
@@ -690,145 +719,220 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                   onCheckedChange={setIsYearly}
                   className="data-[state=checked]:bg-[#7bc74d]"
                 />
-                <span className={`text-sm font-medium ${isYearly ? 'text-black' : 'text-gray-500'}`}>
+                <span className={`text-sm font-semibold transition-colors ${isYearly ? 'text-black' : 'text-gray-500'}`}>
                   Annual
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-              {/* Basic Plan - Static */}
-              <div className="relative bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-gray-200 flex flex-col h-full">
-                <div className="mb-6">
-                  <h3 className="text-xl sm:text-2xl font-gilroy-black text-black mb-2">Basic</h3>
-                  <p className="text-sm text-gray-600">A basic plan for startups and individual users.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
+              {/* Professional Plan - From API */}
+              <div className={`relative bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 border-4 border-[#7bc74d] transform md:scale-105 z-10`}>
+                {/* Badge */}
+                <div className="absolute top-0 right-0 bg-[#7bc74d] text-white text-xs font-semibold px-4 py-2 rounded-bl-xl">
+                  Most Popular
                 </div>
                 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-gilroy-black text-black">$0</span>
-                    <span className="text-sm text-gray-600">/month</span>
+                <div className="p-8">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
+                    <TrendingUp className="w-7 h-7 text-[#7bc74d]" />
+                  </div>
+
+                  {/* Plan Name */}
+                  <h3 className="text-2xl font-gilroy-black text-black mb-2">Professional</h3>
+                  <p className="text-gray-600 text-sm mb-6">For growing businesses ready to scale their loyalty programs</p>
+
+                  {/* Price */}
+                  <div className="mb-6">
+                    {isLoadingProducts ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="w-5 h-5 animate-spin text-black" />
+                      </div>
+                    ) : selectedProduct ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-5xl font-gilroy-black text-black">
+                          {formatPrice(selectedProduct.price)}
+                        </span>
+                        <span className="text-gray-600">
+                          {isYearly ? "/year" : "/month"}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-5xl font-gilroy-black text-black">-</span>
+                        <span className="text-gray-600">{isYearly ? "/year" : "/month"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    onClick={() => selectedProduct && handleUpgrade(selectedProduct.link)}
+                    disabled={!selectedProduct || isLoadingProducts}
+                    className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 ${
+                      selectedProduct && !isLoadingProducts
+                        ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    Subscribe
+                  </button>
+
+                  {/* Features */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Unlimited customers</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Basic points system</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Customer leaderboard</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Mobile-friendly dashboard</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Email support</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Basic analytics</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">QR code generation</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Advanced analytics & insights</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Custom branding & logo</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Multiple store locations</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">SMS notifications</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Referral program tools</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Export customer data</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Priority email support</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Custom point rules</span>
+                    </div>
                   </div>
                 </div>
-
-                <Button
-                  disabled
-                  variant="default"
-                  size="lg"
-                  className="w-full mb-6 bg-black hover:bg-gray-800 text-white"
-                >
-                  Subscribe
-                </Button>
-
-                <ul className="space-y-3 flex-1">
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm text-gray-700">Unlimited customers</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm text-gray-700">Basic analytics</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm text-gray-700">Point management</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm text-gray-700">Customer leaderboard</span>
-                  </li>
-                </ul>
               </div>
 
-              {/* Premium Plan - From API */}
-              <div className="relative bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-black flex flex-col h-full">
-                {isLoadingProducts ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-black" />
-                    <span className="ml-3 text-gray-600">Loading plans...</span>
+              {/* Enterprise Plan - Static */}
+              <div className="relative bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 border-2 border-gray-200 hover:border-[#7bc74d]">
+                {/* Badge */}
+                <div className="absolute top-0 right-0 bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-bl-xl">
+                  Premium
+                </div>
+
+                <div className="p-8">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
+                    <Crown className="w-7 h-7 text-purple-500" />
                   </div>
-                ) : (
-                  <>
-                    <div className="mb-6">
-                      <h3 className="text-xl sm:text-2xl font-gilroy-black text-black mb-2">Premium</h3>
-                      <p className="text-sm text-gray-600">A premium plan for growing businesses.</p>
+
+                  {/* Plan Name */}
+                  <h3 className="text-2xl font-gilroy-black text-black mb-2">Enterprise</h3>
+                  <p className="text-gray-600 text-sm mb-6">For large businesses with advanced needs and multiple locations</p>
+
+                  {/* Price */}
+                  <div className="mb-6">
+                    <span className="text-3xl font-gilroy-black text-black">
+                      Contact Us
+                    </span>
+                    <p className="text-gray-600 text-sm mt-2">
+                      Custom pricing for your business needs
+                    </p>
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    className="w-full py-3 rounded-xl font-semibold transition-colors mb-6 bg-gray-900 hover:bg-gray-800 text-white"
+                  >
+                    Contact Us
+                  </button>
+
+                  {/* Features */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Everything in Professional</span>
                     </div>
-
-                    <div className="mb-6">
-                      {selectedProduct ? (
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl sm:text-4xl font-gilroy-black text-black">
-                            {formatPrice(selectedProduct.price)}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {isYearly ? "/year" : "/month"}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl sm:text-4xl font-gilroy-black text-black">-</span>
-                          <span className="text-sm text-gray-600">{isYearly ? "/year" : "/month"}</span>
-                        </div>
-                      )}
-            </div>
-
-                    <Button
-                      onClick={() => selectedProduct && handleUpgrade(selectedProduct.link)}
-                      disabled={!selectedProduct}
-                      variant="default"
-                      size="lg"
-                      className="w-full mb-6 bg-black hover:bg-gray-800 text-white disabled:bg-gray-200 disabled:text-gray-500"
-                    >
-                      Subscribe
-                    </Button>
-
-                    <ul className="space-y-3 flex-1">
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-sm text-gray-700">Everything in Basic</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-sm text-gray-700">Advanced analytics & insights</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-sm text-gray-700">Priority support</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-sm text-gray-700">Custom branding</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-sm text-gray-700">API access</span>
-                      </li>
-                    </ul>
-                  </>
-                )}
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Full API access</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Dedicated account manager</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Custom integrations</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">White-label solution</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Advanced security features</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">24/7 phone support</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Custom point tiers</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Multi-language support</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">Onboarding & training</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">SLA guarantee</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       ) : null}
+      </div>
 
       {/* Delete Image Confirmation Dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={(open: boolean) => {
@@ -852,7 +956,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
             >
               Cancel
             </button>
-          <button
+            <button
               onClick={() => deleteConfirm && handleRemoveImage(deleteConfirm)}
               disabled={isUploading || !deleteConfirm}
               className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -865,11 +969,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
               ) : (
                 <span>Delete</span>
               )}
-          </button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 

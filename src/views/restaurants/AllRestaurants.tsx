@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Search, Grid, List, Loader2, Building2, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Search, Grid, List, Building2, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { StripedPattern } from "@/components/magicui/striped-pattern";
 import Navbar from "@/components/Navbar";
@@ -265,12 +265,67 @@ export default function AllRestaurants() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State - Skeleton Loaders */}
         {isLoading && (
-          <div className="text-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#7bc74d]" />
-            <p className="mt-4 text-gray-600">Loading businesses...</p>
-          </div>
+          viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/20 animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300" />
+                  
+                  {/* Content Skeleton */}
+                  <div className="p-6">
+                    <div className="mb-3">
+                      <div className="h-6 bg-gray-200 rounded-lg w-3/4 mb-2" />
+                      <div className="h-4 bg-gray-200 rounded-lg w-full mb-1" />
+                      <div className="h-4 bg-gray-200 rounded-lg w-5/6" />
+                    </div>
+                    
+                    {/* Address Skeleton */}
+                    <div className="flex items-start gap-1 mb-4">
+                      <div className="w-4 h-4 bg-gray-200 rounded mt-0.5 flex-shrink-0" />
+                      <div className="h-4 bg-gray-200 rounded-lg w-2/3" />
+                    </div>
+                    
+                    {/* Button Skeleton */}
+                    <div className="h-12 bg-gray-200 rounded-xl w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 flex items-center space-x-6 border border-white/20 animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex-shrink-0" />
+                  
+                  {/* Content Skeleton */}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-2">
+                      <div className="h-6 bg-gray-200 rounded-lg w-1/2 mb-2" />
+                      <div className="h-4 bg-gray-200 rounded-lg w-full mb-1" />
+                      <div className="h-4 bg-gray-200 rounded-lg w-3/4" />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-4 bg-gray-200 rounded-lg w-32" />
+                      </div>
+                      <div className="h-10 bg-gray-200 rounded-lg w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         )}
 
         {/* Error State */}
