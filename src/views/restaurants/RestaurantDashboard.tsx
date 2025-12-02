@@ -687,22 +687,36 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                     </div>
                 )}
 
-                {/* Search Input */}
-                <div className="relative mb-4 sm:mb-6">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.trim().length > 0) {
-                          setShowCustomerSearch(true);
-                      }
+                {/* Search Input with Add Button */}
+                <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        if (e.target.value.trim().length > 0) {
+                            setShowCustomerSearch(true);
+                        }
+                      }}
+                      placeholder="Search by name, email, or phone..."
+                      className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowNewCustomerForm(true);
+                      setShowCustomerSearch(false);
                     }}
-                    placeholder="Search by name, email, or phone..."
-                    className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
-                    autoFocus
-                  />
+                    disabled={!selectedBranchId}
+                    className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors shadow-lg flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+                    title={!selectedBranchId ? "Please select a branch first" : "Add new customer"}
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Add</span>
+                  </button>
                 </div>
 
                 {/* Customer List or Add New Button */}
