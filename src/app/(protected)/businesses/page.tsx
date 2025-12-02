@@ -14,7 +14,7 @@ async function getInitialBusinesses() {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.pointnow.io";
     const baseUrl = API_URL.endsWith('/api/v1') ? API_URL : `${API_URL}/api/v1`;
-    const response = await fetch(`${baseUrl}/business?page=1&limit=19`, {
+    const response = await fetch(`${baseUrl}/business?page=1&limit=100`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

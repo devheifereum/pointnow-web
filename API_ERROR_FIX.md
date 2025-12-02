@@ -127,3 +127,5 @@ After deploying:
 **The fix is deployed!** The page now fetches data server-side, so Googlebot can see the content without executing JavaScript. The API error should disappear after Google re-crawls your site.
 
 
+
+

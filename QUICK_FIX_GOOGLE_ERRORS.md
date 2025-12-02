@@ -81,3 +81,5 @@ I've already updated `next.config.ts` to add CORS headers for fonts. Deploy this
 **The main fix is configuring CORS in DigitalOcean Spaces!** Everything else is secondary.
 
 
+
+

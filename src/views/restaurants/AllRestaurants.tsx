@@ -60,22 +60,43 @@ export default function AllRestaurants() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page] = useState(1);
-  const [limit] = useState(19);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(100);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 100,
+    total_pages: 1,
+    has_next: false,
+    has_previous: false,
+  });
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
 
-  // Update search query when URL param changes
+  // Update search query and page when URL params change
   useEffect(() => {
     const queryParam = searchParams.get("query");
+    const pageParam = searchParams.get("page");
+    
     if (queryParam !== null) {
       setSearchQuery(queryParam);
     } else {
       setSearchQuery("");
     }
+    
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        setPage(pageNum);
+      }
+    } else {
+      setPage(1);
+    }
   }, [searchParams]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
+    // Reset to page 1 when searching
+    setPage(1);
     // Update URL without triggering navigation
     const params = new URLSearchParams(searchParams.toString());
     if (value.trim()) {
@@ -83,7 +104,22 @@ export default function AllRestaurants() {
     } else {
       params.delete("query");
     }
+    params.delete("page"); // Reset to page 1
     router.replace(`/businesses?${params.toString()}`, { scroll: false });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    // Update URL with new page
+    const params = new URLSearchParams(searchParams.toString());
+    if (newPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", newPage.toString());
+    }
+    router.replace(`/businesses?${params.toString()}`, { scroll: false });
+    // Scroll to top of results
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -102,6 +138,18 @@ export default function AllRestaurants() {
           ? response.data.businesses
           : response.data.businesses.filter(business => business.is_active !== false);
         setBusinesses(filteredBusinesses);
+        
+        // Update pagination metadata
+        if (response.data.metadata) {
+          setPagination({
+            total: response.data.metadata.total,
+            page: response.data.metadata.page,
+            limit: response.data.metadata.limit,
+            total_pages: response.data.metadata.total_pages,
+            has_next: response.data.metadata.has_next,
+            has_previous: response.data.metadata.has_previous,
+          });
+        }
         } catch (err) {
           if (err instanceof ApiClientError) {
             setError(err.message || "Failed to load businesses");
@@ -193,7 +241,13 @@ export default function AllRestaurants() {
 
           {/* Results Count */}
           <div className="text-sm text-black">
-            {isLoading ? "Loading..." : `Showing ${businesses.length} business${businesses.length !== 1 ? 'es' : ''}${searchQuery.trim() ? ` for "${searchQuery}"` : ''}`}
+            {isLoading ? "Loading..." : (
+              pagination.total > 0 ? (
+                `Showing ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} business${pagination.total !== 1 ? 'es' : ''}${searchQuery.trim() ? ` for "${searchQuery}"` : ''}`
+              ) : (
+                `No businesses found${searchQuery.trim() ? ` for "${searchQuery}"` : ''}`
+              )
+            )}
           </div>
         </div>
 
@@ -479,6 +533,36 @@ export default function AllRestaurants() {
           )
         )}
 
+
+        {/* Pagination */}
+        {!isLoading && !error && pagination.total_pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-8 pt-6 border-t border-gray-200">
+            <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+              Showing page {pagination.page} of {pagination.total_pages} ({pagination.total} total)
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={!pagination.has_previous}
+                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <span className="px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-black">
+                Page {pagination.page}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={!pagination.has_next}
+                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* No Results */}
         {!isLoading && !error && businesses.length === 0 && (
