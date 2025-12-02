@@ -460,7 +460,7 @@ export default function RestaurantAuthScreen() {
 
                       <div>
                         <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Restaurant Address *
+                          Business Address *
                         </label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -479,7 +479,7 @@ export default function RestaurantAuthScreen() {
 
                       <div>
                         <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Restaurant Description *
+                          Business Description *
                       </label>
                       <textarea
                         id="description"
@@ -489,9 +489,9 @@ export default function RestaurantAuthScreen() {
                         required={!isLogin}
                         rows={4}
                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 resize-none"
-                          placeholder="Tell us about your restaurant, cuisine type, specialties, and what makes it unique..."
+                          placeholder="Tell us about your business, cuisine type, specialties, and what makes it unique..."
                       />
-                        <p className="mt-1 text-xs text-gray-500">This helps customers discover your restaurant</p>
+                        <p className="mt-1 text-xs text-gray-500">This helps customers discover your business</p>
                       </div>
                     </div>
 
