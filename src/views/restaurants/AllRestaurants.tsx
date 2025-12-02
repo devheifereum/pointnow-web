@@ -141,13 +141,27 @@ export default function AllRestaurants() {
         
         // Update pagination metadata
         if (response.data.metadata) {
+          const metadata = response.data.metadata;
           setPagination({
-            total: response.data.metadata.total,
-            page: response.data.metadata.page,
-            limit: response.data.metadata.limit,
-            total_pages: response.data.metadata.total_pages,
-            has_next: response.data.metadata.has_next,
-            has_previous: response.data.metadata.has_previous,
+            total: metadata.total,
+            page: metadata.page,
+            limit: metadata.limit,
+            total_pages: metadata.total_pages,
+            has_next: metadata.has_next,
+            has_previous: metadata.has_previous,
+          });
+        } else {
+          // Fallback: calculate pagination from response if metadata is missing
+          // Note: This is a fallback - the API should always return metadata
+          const total = response.data.businesses.length;
+          const calculatedTotalPages = Math.ceil(total / limit);
+          setPagination({
+            total: total,
+            page: page,
+            limit: limit,
+            total_pages: calculatedTotalPages,
+            has_next: page < calculatedTotalPages,
+            has_previous: page > 1,
           });
         }
         } catch (err) {
@@ -535,32 +549,43 @@ export default function AllRestaurants() {
 
 
         {/* Pagination */}
-        {!isLoading && !error && pagination.total_pages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-8 pt-6 border-t border-gray-200">
-            <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-              Showing page {pagination.page} of {pagination.total_pages} ({pagination.total} total)
+        {!isLoading && !error && businesses.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t-2 border-gray-300 bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-sm">
+            <div className="text-sm font-medium text-gray-700 text-center sm:text-left">
+              {pagination.total_pages > 1 ? (
+                <>Showing page {pagination.page} of {pagination.total_pages} ({pagination.total} total businesses)</>
+              ) : (
+                <>Showing {businesses.length} of {pagination.total || businesses.length} business{(pagination.total || businesses.length) !== 1 ? 'es' : ''}</>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={!pagination.has_previous}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <span className="px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-black">
-                Page {pagination.page}
-              </span>
-              <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={!pagination.has_next}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
+            {pagination.total_pages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.has_previous}
+                  className="p-2 sm:p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 font-bold" />
+                </button>
+                <span className="px-4 py-2 text-sm font-semibold text-black bg-gray-100 rounded-lg border border-gray-200">
+                  Page {pagination.page} of {pagination.total_pages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.has_next}
+                  className="p-2 sm:p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 font-bold" />
+                </button>
+              </div>
+            )}
+            {pagination.total_pages <= 1 && pagination.total > businesses.length && (
+              <div className="text-sm text-gray-500 italic">
+                (Some businesses filtered out)
+              </div>
+            )}
           </div>
         )}
 
