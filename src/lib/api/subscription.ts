@@ -1,5 +1,11 @@
 import { api } from "./client";
-import type { SubscriptionProductsResponse, SubscriptionProductsParams } from "../types/subscription";
+import type {
+  SubscriptionProductsResponse,
+  SubscriptionProductsParams,
+  SubscriptionTypeResponse,
+  ActiveSubscriptionResponse,
+  ActiveSubscriptionParams,
+} from "../types/subscription";
 
 export const subscriptionApi = {
   getProducts: async (params?: SubscriptionProductsParams): Promise<SubscriptionProductsResponse> => {
@@ -18,5 +24,19 @@ export const subscriptionApi = {
     const queryString = queryParams.toString();
     return api.get<SubscriptionProductsResponse>(`/subscription/products${queryString ? `?${queryString}` : ""}`);
   },
+
+  getTypeById: async (typeId: string): Promise<SubscriptionTypeResponse> => {
+    return api.get<SubscriptionTypeResponse>(`/subscription/types/${typeId}`);
+  },
+
+  getActiveByBusinessId: async (params: ActiveSubscriptionParams): Promise<ActiveSubscriptionResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("provider_name", params.provider_name);
+    queryParams.append("business_id", params.business_id);
+
+    return api.get<ActiveSubscriptionResponse>(`/subscriptions/active/business?${queryParams.toString()}`);
+  },
 };
+
+
 
