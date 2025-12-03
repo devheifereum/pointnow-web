@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Store } from "lucide-react";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
@@ -11,7 +10,6 @@ import { authApi } from "@/lib/api/auth";
 import { ApiClientError } from "@/lib/api/client";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +80,7 @@ export default function ForgotPasswordPage() {
                   <p className="text-gray-600 text-sm">
                     {success
                       ? "Check your email for reset instructions"
-                      : "Enter your email address and we'll send you a link to reset your password"}
+                      : "Enter your email address and we&apos;ll send you a link to reset your password"}
                   </p>
                 </div>
 
@@ -90,7 +88,7 @@ export default function ForgotPasswordPage() {
                   <div className="space-y-4">
                     <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
                       <p className="text-sm text-green-700 text-center">
-                        If an account exists with that email, we've sent you password reset instructions. Please check your inbox.
+                        If an account exists with that email, we&apos;ve sent you password reset instructions. Please check your inbox.
                       </p>
                     </div>
                     <Link
