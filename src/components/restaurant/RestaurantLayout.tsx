@@ -6,6 +6,7 @@ import { LogOut, Menu } from "lucide-react";
 import RestaurantSidebar from "@/components/restaurant/RestaurantSidebar";
 import { useAuthStore } from "@/lib/auth/store";
 import { SidebarProvider, useSidebar } from "@/components/restaurant/SidebarContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 interface RestaurantLayoutProps {
   children: React.ReactNode;
@@ -72,9 +73,11 @@ function RestaurantLayoutContent({ children }: RestaurantLayoutProps) {
 
 export default function RestaurantLayout({ children }: RestaurantLayoutProps) {
   return (
-    <SidebarProvider>
-      <RestaurantLayoutContent>{children}</RestaurantLayoutContent>
-    </SidebarProvider>
+    <ProtectedRoute requireAdmin={true}>
+      <SidebarProvider>
+        <RestaurantLayoutContent>{children}</RestaurantLayoutContent>
+      </SidebarProvider>
+    </ProtectedRoute>
   );
 }
 

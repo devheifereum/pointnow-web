@@ -12,6 +12,10 @@ import type {
   VerifyOTPRequest,
   VerifyRegisterOTPResponse,
   VerifyLoginOTPResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "../types/auth";
 
 export const authApi = {
@@ -51,5 +55,17 @@ export const authApi = {
     data: BusinessRegisterRequest
   ): Promise<EmailPasswordRegisterResponse> => {
     return api.post<EmailPasswordRegisterResponse>("/auth/register/business", data);
+  },
+
+  forgotPassword: async (
+    data: ForgotPasswordRequest
+  ): Promise<ForgotPasswordResponse> => {
+    return api.post<ForgotPasswordResponse>("/auth/forgot-password", data);
+  },
+
+  resetPassword: async (
+    data: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> => {
+    return api.post<ResetPasswordResponse>("/auth/reset-password", data);
   },
 };

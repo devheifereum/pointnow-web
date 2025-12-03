@@ -200,3 +200,22 @@ export interface UpdateUserResponse {
     user: User;
   };
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  status: number;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+  status: number;
+}

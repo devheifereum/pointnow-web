@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   MapPin,
@@ -17,6 +18,8 @@ import {
   X,
   TrendingUp,
   Crown,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -44,7 +47,8 @@ interface RestaurantSettingsProps {
 export default function RestaurantSettings({ restaurantName }: RestaurantSettingsProps) {
   // restaurantName is available but not currently used
   void restaurantName;
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, clearAuth } = useAuthStore();
   const [business, setBusiness] = useState<BusinessDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +61,9 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [businessName, setBusinessName] = useState<string>("");
   const [businessDescription, setBusinessDescription] = useState<string>("");
   const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const businessId = user?.businessId || "";
@@ -375,6 +382,60 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!businessId || deleteConfirmText !== "DELETE") return;
+
+    setIsDeletingAccount(true);
+    setError(null);
+
+    try {
+      await businessApi.delete(businessId);
+
+      toast.success("Account deleted successfully", {
+        description: "Your business account has been permanently deleted",
+        duration: 3000,
+      });
+
+      // Clear auth state
+      clearAuth();
+
+      // Prevent going back by replacing history
+      router.replace("/");
+      
+      // Add a small delay to ensure navigation completes
+      setTimeout(() => {
+        // Clear browser history to prevent back navigation
+        if (typeof window !== "undefined") {
+          window.history.pushState(null, "", "/");
+          window.addEventListener("popstate", () => {
+            window.history.pushState(null, "", "/");
+          });
+        }
+      }, 100);
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to delete account";
+        setError(errorMessage);
+        toast.error("Failed to delete account", {
+          description: errorMessage,
+        });
+      } else if (err instanceof Error) {
+        setError(err.message);
+        toast.error("Failed to delete account", {
+          description: err.message,
+        });
+      } else {
+        const errorMessage = "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to delete account", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const businessImages = business?.business_images || [];
 
   // Check if there are changes to business name or description
@@ -411,11 +472,11 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Page Header */}
+      {/* Page Header */}
         <div className="mb-8 sm:mb-12 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-gilroy-black text-black mb-4">Settings</h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">Manage your business information and subscription</p>
-        </div>
+      </div>
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl max-w-4xl mx-auto">
@@ -643,8 +704,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                               fill
                               className="object-cover"
                               unoptimized
-                            />
-                          </div>
+                />
+              </div>
                           <button
                             onClick={() => setDeleteConfirm(img.image_url)}
                             disabled={isUploading}
@@ -682,8 +743,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                     readOnly
                     disabled
                     className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
-                  />
-                </div>
+                />
+              </div>
             </div>
 
             <div>
@@ -698,11 +759,45 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                     readOnly
                     disabled
                     className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm border border-gray-200 rounded-lg sm:rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed"
-                  />
-                </div>
+                />
+              </div>
             </div>
           </div>
         </div>
+
+          {/* Delete Account Section */}
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-red-200 overflow-hidden">
+            <div className="flex items-center gap-3 sm:gap-4 mb-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Danger Zone</h2>
+                <p className="text-sm text-gray-600 mt-1">Permanently delete your business account</p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
+              <h3 className="text-lg font-gilroy-extrabold text-red-900 mb-2">Delete Business Account</h3>
+              <p className="text-sm text-red-700 mb-4">
+                Once you delete your business account, there is no going back. This action will permanently delete:
+              </p>
+              <ul className="text-sm text-red-700 space-y-1 mb-6 list-disc list-inside">
+                <li>All business information and settings</li>
+                <li>All customer data and loyalty points</li>
+                <li>All transaction history</li>
+                <li>All staff accounts associated with this business</li>
+                <li>All analytics and reports</li>
+              </ul>
+              <button
+                onClick={() => setShowDeleteAccountDialog(true)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Account</span>
+              </button>
+            </div>
+          </div>
 
           {/* Subscription */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
@@ -717,8 +812,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                 {/* Badge */}
                 <div className="absolute top-0 right-0 bg-[#7bc74d] text-white text-xs font-semibold px-4 py-2 rounded-bl-xl">
                   Most Popular
-                </div>
-                
+          </div>
+
                 <div className="p-8">
                   {/* Icon */}
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
@@ -846,13 +941,13 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                 {/* Badge */}
                 <div className="absolute top-0 right-0 bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-bl-xl">
                   Premium
-                </div>
+            </div>
 
                 <div className="p-8">
                   {/* Icon */}
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
                     <Crown className="w-7 h-7 text-purple-500" />
-                  </div>
+              </div>
 
                   {/* Plan Name */}
                   <h3 className="text-2xl font-gilroy-black text-black mb-2">Enterprise</h3>
@@ -866,7 +961,7 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                     <p className="text-gray-600 text-sm mt-2">
                       Custom pricing for your business needs
                     </p>
-                  </div>
+            </div>
 
                   {/* CTA Button */}
                   <button
@@ -964,6 +1059,86 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                 </>
               ) : (
                 <span>Delete</span>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteAccountDialog} onOpenChange={(open: boolean) => {
+        if (!open) {
+          setShowDeleteAccountDialog(false);
+          setDeleteConfirmText("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-red-600 flex items-center gap-2">
+              <AlertTriangle className="w-6 h-6" />
+              Delete Business Account
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              This action is permanent and cannot be undone. All your data will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800 font-semibold mb-2">
+                This will permanently delete:
+              </p>
+              <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                <li>Business profile: <span className="font-semibold">{business?.name}</span></li>
+                <li>All customer data and loyalty points</li>
+                <li>All transaction history</li>
+                <li>All staff accounts</li>
+                <li>All analytics and reports</li>
+              </ul>
+            </div>
+
+            <div>
+              <label htmlFor="delete-confirm" className="block text-sm font-semibold text-gray-700 mb-2">
+                Type <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-red-600">DELETE</span> to confirm:
+              </label>
+              <input
+                id="delete-confirm"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black placeholder-gray-400"
+                disabled={isDeletingAccount}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setShowDeleteAccountDialog(false);
+                setDeleteConfirmText("");
+              }}
+              disabled={isDeletingAccount}
+              className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount || deleteConfirmText !== "DELETE"}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isDeletingAccount ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete Account Permanently</span>
+                </>
               )}
             </button>
           </DialogFooter>

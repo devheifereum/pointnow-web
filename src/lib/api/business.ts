@@ -40,4 +40,8 @@ export const businessApi = {
   update: async (businessId: string, payload: UpdateBusinessPayload): Promise<UpdateBusinessResponse> => {
     return api.patch<UpdateBusinessResponse>(`/business/${businessId}`, payload);
   },
+
+  delete: async (businessId: string): Promise<{ message: string; status: number }> => {
+    return api.delete<{ message: string; status: number }>(`/business/${businessId}`);
+  },
 };

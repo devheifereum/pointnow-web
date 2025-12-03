@@ -735,7 +735,7 @@ export default function RestaurantAuthScreen() {
                       <input type="checkbox" className="rounded border-gray-300 text-[#7bc74d] focus:ring-[#7bc74d]" />
                       <span className="ml-2 text-sm text-gray-600">Remember me</span>
                     </label>
-                    <Link href="#" className="text-sm text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
+                    <Link href="/forgot-password" className="text-sm text-[#7bc74d] hover:text-[#6ab63d] font-semibold">
                       Forgot password?
                     </Link>
                   </div>
