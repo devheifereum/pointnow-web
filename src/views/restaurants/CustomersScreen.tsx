@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { toast } from "sonner";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
@@ -10,6 +10,7 @@ import { convertPhoneNumber } from "@/lib/utils";
 import type { Customer } from "@/lib/types/customers";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import * as XLSX from 'xlsx';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
   const [customerEmail, setCustomerEmail] = useState("");
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const businessId = user?.businessId || "";
 
@@ -212,6 +214,99 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     }
   };
 
+  const handleExport = async () => {
+    if (!businessId) {
+      toast.error("Business ID not found");
+      return;
+    }
+
+    setIsExporting(true);
+    setError(null);
+
+    try {
+      // Fetch all customers by paginating through all pages
+      let allCustomers: Customer[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+      const limit = 100; // Use a larger limit to reduce API calls
+
+      while (hasMore) {
+        const response = await customersApi.getByBusiness(businessId, {
+          page: currentPage,
+          limit: limit,
+        });
+
+        const fetchedCustomers = response.data.customers || [];
+        allCustomers = [...allCustomers, ...fetchedCustomers];
+
+        hasMore = response.data.metadata.has_next || false;
+        currentPage++;
+      }
+
+      if (allCustomers.length === 0) {
+        toast.error("No customers to export");
+        setIsExporting(false);
+        return;
+      }
+
+      // Prepare data for Excel
+      const excelData = allCustomers.map((customer) => ({
+        Name: customer.name || "",
+        Email: customer.email || "",
+        "Phone Number": customer.phone_number || "",
+        "Joined Date": customer.created_at
+          ? new Date(customer.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "N/A",
+      }));
+
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
+
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `customers_export_${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Export successful!", {
+        description: `Exported ${allCustomers.length} customer(s) to Excel`,
+        duration: 4000,
+      });
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to export customers";
+        setError(errorMessage);
+        toast.error("Failed to export customers", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to export customers", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -221,6 +316,25 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
             <h1 className="text-2xl sm:text-3xl font-gilroy-black text-black mb-2">Customer Management</h1>
             <p className="text-gray-600 text-sm sm:text-base">View and edit customer information</p>
           </div>
+          <button
+            onClick={handleExport}
+            disabled={isExporting || isLoading || customers.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="hidden sm:inline">Exporting...</span>
+                <span className="sm:hidden">Exporting...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export to Excel</span>
+                <span className="sm:hidden">Export</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
