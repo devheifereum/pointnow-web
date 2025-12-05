@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth/store";
 import { businessApi } from "@/lib/api/business";
-import { User, LogOut, Menu, X, Home, Store, DollarSign, ChevronRight, LayoutDashboard } from "lucide-react";
+import { User, LogOut, Menu, X, Home, Store, DollarSign, ChevronRight, LayoutDashboard, Info } from "lucide-react";
 
 // Helper function to create slug from name
 const createSlug = (name: string): string => {
@@ -74,6 +74,7 @@ export default function Navbar() {
     { label: "Home", href: "/home", icon: Home },
     { label: "Businesses", href: "/businesses", icon: Store },
     { label: "Pricing", href: "/pricing", icon: DollarSign },
+    { label: "About", href: "/about", icon: Info },
   ];
 
   return (
@@ -251,6 +252,7 @@ export default function Navbar() {
                         {link.label === 'Home' && 'Discover businesses'}
                         {link.label === 'Businesses' && 'Browse all locations'}
                         {link.label === 'Pricing' && 'View plans & pricing'}
+                        {link.label === 'About' && 'Our story & mission'}
                       </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#7bc74d] transition-colors" />

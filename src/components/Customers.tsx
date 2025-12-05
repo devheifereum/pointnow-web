@@ -120,7 +120,7 @@ export default function Restaurants() {
             Our Partner Merchants
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto drop-shadow-sm">
-            Trusted by 1000+ businesses and loved by millions of customers. Check your loyalty points and earn rewards.
+            Discover businesses, check your loyalty points, and earn rewards. Build your point portfolio across your favorite brands.
           </p>
         </div>
 
