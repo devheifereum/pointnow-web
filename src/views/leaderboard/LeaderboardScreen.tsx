@@ -248,7 +248,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
 
   // Medal Icon Components using images from Flaticon
   const GoldMedalIcon = ({ size = 32 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.gold}
       alt="Gold Medal - 1st Place"
       width={size}
@@ -259,7 +259,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   );
 
   const SilverMedalIcon = ({ size = 32 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.silver}
       alt="Silver Medal - 2nd Place"
       width={size}
@@ -270,7 +270,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   );
 
   const BronzeMedalIcon = ({ size = 32 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.bronze}
       alt="Bronze Medal - 3rd Place"
       width={size}

@@ -12,9 +12,6 @@ import {
   Target, 
   Heart,
   ArrowRight,
-  Coffee,
-  Shirt,
-  Dumbbell,
   Sparkle
 } from "lucide-react";
 
@@ -71,10 +68,10 @@ export default function AboutScreen() {
                     The Idea
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    Originally called Poinfolio, PointNow started with a simple question: <strong>"What if we could help people build a portfolio—not of stocks, but of loyalty points?"</strong>
+                    Originally called Poinfolio, PointNow started with a simple question: <strong>&quot;What if we could help people build a portfolio—not of stocks, but of loyalty points?&quot;</strong>
                   </p>
                   <p className="text-gray-700 leading-relaxed">
-                    We wanted to let people earn, track, and use their loyalty across their favorite brands. From cafés to fashion, fitness to skincare—every ringgit you spend becomes a point of pride. You don't just spend, you build. You don't just buy, you belong.
+                    We wanted to let people earn, track, and use their loyalty across their favorite brands. From cafés to fashion, fitness to skincare—every ringgit you spend becomes a point of pride. You don&apos;t just spend, you build. You don&apos;t just buy, you belong.
                   </p>
                 </div>
               </div>
@@ -94,13 +91,13 @@ export default function AboutScreen() {
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                       <h3 className="font-gilroy-extrabold text-black mb-2">From Ads to Authentic Loyalty</h3>
                       <p className="text-gray-700 leading-relaxed">
-                        Brands don't need more promotions—they need relationships. Loyalty isn't a stamp card. It's a system of recognition.
+                        Brands don&apos;t need more promotions—they need relationships. Loyalty isn&apos;t a stamp card. It&apos;s a system of recognition.
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                       <h3 className="font-gilroy-extrabold text-black mb-2">From Customers to Stakeholders</h3>
                       <p className="text-gray-700 leading-relaxed">
-                        Your best customer isn't the one who walks in once. It's the one who comes back, again and again, and deserves to be seen.
+                        Your best customer isn&apos;t the one who walks in once. It&apos;s the one who comes back, again and again, and deserves to be seen.
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
@@ -131,7 +128,7 @@ export default function AboutScreen() {
                       </div>
                       <h3 className="font-gilroy-extrabold text-black mb-2">Consumers</h3>
                       <p className="text-gray-600 text-sm leading-relaxed">
-                        Build your "point wealth" across multiple brands
+                        Build your &quot;point wealth&quot; across multiple brands
                       </p>
                     </div>
                     <div className="bg-white rounded-xl p-6 border-2 border-gray-100 hover:border-[#7bc74d] transition-colors">
@@ -165,13 +162,13 @@ export default function AboutScreen() {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl md:text-3xl font-gilroy-black text-black mb-4">
-                    What's Next?
+                    What&apos;s Next?
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-6">
                     In this new economy, attention is currency, and loyalty is leverage. PointNow is on a mission to help 10,000 brands across Southeast Asia activate viral word-of-mouth through leaderboard rewards, build deeper relationships with their top spenders, and turn everyday customers into brand champions.
                   </p>
                   <p className="text-gray-700 leading-relaxed">
-                    And help millions of consumers discover local gems, compete for exclusive rewards, and build their own lifestyle "Poinfolio."
+                    And help millions of consumers discover local gems, compete for exclusive rewards, and build their own lifestyle &quot;Poinfolio.&quot;
                   </p>
                 </div>
               </div>
@@ -185,11 +182,11 @@ export default function AboutScreen() {
                 Join the Movement
               </h2>
               <p className="text-lg md:text-xl opacity-90 mb-8">
-                If you're a customer — start earning.
+                If you&apos;re a customer — start earning.
                 <br />
-                If you're a brand — start rewarding.
+                If you&apos;re a brand — start rewarding.
                 <br />
-                If you're a visionary — let's talk.
+                If you&apos;re a visionary — let&apos;s talk.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

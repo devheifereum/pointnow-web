@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Trophy, Award, Search, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
@@ -169,7 +170,7 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
 
   // Medal Icon Components using images from Flaticon
   const GoldMedalIcon = ({ size = 24 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.gold}
       alt="Gold Medal - 1st Place"
       width={size}
@@ -180,7 +181,7 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
   );
 
   const SilverMedalIcon = ({ size = 24 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.silver}
       alt="Silver Medal - 2nd Place"
       width={size}
@@ -191,7 +192,7 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
   );
 
   const BronzeMedalIcon = ({ size = 24 }: { size?: number }) => (
-    <img
+    <Image
       src={medalIcons.bronze}
       alt="Bronze Medal - 3rd Place"
       width={size}

@@ -54,7 +54,8 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [error, setError] = useState<string | null>(null);
   const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [activeSubscription, setActiveSubscription] = useState<Subscription | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_activeSubscription, setActiveSubscription] = useState<Subscription | null>(null);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType | null>(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
