@@ -7,6 +7,8 @@ import type {
   LeaderboardParams,
   CreateCustomerWithUserPayload,
   CreateCustomerWithUserResponse,
+  CreateCustomerWithUserBatchPayload,
+  CreateCustomerWithUserBatchResponse,
   UpdateCustomerPayload,
   UpdateCustomerResponse,
   CustomerPositionResponse,
@@ -89,6 +91,10 @@ export const customersApi = {
 
   createWithUser: async (payload: CreateCustomerWithUserPayload): Promise<CreateCustomerWithUserResponse> => {
     return api.post<CreateCustomerWithUserResponse>("/customers/user", payload);
+  },
+
+  createWithUserBatch: async (payload: CreateCustomerWithUserBatchPayload[]): Promise<CreateCustomerWithUserBatchResponse> => {
+    return api.post<CreateCustomerWithUserBatchResponse>("/customers/user/batch", payload);
   },
 
   getPosition: async (params: CustomerPositionParams): Promise<CustomerPositionResponse> => {

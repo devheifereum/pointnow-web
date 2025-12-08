@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight, Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
@@ -11,6 +11,7 @@ import type { Customer } from "@/lib/types/customers";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import * as XLSX from 'xlsx';
+import { csvToJson, convertToBatchPayload, type ParsedCustomer } from "@/lib/utils/csvToJson";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,14 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Import CSV state
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [parsedCustomers, setParsedCustomers] = useState<ParsedCustomer[]>([]);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [isParsing, setIsParsing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const businessId = user?.businessId || "";
 
@@ -214,6 +223,124 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     }
   };
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast.error("Invalid file type", {
+        description: "Please upload a CSV or Excel file",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    setIsParsing(true);
+    setParseErrors([]);
+    setParsedCustomers([]);
+
+    try {
+      const result = await csvToJson(file, businessId);
+      
+      if (result.success && result.data) {
+        // Always set valid customers for preview
+        setParsedCustomers(result.data);
+        
+        // If there are any errors, show them but still allow preview
+        if (result.errors && result.errors.length > 0) {
+          setParseErrors(result.errors);
+          toast.error("File has errors", {
+            description: `Found ${result.data.length} valid customer(s) but ${result.errors.length} error(s) - please fix errors before uploading`,
+          });
+        } else {
+          setParseErrors([]);
+          toast.success("File parsed successfully", {
+            description: `Found ${result.data.length} valid customer(s)`,
+          });
+        }
+      } else {
+        setParseErrors(result.errors || ["Failed to parse file"]);
+        setParsedCustomers([]); // Clear parsed customers on complete failure
+        toast.error("Failed to parse file", {
+          description: result.errors?.join(", ") || "Unknown error",
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setParseErrors([errorMessage]);
+      toast.error("Failed to parse file", {
+        description: errorMessage,
+      });
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  const handleConfirmUpload = async () => {
+    if (parsedCustomers.length === 0) {
+      toast.error("No valid customers to upload");
+      return;
+    }
+
+    if (!businessId) {
+      toast.error("Business ID not found");
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const payload = convertToBatchPayload(parsedCustomers);
+      await customersApi.createWithUserBatch(payload);
+
+      toast.success("Customers uploaded successfully!", {
+        description: `${parsedCustomers.length} customer(s) have been added`,
+        duration: 4000,
+      });
+
+      // Reset state and close dialog
+      setShowImportDialog(false);
+      setSelectedFile(null);
+      setParsedCustomers([]);
+      setParseErrors([]);
+      
+      // Refresh customer list
+      fetchCustomers();
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to upload customers";
+        setError(errorMessage);
+        toast.error("Failed to upload customers", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to upload customers", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCloseImportDialog = () => {
+    if (isUploading) return; // Prevent closing while uploading
+    
+    setShowImportDialog(false);
+    setSelectedFile(null);
+    setParsedCustomers([]);
+    setParseErrors([]);
+    // Reset file input
+    const fileInput = document.getElementById('csv-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const handleExport = async () => {
     if (!businessId) {
       toast.error("Business ID not found");
@@ -316,25 +443,36 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
             <h1 className="text-2xl sm:text-3xl font-gilroy-black text-black mb-2">Customer Management</h1>
             <p className="text-gray-600 text-sm sm:text-base">View and edit customer information</p>
           </div>
-          <button
-            onClick={handleExport}
-            disabled={isExporting || isLoading || customers.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="hidden sm:inline">Exporting...</span>
-                <span className="sm:hidden">Exporting...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export to Excel</span>
-                <span className="sm:hidden">Export</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setShowImportDialog(true)}
+              disabled={isLoading || !businessId}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
+            >
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Import from CSV</span>
+              <span className="sm:hidden">Import</span>
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isExporting || isLoading || customers.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">Exporting...</span>
+                  <span className="sm:hidden">Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export to Excel</span>
+                  <span className="sm:hidden">Export</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -579,6 +717,154 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                 <>
                   <Save className="w-4 h-4" />
                   <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import CSV Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={handleCloseImportDialog}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-black">Import Customers from CSV</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file with columns: name, email, phone_number. Review the data before confirming the upload.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Select CSV File
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  id="csv-file-input"
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileSelect}
+                  disabled={isParsing || isUploading}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#7bc74d] file:text-white hover:file:bg-[#6ab63d] disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {selectedFile && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span className="truncate max-w-[200px]">{selectedFile.name}</span>
+                    <button
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setParsedCustomers([]);
+                        setParseErrors([]);
+                        const fileInput = document.getElementById('csv-file-input') as HTMLInputElement;
+                        if (fileInput) fileInput.value = '';
+                      }}
+                      disabled={isParsing || isUploading}
+                      className="text-red-600 hover:text-red-700 disabled:opacity-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {isParsing && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Parsing file...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Parse Errors */}
+            {parseErrors.length > 0 && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <h4 className="text-sm font-semibold text-red-800 mb-2">
+                  Errors ({parseErrors.length}) - Upload Disabled
+                </h4>
+                <p className="text-xs text-red-700 mb-2">Please fix all errors before uploading.</p>
+                <ul className="text-sm text-red-700 space-y-1 max-h-32 overflow-y-auto">
+                  {parseErrors.map((error, index) => (
+                    <li key={index}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Preview Table */}
+            {parsedCustomers.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                  These are correct rows ({parsedCustomers.length} customer{parsedCustomers.length !== 1 ? 's' : ''})
+                </h4>
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Name</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Email</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Phone</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {parsedCustomers.map((customer, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-3 py-2 text-gray-900">{customer.name}</td>
+                            <td className="px-3 py-2 text-gray-900">{customer.email}</td>
+                            <td className="px-3 py-2 text-gray-900">{customer.phone_number}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Info Box */}
+            {!selectedFile && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">CSV Format Requirements</h4>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <ol className="list-decimal list-inside space-y-1.5">
+                    <li>Required columns: <code className="bg-blue-100 px-1.5 py-0.5 rounded">name</code>, <code className="bg-blue-100 px-1.5 py-0.5 rounded">email</code>, <code className="bg-blue-100 px-1.5 py-0.5 rounded">phone_number</code></li>
+                    <li>Column names are case-insensitive. Phone column can also be named &quot;phone&quot; or &quot;phone number&quot;.</li>
+                    <li>Example format:
+                      <div className="bg-blue-100 p-2 rounded text-xs font-mono text-blue-900 mt-1 ml-4">
+                        <div>name,email,phone_number</div>
+                        <div>John Doe,john@example.com,60123456789</div>
+                      </div>
+                    </li>
+                    <li>Phone numbers with + sign will have it automatically removed.</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <button
+              onClick={handleCloseImportDialog}
+              disabled={isUploading}
+              className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmUpload}
+              disabled={isUploading || parsedCustomers.length === 0 || isParsing || parseErrors.length > 0}
+              className="bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  <span>Confirm & Upload ({parsedCustomers.length})</span>
                 </>
               )}
             </button>

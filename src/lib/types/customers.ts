@@ -179,3 +179,21 @@ export interface UserProfileResponse {
   status_code: number;
   data: UserProfileData;
 }
+
+export interface CreateCustomerWithUserBatchPayload {
+  name: string;
+  email: string;
+  phone_number: string;
+  business: {
+    business_id: string;
+  };
+}
+
+export interface CreateCustomerWithUserBatchResponse {
+  message: string;
+  status_code: number;
+  data: {
+    customers: Customer[];
+    [key: string]: unknown;
+  };
+}
