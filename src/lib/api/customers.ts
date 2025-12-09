@@ -14,6 +14,7 @@ import type {
   CustomerPositionResponse,
   CustomerPositionParams,
   UserProfileResponse,
+  DeleteCustomerResponse,
 } from "../types/customers";
 
 export const customersApi = {
@@ -115,5 +116,9 @@ export const customersApi = {
 
   updateByBusiness: async (customerId: string, businessId: string, payload: UpdateCustomerPayload): Promise<UpdateCustomerResponse> => {
     return api.patch<UpdateCustomerResponse>(`/customers/${customerId}/business/${businessId}`, payload);
+  },
+
+  delete: async (customerId: string, businessId: string): Promise<DeleteCustomerResponse> => {
+    return api.delete<DeleteCustomerResponse>(`/customers/${customerId}/business/${businessId}`);
   },
 };

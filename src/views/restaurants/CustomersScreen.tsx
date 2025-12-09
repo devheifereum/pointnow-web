@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight, Download, Upload, X } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Edit2, Loader2, Save, User, Mail, ChevronLeft, ChevronRight, Download, Upload, X, MoreVertical, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { customersApi } from "@/lib/api/customers";
 import { useAuthStore } from "@/lib/auth/store";
@@ -49,6 +49,13 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
+  // Dropdown menu state
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<Customer | null>(null);
+  
   // Import CSV state
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -84,6 +91,23 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     fetchCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId, pagination.page]);
+
+  // Close dropdown menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId && menuRefs.current[openMenuId]) {
+        const menuElement = menuRefs.current[openMenuId];
+        if (menuElement && !menuElement.contains(event.target as Node)) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const fetchCustomers = async () => {
     if (!businessId) return;
@@ -125,6 +149,53 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     setCustomerName(customer.name || "");
     setCustomerEmail(customer.email || "");
     setPhoneValue(customer.phone_number || undefined);
+    setOpenMenuId(null); // Close menu
+  };
+
+  const handleDeleteClick = (customer: Customer) => {
+    setDeleteConfirm(customer);
+    setOpenMenuId(null); // Close menu
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm || !businessId) return;
+
+    const customerId = deleteConfirm.id;
+    if (!customerId) {
+      setError("Customer ID not found. Cannot delete customer.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await customersApi.delete(customerId, businessId);
+
+      toast.success("Customer deleted successfully!", {
+        description: `${deleteConfirm.name} has been removed from your business`,
+        duration: 4000,
+      });
+
+      setDeleteConfirm(null);
+      fetchCustomers();
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        const errorMessage = err.message || "Failed to delete customer";
+        setError(errorMessage);
+        toast.error("Failed to delete customer", {
+          description: errorMessage,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
+        toast.error("Failed to delete customer", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSave = async () => {
@@ -545,13 +616,33 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                         <div className="text-sm text-gray-500">{formatDate(customer.created_at)}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(customer)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#7bc74d] hover:bg-[#6ab63d] text-white font-semibold rounded-lg transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Edit</span>
-                        </button>
+                        <div className="relative inline-block" ref={(el) => { menuRefs.current[customer.id] = el; }}>
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === customer.id ? null : customer.id)}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            aria-label="Actions"
+                          >
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          {openMenuId === customer.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                              <button
+                                onClick={() => handleEdit(customer)}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(customer)}
+                                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -717,6 +808,49 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                 <>
                   <Save className="w-4 h-4" />
                   <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(open: boolean) => {
+        if (!open) {
+          setDeleteConfirm(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-gilroy-black text-black">Delete Customer</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {deleteConfirm?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              disabled={isSubmitting}
+              className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isSubmitting || !deleteConfirm}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete</span>
                 </>
               )}
             </button>

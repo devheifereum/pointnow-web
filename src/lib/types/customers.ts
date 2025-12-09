@@ -197,3 +197,20 @@ export interface CreateCustomerWithUserBatchResponse {
     [key: string]: unknown;
   };
 }
+
+export interface DeleteCustomerResponse {
+  message: string;
+  status_code: number;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      phone_number: string;
+      metadata: Record<string, unknown>;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+  };
+}
