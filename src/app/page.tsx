@@ -1,50 +1,50 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import Restaurants from "@/components/Customers";
-import DecorativeShapes from "@/components/DecorativeShapes";
-import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
+import LandingPage from "@/components/LandingPage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "PointNow - Loyalty Points Management System",
+  title: "PointNow - Loyalty Reimagined | Transform Customers Into Brand Ambassadors",
   description:
-    "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
+    "PointNow is a smart loyalty point system with a competitive twist. Gamified leaderboards, phone-based loyalty, and monthly SMS drive repeat purchases and customer retention. Go live in 2 minutes.",
   keywords: [
     "loyalty points",
     "loyalty program",
     "customer rewards",
-    "points management",
-    "retail loyalty",
-    "business loyalty",
+    "gamified loyalty",
+    "leaderboard rewards",
     "customer retention",
     "loyalty system",
     "rewards program",
     "points tracking",
-    "affordable loyalty software",
-    "loyalty points app",
+    "viral marketing",
+    "brand ambassadors",
+    "customer engagement",
+    "F&B loyalty",
+    "retail loyalty",
+    "SMS marketing",
   ],
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://www.pointnow.io",
     siteName: "PointNow",
-    title: "PointNow - Loyalty Points Management System",
+    title: "PointNow - Loyalty Reimagined | Transform Customers Into Brand Ambassadors",
     description:
-      "Loyalty points management for businesses and retail stores. Customers check points, merchants reward loyalty. Go live in 2 minutes. Affordable pricing for unlimited customers.",
+      "PointNow is a smart loyalty point system with a competitive twist. Gamified leaderboards drive repeat purchases. Go live in 2 minutes.",
     images: [
       {
         url: "https://www.pointnow.io/og-image.png",
         width: 1200,
         height: 630,
-        alt: "PointNow - Loyalty Points Management",
+        alt: "PointNow - Loyalty Reimagined",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PointNow - Loyalty Points Management System",
+    title: "PointNow - Loyalty Reimagined",
     description:
-      "Loyalty points management for businesses. Go live in 2 minutes. Affordable pricing for unlimited customers.",
+      "Transform customers into brand ambassadors with gamified loyalty. Leaderboards, points, rewards. Go live in 2 minutes.",
     images: ["https://www.pointnow.io/og-image.png"],
     creator: "@pointnow",
   },
@@ -63,25 +63,27 @@ export default function RootPage() {
     url: "https://www.pointnow.io",
     offers: {
       "@type": "Offer",
-      price: "73",
+      price: "0",
       priceCurrency: "USD",
+      description: "Free tier available, Professional plan from $73/month",
     },
     description:
-      "Loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
+      "Smart loyalty point system with gamified leaderboards. Transform customers into brand ambassadors through competitive loyalty programs.",
     featureList: [
-      "Loyalty Points Management",
-      "Customer Rewards System",
-      "Points Leaderboard",
+      "Phone-Based Loyalty System",
+      "Gamified Leaderboards",
+      "Monthly SMS Notifications",
+      "Customer Rewards & Milestones",
       "Business Analytics",
       "Transaction Tracking",
-      "Staff Management",
       "Unlimited Customers",
-      "Affordable Pricing",
+      "No App Required",
+      "Go Live in 2 Minutes",
     ],
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "150",
+      ratingValue: "4.9",
+      ratingCount: "200",
     },
   };
 
@@ -91,23 +93,8 @@ export default function RootPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="min-h-screen bg-white relative overflow-hidden">
-        {/* Full page animated grid background */}
-        <AnimatedGridPattern
-          className="opacity-20"
-          width={60}
-          height={60}
-          numSquares={50}
-          maxOpacity={0.05}
-          duration={4}
-        />
-        <Navbar />
-        <div className="relative">
-          <DecorativeShapes />
-          <Hero />
-        </div>
-        <Restaurants />
-      </div>
+      <Navbar variant="transparent" />
+      <LandingPage />
     </>
   );
 }

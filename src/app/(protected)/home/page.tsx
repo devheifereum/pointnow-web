@@ -1,14 +1,11 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import Restaurants from "@/components/Customers";
-import DecorativeShapes from "@/components/DecorativeShapes";
-import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
+import LandingPage from "@/components/LandingPage";
 import type { Metadata } from "next";
 import { constructMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructMetadata({
-  title: "Loyalty Points Management System for Businesses",
-  description: "PointNow helps businesses create and manage loyalty programs in minutes. Affordable pricing for unlimited customers. Customers can check points, businesses reward loyalty.",
+  title: "Loyalty Reimagined | Transform Customers Into Brand Ambassadors",
+  description: "PointNow is a smart loyalty point system with a competitive twist. Gamified leaderboards, phone-based loyalty, and monthly SMS drive repeat purchases and customer retention.",
   canonical: "https://www.pointnow.io/home",
 });
 
@@ -19,26 +16,30 @@ export default function Home() {
     name: "PointNow",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
+    url: "https://www.pointnow.io",
     offers: {
       "@type": "Offer",
-      price: "73",
+      price: "0",
       priceCurrency: "USD",
+      description: "Free tier available, Professional plan from $73/month",
     },
-    description: "Loyalty points management system for businesses and retail stores. Customers check points, merchants reward loyalty.",
+    description:
+      "Smart loyalty point system with gamified leaderboards. Transform customers into brand ambassadors through competitive loyalty programs.",
     featureList: [
-      "Loyalty Points Management",
-      "Customer Rewards System",
-      "Points Leaderboard",
+      "Phone-Based Loyalty System",
+      "Gamified Leaderboards",
+      "Monthly SMS Notifications",
+      "Customer Rewards & Milestones",
       "Business Analytics",
       "Transaction Tracking",
-      "Staff Management",
       "Unlimited Customers",
-      "Affordable Pricing",
+      "No App Required",
+      "Go Live in 2 Minutes",
     ],
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "150",
+      ratingValue: "4.9",
+      ratingCount: "200",
     },
   };
 
@@ -48,23 +49,8 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="min-h-screen bg-white relative overflow-hidden">
-        {/* Full page animated grid background */}
-        <AnimatedGridPattern
-          className="opacity-20"
-          width={60}
-          height={60}
-          numSquares={50}
-          maxOpacity={0.05}
-          duration={4}
-        />
-        <Navbar />
-        <div className="relative">
-          <DecorativeShapes />
-          <Hero />
-        </div>
-        <Restaurants />
-      </div>
+      <Navbar variant="transparent" />
+      <LandingPage />
     </>
   );
 }
