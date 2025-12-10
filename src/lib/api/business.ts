@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { BusinessesResponse, BusinessesParams, BusinessDetailResponse, UpdateBusinessPayload, UpdateBusinessResponse } from "../types/business";
+import type { BusinessesResponse, BusinessesParams, BusinessDetailResponse, UpdateBusinessPayload, UpdateBusinessResponse, TrendingBusinessesResponse } from "../types/business";
 
 export const businessApi = {
   getAll: async (params?: BusinessesParams): Promise<BusinessesResponse> => {
@@ -43,5 +43,9 @@ export const businessApi = {
 
   delete: async (businessId: string): Promise<{ message: string; status: number }> => {
     return api.delete<{ message: string; status: number }>(`/business/${businessId}`);
+  },
+
+  getTrending: async (): Promise<TrendingBusinessesResponse> => {
+    return api.get<TrendingBusinessesResponse>("/business/trending");
   },
 };

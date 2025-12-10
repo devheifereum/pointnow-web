@@ -94,3 +94,23 @@ export interface UpdateBusinessResponse {
   };
 }
 
+export interface Region {
+  id: string;
+  name: string;
+  country_code: string;
+}
+
+export interface TrendingBusiness extends Business {
+  total_customers: number;
+  regions: Region[];
+}
+
+export interface TrendingBusinessesResponse {
+  message: string;
+  status_code: number;
+  data: {
+    businesses: TrendingBusiness[];
+    metadata: BusinessesMetadata;
+  };
+}
+
