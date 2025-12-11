@@ -71,7 +71,7 @@ const HOW_IT_WORKS_STEPS: StepData[] = [
     icon: Phone,
     title: "Customer Purchases",
     description: "Staff enters phone number and purchase amount. Points are instantly added.",
-    color: "from-blue-500 to-blue-600",
+    color: "from-[#7bc74d] to-[#6ab63d]",
   },
   {
     step: "02",
@@ -100,7 +100,7 @@ const BUSINESS_TYPES: BusinessType[] = [
   { icon: Coffee, label: "Cafés", color: "bg-orange-500", bg: "bg-orange-50" },
   { icon: ShoppingBag, label: "Retail", color: "bg-purple-500", bg: "bg-purple-50" },
   { icon: Scissors, label: "Salons", color: "bg-pink-500", bg: "bg-pink-50" },
-  { icon: Users, label: "Fitness", color: "bg-blue-500", bg: "bg-blue-50" },
+  { icon: Users, label: "Fitness", color: "bg-[#7bc74d]", bg: "bg-green-50" },
   { icon: Heart, label: "Healthcare", color: "bg-red-500", bg: "bg-red-50" },
   { icon: Smartphone, label: "Services", color: "bg-[#7bc74d]", bg: "bg-green-50" },
 ];
@@ -392,10 +392,10 @@ export default function LandingPage() {
             </div>
 
             {/* Phone-Based */}
-            <div className="relative bg-gradient-to-br from-blue-50 via-blue-50/80 to-blue-100/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 lg:p-10 group active:shadow-2xl transition-all duration-200 border border-blue-100/50 active:border-blue-200 overflow-hidden touch-manipulation">
-              <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-blue-200/30 rounded-full blur-2xl group-active:scale-150 transition-transform duration-500"></div>
+            <div className="relative bg-gradient-to-br from-white via-white/80 to-green-50/50 rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 lg:p-10 group active:shadow-2xl transition-all duration-200 border border-green-100/50 active:border-[#7bc74d]/30 overflow-hidden touch-manipulation">
+              <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#7bc74d]/20 rounded-full blur-2xl group-active:scale-150 transition-transform duration-500"></div>
               <div className="relative z-10">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-active:scale-110 group-active:rotate-3 transition-all duration-200 shadow-lg">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-active:scale-110 group-active:rotate-3 transition-all duration-200 shadow-lg">
                   <Phone className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                 </div>
                 <h3 className="text-lg sm:text-xl md:text-2xl font-gilroy-black text-gray-900 mb-2 sm:mb-3 md:mb-4">Phone-Based</h3>

@@ -4,14 +4,16 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Search, Grid, List, Building2, Lock, ChevronLeft, ChevronRight, Users, Gift, TrendingUp, Star, ArrowRight, Zap, Shield, Award, Flame } from "lucide-react";
+import { MapPin, Search, Grid, List, Building2, Lock, ChevronLeft, ChevronRight, ChevronDown, Users, Gift, TrendingUp, Star, ArrowRight, Zap, Shield, Award, Flame, Globe, X } from "lucide-react";
 import { LightRays } from "@/components/ui/light-rays";
 import { StripedPattern } from "@/components/magicui/striped-pattern";
 import Navbar from "@/components/Navbar";
 import { businessApi } from "@/lib/api/business";
+import { regionsApi } from "@/lib/api/regions";
 import { ApiClientError } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/auth/store";
 import type { Business, TrendingBusiness } from "@/lib/types/business";
+import type { RegionCountryCode } from "@/lib/types/regions";
 
 const FEATURED_BUSINESS_ID = "cmhw3d766000zq2h240xtkpiz";
 
@@ -84,6 +86,9 @@ export default function AllRestaurants() {
   });
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
   const [featuredImageIndex, setFeaturedImageIndex] = useState(0);
+  const [countries, setCountries] = useState<RegionCountryCode[]>([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>(searchParams.get("country_code") || "");
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
   
   // Determine if we should show featured business (when no search query)
   const showFeatured = !searchQuery.trim();
@@ -108,10 +113,32 @@ export default function AllRestaurants() {
     fetchFeaturedBusiness();
   }, []);
 
-  // Update search query and page when URL params change
+  // Fetch countries on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setIsLoadingCountries(true);
+        const response = await regionsApi.getCountryCodes();
+        // Sort countries alphabetically by name
+        const sortedCountries = [...response.data.regions].sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
+        setCountries(sortedCountries);
+      } catch (err) {
+        console.error("Failed to fetch countries:", err);
+      } finally {
+        setIsLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  // Update search query, page, and country when URL params change
   useEffect(() => {
     const queryParam = searchParams.get("query");
     const pageParam = searchParams.get("page");
+    const countryParam = searchParams.get("country_code");
     
     if (queryParam !== null) {
       setSearchQuery(queryParam);
@@ -126,6 +153,12 @@ export default function AllRestaurants() {
       }
     } else {
       setPage(1);
+    }
+
+    if (countryParam !== null) {
+      setSelectedCountryCode(countryParam);
+    } else {
+      setSelectedCountryCode("");
     }
   }, [searchParams]);
 
@@ -142,6 +175,24 @@ export default function AllRestaurants() {
     }
     params.delete("page"); // Reset to page 1
     router.replace(`/businesses?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCountryChange = (countryCode: string) => {
+    setSelectedCountryCode(countryCode);
+    setPage(1); // Reset to page 1 when filtering
+    // Update URL without triggering navigation
+    const params = new URLSearchParams(searchParams.toString());
+    if (countryCode) {
+      params.set("country_code", countryCode);
+    } else {
+      params.delete("country_code");
+    }
+    params.delete("page"); // Reset to page 1
+    router.replace(`/businesses?${params.toString()}`, { scroll: false });
+  };
+
+  const handleClearCountry = () => {
+    handleCountryChange("");
   };
 
   const handlePageChange = (newPage: number) => {
@@ -167,11 +218,26 @@ export default function AllRestaurants() {
     }
 
     const fetchBusinesses = async () => {
+      const startTime = Date.now();
+      const minLoadingTime = 500; // Minimum loading time to prevent flickering
+      
       try {
         setIsLoading(true);
         setError(null);
         
-        const response = await businessApi.search({ query: searchQuery.trim(), page, limit });
+        const response = await businessApi.search({ 
+          query: searchQuery.trim(), 
+          page, 
+          limit,
+          country_code: selectedCountryCode || undefined,
+        });
+        
+        // Ensure minimum loading time to prevent blinking
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         setBusinesses(response.data.businesses);
         
         // Update pagination metadata
@@ -198,6 +264,11 @@ export default function AllRestaurants() {
           });
         }
       } catch (err) {
+        // Ensure minimum loading time even on error
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         if (err instanceof ApiClientError) {
           setError(err.message || "Failed to load businesses");
         } else {
@@ -208,13 +279,14 @@ export default function AllRestaurants() {
       }
     };
 
-    // Debounce search to avoid too many API calls
+    // Debounce search to avoid too many API calls and prevent blinking
+    // Increased delay to 600ms for smoother UX
     const timeoutId = setTimeout(() => {
       fetchBusinesses();
-    }, 300);
+    }, 600);
 
     return () => clearTimeout(timeoutId);
-  }, [page, limit, searchQuery]);
+  }, [page, limit, searchQuery, selectedCountryCode]);
 
   const featuredSlug = featuredBusiness ? createSlug(featuredBusiness.name) : "";
   const featuredHasMultipleImages = featuredBusiness?.business_images && featuredBusiness.business_images.length > 1;
@@ -345,23 +417,60 @@ export default function AllRestaurants() {
         {/* Search Bar */}
         <div className={`${showFeatured ? 'max-w-3xl mx-auto mb-20' : 'mb-8'}`}>
           <div className={`flex flex-col ${!showFeatured ? 'lg:flex-row' : ''} gap-4 mb-6`}>
-            <div className="flex-1 relative group">
-              <div className={`absolute inset-0 bg-gradient-to-r from-[#7bc74d]/20 to-[#6ab63d]/20 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 ${showFeatured ? 'scale-105' : ''}`} />
-              <div className="relative">
-                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#7bc74d] transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search for businesses, cafes, restaurants..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className={`w-full pl-14 pr-6 ${showFeatured ? 'py-5 text-lg' : 'py-3.5'} bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-[#7bc74d] focus:ring-4 focus:ring-[#7bc74d]/10 text-black placeholder-gray-400 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300`}
-                />
-                {showFeatured && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">
-                    <span>Press</span>
-                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-gray-200 font-mono text-[10px]">Enter</kbd>
-                  </div>
+            <div className="flex-1 flex gap-2 sm:gap-3">
+              {/* Search Input */}
+              <div className="flex-1 relative group">
+                <div className={`absolute inset-0 bg-gradient-to-r from-[#7bc74d]/20 to-[#6ab63d]/20 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 ${showFeatured ? 'scale-105' : ''}`} />
+                <div className="relative">
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-focus-within:text-[#7bc74d] transition-colors z-10" />
+                  <input
+                    type="text"
+                    placeholder="Search for businesses, cafes, restaurants..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className={`w-full pl-10 sm:pl-12 ${searchQuery ? 'pr-9 sm:pr-10' : 'pr-3 sm:pr-4'} py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-100 rounded-3xl focus:outline-none focus:border-[#7bc74d] focus:ring-4 focus:ring-[#7bc74d]/10 text-black placeholder-gray-400 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300`}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => handleSearchChange("")}
+                      className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-lg transition-colors z-20 flex-shrink-0"
+                      aria-label="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Country Filter - Next to search box */}
+              <div className="relative flex items-center">
+                {selectedCountryCode && (
+                  <button
+                    onClick={handleClearCountry}
+                    className="absolute -left-6 sm:-left-7 p-1 hover:bg-gray-100 rounded-lg transition-colors z-20 flex-shrink-0"
+                    aria-label="Clear country filter"
+                  >
+                    <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-gray-600" />
+                  </button>
                 )}
+                <div className="relative">
+                  <Globe className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 pointer-events-none z-10" />
+                  <select
+                    value={selectedCountryCode}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    disabled={isLoadingCountries}
+                    className={`pl-8 sm:pl-10 pr-6 sm:pr-8 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-100 rounded-3xl focus:outline-none focus:border-[#7bc74d] focus:ring-4 focus:ring-[#7bc74d]/10 text-black shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300 appearance-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed min-w-[110px] sm:min-w-[130px] max-w-[130px] sm:max-w-[150px]`}
+                    title={selectedCountryCode ? countries.find(c => c.country_code === selectedCountryCode)?.name || "All Countries" : "All Countries"}
+                  >
+                    <option value="">All</option>
+                    {countries.map((country) => (
+                      <option key={country.country_code} value={country.country_code}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 pointer-events-none" />
+                </div>
               </div>
             </div>
 
@@ -396,18 +505,29 @@ export default function AllRestaurants() {
 
           {/* Results Count - Only show when searching */}
           {!showFeatured && (
-            <div className="text-sm text-gray-600 font-medium">
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-[#7bc74d] border-t-transparent rounded-full animate-spin" />
-                  Searching...
-                </span>
-              ) : (
-                pagination.total > 0 ? (
-                  `Showing ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} business${pagination.total !== 1 ? 'es' : ''} for "${searchQuery}"`
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="text-sm text-gray-600 font-medium">
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-[#7bc74d] border-t-transparent rounded-full animate-spin" />
+                    Searching...
+                  </span>
                 ) : (
-                  `No businesses found for "${searchQuery}"`
-                )
+                  pagination.total > 0 ? (
+                    `Showing ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} business${pagination.total !== 1 ? 'es' : ''}${searchQuery ? ` for "${searchQuery}"` : ''}${selectedCountryCode ? ` in ${countries.find(c => c.country_code === selectedCountryCode)?.name || selectedCountryCode}` : ''}`
+                  ) : (
+                    `No businesses found${searchQuery ? ` for "${searchQuery}"` : ''}${selectedCountryCode ? ` in ${countries.find(c => c.country_code === selectedCountryCode)?.name || selectedCountryCode}` : ''}`
+                  )
+                )}
+              </div>
+              {selectedCountryCode && (
+                <button
+                  onClick={handleClearCountry}
+                  className="text-xs text-[#7bc74d] hover:text-[#6ab63d] font-medium flex items-center gap-1 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  Clear country filter
+                </button>
               )}
             </div>
           )}

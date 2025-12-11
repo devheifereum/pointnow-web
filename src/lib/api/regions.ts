@@ -6,3 +6,5 @@ export const regionsApi = {
     return api.get<RegionsCountryCodeResponse>("/regions/country-code");
   },
 };
+
+

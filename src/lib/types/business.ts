@@ -35,6 +35,7 @@ export interface BusinessesParams {
   page?: number;
   limit?: number;
   query?: string;
+  country_code?: string;
 }
 
 export interface BusinessAdmin {

@@ -28,6 +28,9 @@ export const businessApi = {
     if (params?.limit) {
       queryParams.append("limit", params.limit.toString());
     }
+    if (params?.country_code) {
+      queryParams.append("country_code", params.country_code);
+    }
 
     const queryString = queryParams.toString();
     return api.get<BusinessesResponse>(`/business/search${queryString ? `?${queryString}` : ""}`);
