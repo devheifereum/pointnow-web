@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Building2, Phone, MapPin, Eye, EyeOff, Store } from "lucide-react";
+import { Mail, Lock, Building2, Phone, MapPin, Eye, EyeOff, Store, Globe, ChevronDown } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import Navbar from "@/components/Navbar";
 import { authApi } from "@/lib/api/auth";
+import { regionsApi } from "@/lib/api/regions";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
 import { convertPhoneNumber } from "@/lib/utils";
+import type { RegionCountryCode } from "@/lib/types/regions";
 
 export default function RestaurantAuthScreen() {
   const router = useRouter();
@@ -37,6 +39,36 @@ export default function RestaurantAuthScreen() {
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [businessPhoneValue, setBusinessPhoneValue] = useState<string | undefined>();
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [countries, setCountries] = useState<RegionCountryCode[]>([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>("");
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+
+  // Fetch countries on component mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setIsLoadingCountries(true);
+        const response = await regionsApi.getCountryCodes();
+        // Sort countries alphabetically by name
+        const sortedCountries = [...response.data.regions].sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
+        setCountries(sortedCountries);
+        // Set default to Malaysia if available
+        const malaysia = sortedCountries.find(c => c.country_code === "MY");
+        if (malaysia) {
+          setSelectedCountryCode(malaysia.country_code);
+        }
+      } catch (err) {
+        console.error("Failed to fetch countries:", err);
+        setError("Failed to load countries. Please refresh the page.");
+      } finally {
+        setIsLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
 
   // Memoize the phone input component to prevent re-renders that cause focus loss
   const PhoneInputComponent = useMemo(() => {
@@ -168,6 +200,12 @@ export default function RestaurantAuthScreen() {
           return;
         }
 
+        if (!selectedCountryCode) {
+          setError("Please select a country");
+          setIsLoading(false);
+          return;
+        }
+
         const response = await authApi.registerBusiness({
           email: trimmedEmail,
           password: formData.password,
@@ -182,6 +220,7 @@ export default function RestaurantAuthScreen() {
             description: formData.description.trim(),
             address: formData.address.trim(),
             registration_number: formData.registrationNumber.trim() || undefined,
+            country_code: selectedCountryCode,
             metadata: {},
             is_active: true,
           },
@@ -492,6 +531,43 @@ export default function RestaurantAuthScreen() {
                           placeholder="Tell us about your business, cuisine type, specialties, and what makes it unique..."
                       />
                         <p className="mt-1 text-xs text-gray-500">This helps customers discover your business</p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Country *
+                        </label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                          <select
+                            id="country"
+                            name="country"
+                            value={selectedCountryCode}
+                            onChange={(e) => setSelectedCountryCode(e.target.value)}
+                            required={!isLogin}
+                            disabled={isLoadingCountries}
+                            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black bg-white appearance-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            {isLoadingCountries ? (
+                              <option value="">Loading countries...</option>
+                            ) : (
+                              <>
+                                <option value="">Select a country</option>
+                                {countries.map((country) => (
+                                  <option key={country.country_code} value={country.country_code}>
+                                    {country.name}
+                                  </option>
+                                ))}
+                              </>
+                            )}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        </div>
+                        {selectedCountryCode && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Selected: {countries.find(c => c.country_code === selectedCountryCode)?.name}
+                          </p>
+                        )}
                       </div>
                     </div>
 

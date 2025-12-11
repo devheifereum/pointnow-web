@@ -170,6 +170,7 @@ export interface BusinessRegisterRequest {
     registration_number?: string;
     latitude?: number;
     longitude?: number;
+    country_code?: string;
     metadata?: Record<string, unknown>;
     is_active?: boolean;
   };
