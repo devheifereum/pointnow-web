@@ -12,11 +12,7 @@ const createSlug = (name: string): string => {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 };
 
-interface NavbarProps {
-  variant?: "default" | "transparent";
-}
-
-export default function Navbar({ variant = "default" }: NavbarProps) {
+export default function Navbar() {
   const { user, isAuthenticated, clearAuth, initialize } = useAuthStore();
   const router = useRouter();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -81,17 +77,9 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
     { label: "About", href: "/about", icon: Info },
   ];
 
-  const isTransparent = variant === "transparent";
-
   return (
-    <nav className={`flex justify-between items-center py-4 px-4 sm:px-6 lg:px-20 z-[9999] ${
-      isTransparent 
-        ? "absolute top-0 left-0 right-0" 
-        : "relative bg-white/95 backdrop-blur-md border-b border-gray-100"
-    }`}>
-      <Link href="/home" className={`text-2xl sm:text-3xl font-gilroy-extrabold transition ${
-        isTransparent ? "text-white hover:text-[#7bc74d]" : "text-black hover:text-[#7bc74d]"
-      }`}>
+    <nav className="flex justify-between items-center py-4 px-4 sm:px-6 lg:px-20 z-[9999] absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-100">
+      <Link href="/home" className="text-2xl sm:text-3xl font-gilroy-extrabold text-black hover:text-[#7bc74d] transition">
         PointNow.
       </Link>
       
@@ -101,9 +89,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
           <Link
             key={link.label}
             href={link.href}
-            className={`font-medium hover:text-[#7bc74d] transition text-sm lg:text-base ${
-              isTransparent ? "text-gray-300" : "text-gray-700"
-            }`}
+            className="font-medium text-gray-700 hover:text-[#7bc74d] transition text-sm lg:text-base"
           >
             {link.label}
           </Link>
@@ -111,11 +97,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
         <div className="flex items-center gap-2 lg:gap-4">
           <button
             onClick={handleDashboardClick}
-            className={`px-4 lg:px-6 py-2 lg:py-3 rounded-full font-semibold transition text-sm lg:text-base ${
-              isTransparent 
-                ? "bg-white/10 hover:bg-white/20 text-white border border-white/20" 
-                : "bg-black hover:bg-gray-800 text-white"
-            }`}
+            className="px-4 lg:px-6 py-2 lg:py-3 rounded-full font-semibold transition text-sm lg:text-base bg-black hover:bg-gray-800 text-white"
           >
             Dashboard
           </button>
@@ -123,9 +105,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
             <div className="relative">
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className={`flex items-center gap-2 p-2 rounded-full transition-colors ${
-                  isTransparent ? "hover:bg-white/10" : "hover:bg-gray-100"
-                }`}
+                className="flex items-center gap-2 p-2 rounded-full transition-colors hover:bg-gray-100"
               >
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
@@ -175,9 +155,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
       {/* Mobile Menu Button */}
       <div className="md:hidden flex items-center gap-2">
         {isAuthenticated && user && (
-          <Link href={`/profile/${user.user.id}`} className={`p-2 rounded-full transition-colors ${
-            isTransparent ? "hover:bg-white/10" : "hover:bg-gray-100"
-          }`}>
+          <Link href={`/profile/${user.user.id}`} className="p-2 rounded-full transition-colors hover:bg-gray-100">
             <div className="w-8 h-8 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
@@ -185,11 +163,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
         )}
         <button
           onClick={() => setShowMobileMenu(!showMobileMenu)}
-          className={`p-2 hover:text-[#7bc74d] rounded-full transition-all ${
-            isTransparent 
-              ? "text-gray-300 hover:bg-white/10" 
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
+          className="p-2 hover:text-[#7bc74d] rounded-full transition-all text-gray-700 hover:bg-gray-100"
           aria-label="Toggle menu"
         >
           {showMobileMenu ? (

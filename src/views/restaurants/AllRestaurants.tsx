@@ -326,7 +326,7 @@ export default function AllRestaurants() {
       {showFeatured && (
         <>
           <FloatingOrb className="w-96 h-96 bg-[#7bc74d] -top-48 -right-48" delay={0} />
-          <FloatingOrb className="w-64 h-64 bg-blue-400 top-1/3 -left-32" delay={1} />
+          <FloatingOrb className="w-64 h-64 bg-[#7bc74d] top-1/3 -left-32" delay={1} />
           <FloatingOrb className="w-80 h-80 bg-[#6ab63d] bottom-1/4 -right-40" delay={2} />
         </>
       )}
@@ -334,10 +334,10 @@ export default function AllRestaurants() {
       {/* Navigation */}
       <Navbar />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 sm:pt-28 md:pt-32 lg:pt-36">
         {/* Hero Header for Featured View */}
         {showFeatured ? (
-          <div className="text-center mb-16 pt-8">
+          <div className="text-center mb-16">
             {/* Premium Badge */}
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#7bc74d]/10 via-[#6ab63d]/5 to-[#7bc74d]/10 backdrop-blur-sm border border-[#7bc74d]/20 px-5 py-2.5 rounded-full mb-8 shadow-sm">
               <div className="w-2 h-2 bg-[#7bc74d] rounded-full animate-pulse" />
@@ -824,22 +824,15 @@ export default function AllRestaurants() {
             </div>
 
             {/* CTA Section */}
-            <div className="relative overflow-hidden rounded-[2.5rem] mb-8">
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
-              <div 
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                }}
-              />
-              <FloatingOrb className="w-64 h-64 bg-[#7bc74d] -top-32 -right-32" delay={0} />
-              <FloatingOrb className="w-48 h-48 bg-[#7bc74d] -bottom-24 -left-24" delay={1.5} />
+            <div className="relative overflow-hidden rounded-[2.5rem] mb-8 bg-white border border-gray-200">
+              <FloatingOrb className="w-64 h-64 bg-[#7bc74d]/20 -top-32 -right-32" delay={0} />
+              <FloatingOrb className="w-48 h-48 bg-[#7bc74d]/20 -bottom-24 -left-24" delay={1.5} />
               
               <div className="relative px-8 py-16 md:py-20 text-center">
-                <h2 className="text-3xl md:text-5xl font-gilroy-black text-white mb-6 leading-tight">
+                <h2 className="text-3xl md:text-5xl font-gilroy-black text-gray-900 mb-6 leading-tight">
                   Ready to Start Earning?
                 </h2>
-                <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg">
+                <p className="text-gray-600 mb-10 max-w-xl mx-auto text-lg">
                   Join thousands of happy customers who are already earning rewards at their favorite local businesses.
                 </p>
                 {!isAuthenticated && (
@@ -850,7 +843,7 @@ export default function AllRestaurants() {
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </Link>
-                    <span className="text-gray-500 text-sm flex items-center gap-2">
+                    <span className="text-gray-600 text-sm flex items-center gap-2">
                       <Shield className="w-4 h-4" />
                       Free forever, no credit card
                     </span>

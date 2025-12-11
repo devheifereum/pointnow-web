@@ -93,7 +93,7 @@ export default function RootPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <Navbar variant="transparent" />
+      <Navbar />
       <LandingPage />
     </>
   );

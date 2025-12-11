@@ -201,15 +201,15 @@ function StatCard({ value, icon: Icon, title, description }: StatCardProps) {
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-white">
-      {/* Hero Section - Dark background */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Hero Section - White background */}
+      <section className="relative overflow-hidden bg-white text-gray-900">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-[0.03]">
+        <div className="absolute inset-0 opacity-[0.02]">
           <AnimatedGridPattern
             width={60}
             height={60}
             numSquares={50}
-            maxOpacity={0.1}
+            maxOpacity={0.05}
             duration={4}
           />
         </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
         <div className="absolute bottom-20 left-10 w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#7bc74d]/5 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-[#7bc74d]/3 rounded-full blur-3xl"></div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-16 pb-12 sm:pt-20 sm:pb-16 md:pt-24 md:pb-20 lg:pt-32 lg:pb-32">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-24 pb-12 sm:pt-28 sm:pb-16 md:pt-32 md:pb-20 lg:pt-40 lg:pb-32">
           <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 md:gap-14 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-5 sm:space-y-6 md:space-y-8 text-center lg:text-left">
@@ -233,7 +233,7 @@ export default function LandingPage() {
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-gilroy-black text-white leading-[1.15] sm:leading-[1.1] tracking-tight px-2 sm:px-0">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-gilroy-black text-gray-900 leading-[1.15] sm:leading-[1.1] tracking-tight px-2 sm:px-0">
                 One Loyalty Platform For All
                 <br className="hidden sm:block" />
                 <span className="block sm:inline"> </span>
@@ -245,7 +245,7 @@ export default function LandingPage() {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed px-4 sm:px-0 font-light">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed px-4 sm:px-0 font-light">
                 A cloud-based online loyalty platform that can take your business potential to the highest level, both online and offline.
               </p>
 
@@ -264,15 +264,15 @@ export default function LandingPage() {
               </div>
 
               {/* Partner Logos */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 md:gap-6 pt-6 sm:pt-8 opacity-70" aria-label="Supported business types">
-                <span className="text-xs sm:text-sm text-gray-400 font-medium w-full sm:w-auto mb-2 sm:mb-0">Trusted by:</span>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 md:gap-6 pt-6 sm:pt-8" aria-label="Supported business types">
+                <span className="text-xs sm:text-sm text-gray-600 font-medium w-full sm:w-auto mb-2 sm:mb-0">Trusted by:</span>
                 {PARTNER_ICONS.map((Icon, index) => (
                   <div
                     key={index}
-                    className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10 active:bg-white/10 active:scale-95 transition-all duration-200 touch-manipulation"
+                    className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center border border-gray-200 active:bg-gray-200 active:scale-95 transition-all duration-200 touch-manipulation"
                     aria-hidden="true"
                   >
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-700" />
                   </div>
                 ))}
               </div>
@@ -284,7 +284,7 @@ export default function LandingPage() {
               <div className="absolute inset-0 bg-[#7bc74d]/20 rounded-full blur-3xl scale-150"></div>
               
               {/* Mobile Device Frame */}
-              <div className="relative w-80 h-[640px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3.5rem] p-3 shadow-2xl border-4 border-gray-700/50 transform hover:scale-105 transition-transform duration-500">
+              <div className="relative w-80 h-[640px] bg-white rounded-[3.5rem] p-3 shadow-2xl border-4 border-gray-200 transform hover:scale-105 transition-transform duration-500">
                 {/* Inner white border/padding */}
                 <div className="w-full h-full bg-white rounded-[3rem] px-4 overflow-hidden">
                   {/* Screen content */}
@@ -301,11 +301,11 @@ export default function LandingPage() {
                   </div>
                 </div>
                 {/* Notch */}
-                <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-gray-900 rounded-b-2xl shadow-lg"></div>
+                <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-gray-200 rounded-b-2xl shadow-lg"></div>
                 {/* Side Buttons - More realistic */}
-                <div className="absolute right-[-5px] top-36 w-1.5 h-14 bg-gray-700/80 rounded-l-md"></div>
-                <div className="absolute left-[-5px] top-32 w-1.5 h-10 bg-gray-700/80 rounded-r-md"></div>
-                <div className="absolute left-[-5px] top-44 w-1.5 h-10 bg-gray-700/80 rounded-r-md"></div>
+                <div className="absolute right-[-5px] top-36 w-1.5 h-14 bg-gray-300 rounded-l-md"></div>
+                <div className="absolute left-[-5px] top-32 w-1.5 h-10 bg-gray-300 rounded-r-md"></div>
+                <div className="absolute left-[-5px] top-44 w-1.5 h-10 bg-gray-300 rounded-r-md"></div>
               </div>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function LandingPage() {
           {/* Bento Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
             {/* Large Feature Card */}
-            <div className="lg:col-span-2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 lg:p-12 text-white relative overflow-hidden group border border-gray-700/50 shadow-2xl active:shadow-[#7bc74d]/20 transition-all duration-200 touch-manipulation">
+            <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 lg:p-12 text-gray-900 relative overflow-hidden group border border-gray-200 shadow-2xl active:shadow-[#7bc74d]/20 transition-all duration-200 touch-manipulation">
               {/* Animated gradient overlay */}
               <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 md:w-96 md:h-96 bg-[#7bc74d]/20 rounded-full blur-3xl group-active:bg-[#7bc74d]/30 group-active:scale-150 transition-all duration-500"></div>
               <div className="absolute bottom-0 left-0 w-36 h-36 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-[#7bc74d]/10 rounded-full blur-3xl"></div>
@@ -384,8 +384,8 @@ export default function LandingPage() {
                 <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-2xl sm:rounded-3xl flex items-center justify-center mb-5 sm:mb-6 md:mb-8 shadow-lg group-active:scale-110 group-active:rotate-3 transition-transform duration-200">
                   <Trophy className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-gilroy-black mb-3 sm:mb-4 md:mb-6 leading-tight">Gamified Leaderboards</h3>
-                <p className="text-gray-300 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl font-light">
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-gilroy-black text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight">Gamified Leaderboards</h3>
+                <p className="text-gray-600 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl font-light">
                   Create friendly competition among your customers. Public rankings drive repeat visits as customers compete to become top spenders at your business.
                 </p>
               </div>
@@ -494,12 +494,12 @@ export default function LandingPage() {
           </div>
 
           {/* Results Banner */}
-          <div className="mt-10 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16 relative overflow-hidden border border-gray-700/50 shadow-2xl">
+          <div className="mt-10 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24 bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16 relative overflow-hidden border border-gray-200 shadow-2xl">
             <div className="absolute top-0 right-0 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] md:w-[500px] md:h-[500px] bg-[#7bc74d]/15 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute bottom-0 left-0 w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] md:w-[400px] md:h-[400px] bg-[#7bc74d]/10 rounded-full blur-3xl"></div>
             <div className="relative z-10">
               <div className="text-center mb-6 sm:mb-8 md:mb-10 lg:mb-14">
-                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-gilroy-black text-white mb-3 sm:mb-4 md:mb-6 tracking-tight px-2">
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-gilroy-black text-gray-900 mb-3 sm:mb-4 md:mb-6 tracking-tight px-2">
                   The Results Speak For Themselves
                 </h3>
                 <div className="w-12 sm:w-16 md:w-20 lg:w-24 h-0.5 sm:h-1 bg-gradient-to-r from-transparent via-[#7bc74d] to-transparent mx-auto rounded-full"></div>
@@ -509,7 +509,7 @@ export default function LandingPage() {
                 {RESULTS_STATS.map((stat, index) => (
                   <div key={index} className="text-center group touch-manipulation">
                     <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-gilroy-black text-[#7bc74d] mb-1 sm:mb-2 md:mb-3 group-active:scale-110 transition-transform duration-200">{stat.value}</div>
-                    <p className="text-white/90 text-xs sm:text-sm md:text-base font-medium leading-tight">{stat.label}</p>
+                    <p className="text-gray-600 text-xs sm:text-sm md:text-base font-medium leading-tight">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -632,18 +632,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA - Full Width Dark */}
-      <section className="relative py-12 sm:py-16 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
+      {/* Final CTA - Full Width White */}
+      <section className="relative py-12 sm:py-16 md:py-24 lg:py-32 xl:py-48 bg-white text-gray-900 overflow-hidden">
         {/* Background Elements */}
         <div className="absolute top-0 left-0 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[600px] md:h-[600px] bg-[#7bc74d]/12 rounded-full blur-3xl -translate-x-1/3 -translate-y-1/3 animate-pulse" />
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[600px] md:h-[600px] bg-[#7bc74d]/12 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] md:w-[800px] md:h-[800px] bg-[#7bc74d]/8 rounded-full blur-3xl" />
-        <div className="absolute inset-0 opacity-[0.03]">
+        <div className="absolute inset-0 opacity-[0.02]">
           <AnimatedGridPattern
             width={60}
             height={60}
             numSquares={30}
-            maxOpacity={0.1}
+            maxOpacity={0.05}
             duration={4}
           />
         </div>
@@ -657,7 +657,7 @@ export default function LandingPage() {
             />
           </div>
           
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl font-gilroy-black mb-5 sm:mb-6 md:mb-8 lg:mb-10 leading-[1.1] sm:leading-[0.95] tracking-tight px-2">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl font-gilroy-black text-gray-900 mb-5 sm:mb-6 md:mb-8 lg:mb-10 leading-[1.1] sm:leading-[0.95] tracking-tight px-2">
             Ready to Transform Your 
             <br />
             <span className="relative inline-block mt-1 sm:mt-0">
@@ -666,7 +666,7 @@ export default function LandingPage() {
             </span>
           </h2>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-gray-300 mb-8 sm:mb-10 md:mb-12 lg:mb-16 leading-relaxed max-w-4xl mx-auto font-light px-4">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-gray-600 mb-8 sm:mb-10 md:mb-12 lg:mb-16 leading-relaxed max-w-4xl mx-auto font-light px-4">
             Join thousands of businesses using PointNow to build lasting customer relationships
           </p>
 
@@ -684,7 +684,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/businesses" className="w-full sm:w-auto">
               <button 
-                className="bg-white/10 active:bg-white/20 backdrop-blur-md text-white px-7 py-4 sm:px-8 sm:py-4.5 md:px-10 md:py-5 lg:px-12 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg md:text-xl transition-all duration-200 border border-white/20 active:border-white/40 active:scale-[0.98] w-full sm:w-auto shadow-lg touch-manipulation"
+                className="bg-gray-100 active:bg-gray-200 text-gray-900 px-7 py-4 sm:px-8 sm:py-4.5 md:px-10 md:py-5 lg:px-12 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg md:text-xl transition-all duration-200 border border-gray-200 active:border-gray-300 active:scale-[0.98] w-full sm:w-auto shadow-lg touch-manipulation"
                 aria-label="View PointNow demo"
               >
                 View Demo
@@ -693,7 +693,7 @@ export default function LandingPage() {
           </div>
 
           {/* Trust Indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 text-gray-400 mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
+          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 text-gray-600 mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
             {TRUST_INDICATORS.map((item, index) => (
               <div key={index} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base">
                 <item.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-[#7bc74d]" />
@@ -703,23 +703,23 @@ export default function LandingPage() {
           </div>
 
           {/* Contact Info */}
-          <div className="pt-5 sm:pt-6 md:pt-8 border-t border-white/10 px-4">
-            <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6 text-xs sm:text-sm md:text-base">Questions? We&apos;re here to help</p>
+          <div className="pt-5 sm:pt-6 md:pt-8 border-t border-gray-200 px-4">
+            <p className="text-gray-600 mb-3 sm:mb-4 md:mb-6 text-xs sm:text-sm md:text-base">Questions? We&apos;re here to help</p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
               <a 
                 href="tel:+601162464247" 
-                className="flex items-center gap-2 sm:gap-3 text-white active:text-[#7bc74d] transition group text-xs sm:text-sm md:text-base touch-manipulation"
+                className="flex items-center gap-2 sm:gap-3 text-gray-900 active:text-[#7bc74d] transition group text-xs sm:text-sm md:text-base touch-manipulation"
               >
-                <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-white/10 rounded-lg sm:rounded-xl flex items-center justify-center group-active:bg-[#7bc74d]/20 transition">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center group-active:bg-[#7bc74d]/20 transition">
                   <Phone className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5" />
                 </div>
                 <span className="font-medium">+60 11-6246 4247</span>
               </a>
               <a 
                 href="mailto:hello@pointnow.io" 
-                className="flex items-center gap-2 sm:gap-3 text-white active:text-[#7bc74d] transition group text-xs sm:text-sm md:text-base touch-manipulation"
+                className="flex items-center gap-2 sm:gap-3 text-gray-900 active:text-[#7bc74d] transition group text-xs sm:text-sm md:text-base touch-manipulation"
               >
-                <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-white/10 rounded-lg sm:rounded-xl flex items-center justify-center group-active:bg-[#7bc74d]/20 transition">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center group-active:bg-[#7bc74d]/20 transition">
                   <MessageCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5" />
                 </div>
                 <span className="font-medium break-all">hello@pointnow.io</span>
