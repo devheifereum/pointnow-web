@@ -49,6 +49,7 @@ export default function Billing({ restaurantName }: BillingProps) {
     SubscriptionProduct[]
   >([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_activeSubscription, setActiveSubscription] =
     useState<Subscription | null>(null);
   const [subscriptionType, setSubscriptionType] =
@@ -66,7 +67,7 @@ export default function Billing({ restaurantName }: BillingProps) {
   const [showTopupSuccess, setShowTopupSuccess] = useState(false);
 
   const businessId = user?.businessId || "";
-  const businessName = restaurantName || user?.businessName || "";
+  const businessName = restaurantName || "";
 
   // Easy to manipulate - set to true for dev/sandbox, false for production
   const IS_TRIAL = process.env.NEXT_PUBLIC_IS_TRIAL === "true";
