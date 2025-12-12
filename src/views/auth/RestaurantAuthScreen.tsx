@@ -39,6 +39,8 @@ export default function RestaurantAuthScreen() {
   const [phoneValue, setPhoneValue] = useState<string | undefined>();
   const [businessPhoneValue, setBusinessPhoneValue] = useState<string | undefined>();
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [emailValid, setEmailValid] = useState<boolean | null>(null);
+  const [businessEmailValid, setBusinessEmailValid] = useState<boolean | null>(null);
   const [countries, setCountries] = useState<RegionCountryCode[]>([]);
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>("");
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
@@ -85,6 +87,39 @@ export default function RestaurantAuthScreen() {
     return Component;
   }, []);
 
+  const validateEmail = (email: string): boolean => {
+    // More robust email validation regex
+    // Validates: local-part@domain.tld format
+    // - Local part: alphanumeric, dots, hyphens, underscores, plus signs
+    // - Domain: alphanumeric, dots, hyphens
+    // - TLD: at least 2 characters, letters only
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    // Additional checks
+    if (!email || email.trim() === "") {
+      return false;
+    }
+    
+    // Check for consecutive dots
+    if (email.includes("..")) {
+      return false;
+    }
+    
+    // Check that @ appears only once
+    const atCount = (email.match(/@/g) || []).length;
+    if (atCount !== 1) {
+      return false;
+    }
+    
+    // Check that email doesn't start or end with dot, @, or hyphen
+    const trimmed = email.trim();
+    if (/^[.@-]|[.@-]$/.test(trimmed)) {
+      return false;
+    }
+    
+    return emailRegex.test(trimmed);
+  };
+
   const validatePassword = (password: string) => {
     const errors: string[] = [];
     
@@ -120,6 +155,24 @@ export default function RestaurantAuthScreen() {
     // Validate password in real-time
     if (e.target.name === "password") {
       validatePassword(newValue);
+    }
+    
+    // Validate email in real-time
+    if (e.target.name === "email") {
+      if (newValue.trim() === "") {
+        setEmailValid(null);
+      } else {
+        setEmailValid(validateEmail(newValue));
+      }
+    }
+    
+    // Validate business email in real-time
+    if (e.target.name === "businessEmail") {
+      if (newValue.trim() === "") {
+        setBusinessEmailValid(null);
+      } else {
+        setBusinessEmailValid(validateEmail(newValue));
+      }
     }
   };
 
@@ -174,7 +227,63 @@ export default function RestaurantAuthScreen() {
           router.push("/home");
         }
       } else {
-        // Register Business
+        // Register Business - Validate all required fields
+        
+        // Business Information Validation
+        const trimmedBusinessName = formData.businessName.trim();
+        if (!trimmedBusinessName) {
+          setError("Please provide a business name");
+          setIsLoading(false);
+          return;
+        }
+
+        const trimmedRegistrationNumber = formData.registrationNumber.trim();
+        if (!trimmedRegistrationNumber) {
+          setError("Please provide a registration number");
+          setIsLoading(false);
+          return;
+        }
+
+        const trimmedBusinessEmail = formData.businessEmail.trim();
+        if (!trimmedBusinessEmail) {
+          setError("Please provide a business email address");
+          setIsLoading(false);
+          return;
+        }
+        // Validate business email format
+        if (!validateEmail(trimmedBusinessEmail)) {
+          setError("Please provide a valid business email address (e.g., business@example.com)");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!businessPhoneValue || businessPhoneValue.trim() === "") {
+          setError("Please provide a business phone number");
+          setIsLoading(false);
+          return;
+        }
+
+        const trimmedAddress = formData.address.trim();
+        if (!trimmedAddress) {
+          setError("Please provide a business address");
+          setIsLoading(false);
+          return;
+        }
+
+        const trimmedDescription = formData.description.trim();
+        if (!trimmedDescription) {
+          setError("Please provide a business description");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!selectedCountryCode) {
+          setError("Please select a country");
+          setIsLoading(false);
+          return;
+        }
+
+        // Account Information Validation
         if (!phoneValue || phoneValue.trim() === "") {
           setError("Please provide a valid phone number");
           setIsLoading(false);
@@ -184,6 +293,12 @@ export default function RestaurantAuthScreen() {
         const trimmedEmail = formData.email.trim();
         if (!trimmedEmail) {
           setError("Please provide a valid email address");
+          setIsLoading(false);
+          return;
+        }
+        // Validate email format
+        if (!validateEmail(trimmedEmail)) {
+          setError("Please provide a valid email address format (e.g., user@example.com)");
           setIsLoading(false);
           return;
         }
@@ -200,12 +315,6 @@ export default function RestaurantAuthScreen() {
           return;
         }
 
-        if (!selectedCountryCode) {
-          setError("Please select a country");
-          setIsLoading(false);
-          return;
-        }
-
         const response = await authApi.registerBusiness({
           email: trimmedEmail,
           password: formData.password,
@@ -214,12 +323,12 @@ export default function RestaurantAuthScreen() {
           is_active: true,
           metadata: {},
           business: {
-            name: formData.businessName.trim(),
-            email: formData.businessEmail.trim() || undefined,
-            phone_number: businessPhoneValue ? convertPhoneNumber(businessPhoneValue.trim()) : undefined,
-            description: formData.description.trim(),
-            address: formData.address.trim(),
-            registration_number: formData.registrationNumber.trim() || undefined,
+            name: trimmedBusinessName,
+            email: trimmedBusinessEmail,
+            phone_number: convertPhoneNumber(businessPhoneValue.trim()),
+            description: trimmedDescription,
+            address: trimmedAddress,
+            registration_number: trimmedRegistrationNumber,
             country_code: selectedCountryCode,
             metadata: {},
             is_active: true,
@@ -398,7 +507,7 @@ export default function RestaurantAuthScreen() {
 
                       <div>
                         <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Registration Number
+                          Registration Number *
                         </label>
                         <div className="relative">
                           <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -408,6 +517,7 @@ export default function RestaurantAuthScreen() {
                             name="registrationNumber"
                             value={formData.registrationNumber}
                             onChange={handleInputChange}
+                            required={!isLogin}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
                             placeholder="e.g., SSM2003"
                           />
@@ -416,7 +526,7 @@ export default function RestaurantAuthScreen() {
 
                       <div>
                         <label htmlFor="businessEmail" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Business Email
+                          Business Email *
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -426,15 +536,30 @@ export default function RestaurantAuthScreen() {
                             name="businessEmail"
                             value={formData.businessEmail}
                             onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                            required={!isLogin}
+                            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 ${
+                              businessEmailValid === false
+                                ? "border-red-300 focus:ring-red-500"
+                                : businessEmailValid === true
+                                ? "border-green-300"
+                                : "border-gray-200"
+                            }`}
                             placeholder="e.g., business@example.com"
                           />
                         </div>
+                        {businessEmailValid === false && formData.businessEmail.trim() && (
+                          <p className="mt-1 text-xs text-red-600">
+                            Please enter a valid email address (e.g., business@example.com)
+                          </p>
+                        )}
+                        {businessEmailValid === true && (
+                          <p className="mt-1 text-xs text-green-600">✓ Valid email address</p>
+                        )}
                       </div>
 
                       <div>
                         <label htmlFor="businessPhone" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Business Phone Number
+                          Business Phone Number *
                         </label>
                         <div className="relative">
                           <style dangerouslySetInnerHTML={{__html: `
@@ -590,10 +715,24 @@ export default function RestaurantAuthScreen() {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                        className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 ${
+                          !isLogin && emailValid === false
+                            ? "border-red-300 focus:ring-red-500"
+                            : !isLogin && emailValid === true
+                            ? "border-green-300"
+                            : "border-gray-200"
+                        }`}
                             placeholder="admin@yourrestaurant.com"
                           />
                         </div>
+                        {!isLogin && emailValid === false && formData.email.trim() && (
+                          <p className="mt-1 text-xs text-red-600">
+                            Please enter a valid email address (e.g., user@example.com)
+                          </p>
+                        )}
+                        {!isLogin && emailValid === true && (
+                          <p className="mt-1 text-xs text-green-600">✓ Valid email address</p>
+                        )}
                       </div>
 
                       <div>
@@ -771,10 +910,24 @@ export default function RestaurantAuthScreen() {
                           value={formData.email}
                           onChange={handleInputChange}
                           required
-                          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400"
+                          className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black placeholder-gray-400 ${
+                            isLogin && emailValid === false && formData.email.trim()
+                              ? "border-red-300 focus:ring-red-500"
+                              : isLogin && emailValid === true
+                              ? "border-green-300"
+                              : "border-gray-200"
+                          }`}
                           placeholder="Enter your email"
                         />
                       </div>
+                      {isLogin && emailValid === false && formData.email.trim() && (
+                        <p className="mt-1 text-xs text-red-600">
+                          Please enter a valid email address (e.g., user@example.com)
+                        </p>
+                      )}
+                      {isLogin && emailValid === true && (
+                        <p className="mt-1 text-xs text-green-600">✓ Valid email address</p>
+                      )}
                     </div>
 
                     <div>

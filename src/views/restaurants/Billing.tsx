@@ -351,8 +351,13 @@ export default function Billing({ restaurantName }: BillingProps) {
           )}
         </div>
 
-        {/* Topup Wallet Section - Uses Stripe SDK */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200">
+        {/* Topup Wallet Section - Upcoming Feature */}
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 relative opacity-75">
+          {/* Coming Soon Badge */}
+          <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-full z-10">
+            Coming Soon
+          </div>
+          
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black flex items-center gap-3">
@@ -360,7 +365,7 @@ export default function Billing({ restaurantName }: BillingProps) {
                 Messaging Wallet
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Top up credits to send SMS messages to your customers
+                Top up credits to send SMS messages to your customers (Coming Soon)
               </p>
             </div>
           </div>
@@ -383,7 +388,7 @@ export default function Billing({ restaurantName }: BillingProps) {
             </div>
 
             {/* Topup Options */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 pointer-events-none">
               <p className="text-sm font-semibold text-gray-700 mb-4">Select top-up amount</p>
               
               {/* Preset Options */}
@@ -394,17 +399,18 @@ export default function Billing({ restaurantName }: BillingProps) {
                     <button
                       key={option.amount}
                       type="button"
+                      disabled
                       onClick={() => handleSelectPresetAmount(option.amount)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-left cursor-not-allowed ${
                         isSelected
-                          ? "border-[#7bc74d] bg-[#7bc74d]/10"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
+                          ? "border-gray-300 bg-gray-100"
+                          : "border-gray-200 bg-gray-50"
                       }`}
                     >
-                      <p className={`text-lg font-bold ${isSelected ? "text-[#7bc74d]" : "text-gray-900"}`}>
+                      <p className={`text-lg font-bold ${isSelected ? "text-gray-500" : "text-gray-400"}`}>
                         RM{option.amount}
                       </p>
-                      <p className="text-xs text-gray-500">{option.label}</p>
+                      <p className="text-xs text-gray-400">{option.label}</p>
                     </button>
                   );
                 })}
@@ -416,20 +422,22 @@ export default function Billing({ restaurantName }: BillingProps) {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    disabled
                     onClick={() => {
                       if (topupAmount > 2) {
                         handleCustomAmountChange(Math.max(2, topupAmount - 10));
                       }
                     }}
-                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center bg-gray-50 cursor-not-allowed"
                   >
-                    <Minus className="w-4 h-4 text-gray-600" />
+                    <Minus className="w-4 h-4 text-gray-400" />
                   </button>
                   <input
                     type="number"
                     min="2"
                     step="1"
                     placeholder="Custom"
+                    disabled
                     value={isCustomAmount ? topupAmount : ""}
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
@@ -444,20 +452,17 @@ export default function Billing({ restaurantName }: BillingProps) {
                         setIsCustomAmount(true);
                       }
                     }}
-                    className={`flex-1 px-4 py-2 border-2 rounded-xl focus:outline-none text-center font-bold text-gray-900 transition-colors ${
-                      isCustomAmount
-                        ? "border-[#7bc74d] bg-white"
-                        : "border-gray-200 bg-white focus:border-[#7bc74d]"
-                    }`}
+                    className="flex-1 px-4 py-2 border-2 rounded-xl focus:outline-none text-center font-bold text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed"
                   />
                   <button
                     type="button"
+                    disabled
                     onClick={() => {
                       handleCustomAmountChange(topupAmount + 10);
                     }}
-                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center bg-gray-50 cursor-not-allowed"
                   >
-                    <Plus className="w-4 h-4 text-gray-600" />
+                    <Plus className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
               </div>
@@ -466,12 +471,8 @@ export default function Billing({ restaurantName }: BillingProps) {
               <button
                 type="button"
                 onClick={handleTopupClick}
-                disabled={topupAmount < 2}
-                className={`w-full sm:w-auto px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-                  topupAmount >= 2
-                    ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white shadow-lg shadow-[#7bc74d]/25"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
+                disabled
+                className="w-full sm:w-auto px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gray-200 text-gray-500 cursor-not-allowed"
               >
                 <Wallet className="w-5 h-5" />
                 Top Up RM{topupAmount}
@@ -857,3 +858,4 @@ export default function Billing({ restaurantName }: BillingProps) {
     </div>
   );
 }
+
