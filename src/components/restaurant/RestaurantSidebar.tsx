@@ -14,6 +14,7 @@ import {
   Building2,
   Users,
   UserCircle,
+  CreditCard,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 import { useSidebar } from "./SidebarContext";
@@ -33,6 +34,7 @@ const sidebarItems: SidebarItem[] = [
   { label: "Customers", href: (name) => `/${name}/customers`, icon: UserCircle },
   { label: "Branches", href: (name) => `/${name}/branches`, icon: Building2 },
   { label: "Staff", href: (name) => `/${name}/staff`, icon: Users },
+  { label: "Billing", href: (name) => `/${name}/billing`, icon: CreditCard },
   { label: "Settings", href: (name) => `/${name}/settings`, icon: Settings },
 ];
 

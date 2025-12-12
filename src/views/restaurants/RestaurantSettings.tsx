@@ -16,8 +16,6 @@ import {
   Upload,
   Image as ImageIcon,
   X,
-  TrendingUp,
-  Sparkles,
   Trash2,
   AlertTriangle,
 } from "lucide-react";
@@ -34,11 +32,9 @@ import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { businessApi } from "@/lib/api/business";
 import { fileApi } from "@/lib/api/file";
-import { subscriptionApi } from "@/lib/api/subscription";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
 import type { BusinessDetail } from "@/lib/types/business";
-import type { SubscriptionProduct, Subscription, SubscriptionType } from "@/lib/types/subscription";
 
 interface RestaurantSettingsProps {
   restaurantName?: string;
@@ -52,12 +48,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
   const [business, setBusiness] = useState<BusinessDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_activeSubscription, setActiveSubscription] = useState<Subscription | null>(null);
-  const [subscriptionType, setSubscriptionType] = useState<SubscriptionType | null>(null);
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -72,9 +62,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
 
   const businessId = user?.businessId || "";
 
-  // Easy to manipulate - set to true for dev/sandbox, false for production
-  const IS_TRIAL = process.env.NEXT_PUBLIC_IS_TRIAL === "true";
-
   useEffect(() => {
     if (!businessId) {
       setError("Business ID not found. Please log in again.");
@@ -83,8 +70,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }
 
     fetchBusiness();
-    fetchSubscriptionProducts();
-    fetchActiveSubscription();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
 
@@ -113,53 +98,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     }
   };
 
-  const fetchSubscriptionProducts = async () => {
-    setIsLoadingProducts(true);
-    try {
-      const response = await subscriptionApi.getProducts({
-        page: 1,
-        limit: 10,
-        is_trial: IS_TRIAL,
-      });
-      setSubscriptionProducts(response.data.subscription_products || []);
-    } catch (err) {
-      console.error("Failed to load subscription products:", err);
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
-
-  const fetchActiveSubscription = async () => {
-    if (!businessId) return;
-    
-    setIsLoadingSubscription(true);
-    try {
-      const response = await subscriptionApi.getActiveByBusinessId({
-        provider_name: "STRIPE",
-        business_id: businessId,
-      });
-      setActiveSubscription(response.data.subscription);
-      
-      // If we have an active subscription, fetch the subscription type
-      if (response.data.subscription?.subscription_type_id) {
-        const typeResponse = await subscriptionApi.getTypeById(
-          response.data.subscription.subscription_type_id
-        );
-        setSubscriptionType(typeResponse.data.subscription_type);
-      }
-    } catch (err) {
-      console.error("Failed to load active subscription:", err);
-    } finally {
-      setIsLoadingSubscription(false);
-    }
-  };
-
-  const handleUpgrade = (link: string) => {
-    const url = new URL(link);
-    url.searchParams.set("client_reference_id", businessId);
-    window.open(url.toString(), "_blank");
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -170,20 +108,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const formatPrice = (price: number) => {
-    // Return just the number without currency symbol
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const convertToUSD = (myrPrice: number) => {
-    // Using approximate conversion rate (1 USD ≈ 4.11 MYR)
-    // Rounding to nearest integer for cleaner display
-    return Math.round(myrPrice / 4.11);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -473,59 +397,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
     businessName.trim() !== (business.name || "").trim() ||
     businessDescription.trim() !== (business.description || "").trim()
   );
-
-  // Get monthly product for subscription (price is in MYR)
-  const monthlyProduct = subscriptionProducts.find(p => p.duration === "MONTHLY");
-  
-  // Display price from API (in MYR)
-  const displayPriceMYR = monthlyProduct?.price || null;
-
-  // Determine current plan
-  const currentPlanName = subscriptionType?.name?.toUpperCase() || "FREE";
-  const isOnFreePlan = currentPlanName === "FREE";
-  const isOnProfessionalPlan = currentPlanName === "PROFESSIONAL" || currentPlanName === "PRO";
-
-  // Badge logic
-  const getBasicBadge = () => {
-    if (isOnFreePlan) return "Current Plan";
-    return "Starter";
-  };
-
-  const getProfessionalBadge = () => {
-    if (isOnProfessionalPlan) return "Current Plan";
-    return "Most Popular";
-  };
-
-  const isLoadingPlan = isLoadingProducts || isLoadingSubscription;
-
-  // Feature lists
-  const basicFeatures = [
-    "Up to 3,000 customers",
-    "Points system",
-    "Customer leaderboard",
-    "Mobile-friendly dashboard",
-    "Email support",
-    "Basic analytics",
-    "QR code generation",
-    "Single store location",
-  ];
-
-  const professionalFeatures = [
-    "Unlimited customers",
-    "Advanced points system",
-    "Customer leaderboard with insights",
-    "Mobile-friendly dashboard",
-    "Priority email support",
-    "Advanced analytics & reports",
-    "QR code generation",
-    "Multiple store locations",
-    "Custom branding & logo",
-    "SMS notifications",
-    "Referral program tools",
-    "Export customer data",
-    "Custom point rules",
-    "Customer message blasting (pay per use)",
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -873,159 +744,6 @@ export default function RestaurantSettings({ restaurantName }: RestaurantSetting
                 <Trash2 className="w-4 h-4" />
                 <span>Delete Account</span>
               </button>
-            </div>
-          </div>
-
-          {/* Subscription */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">Subscription</h2>
-              <p className="text-sm text-gray-600 mt-1">Manage your plan</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
-              {/* Basic Plan - Free */}
-              <div className={`relative bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 ${
-                isOnFreePlan
-                  ? "border-4 border-gray-400"
-                  : "border-2 border-gray-200 hover:border-gray-400"
-              }`}>
-                {/* Badge */}
-                <div className={`absolute top-0 right-0 ${
-                  getBasicBadge() === "Current Plan" ? "bg-gray-600" : "bg-gray-500"
-                } text-white text-xs font-semibold px-4 py-2 rounded-bl-xl`}>
-                  {isLoadingPlan ? <Loader2 className="w-3 h-3 animate-spin" /> : getBasicBadge()}
-                </div>
-
-                <div className="p-8">
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
-                    <Sparkles className="w-7 h-7 text-gray-600" />
-                  </div>
-
-                  {/* Plan Name */}
-                  <h3 className="text-2xl font-gilroy-black text-black mb-2">Basic</h3>
-                  <p className="text-gray-600 text-sm mb-6">Perfect for small businesses getting started with loyalty programs</p>
-
-                  {/* Price */}
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-gilroy-black text-black">
-                        Free
-                      </span>
-                    </div>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Included with your account
-                    </p>
-                  </div>
-
-                  {/* CTA Button */}
-                  {isOnFreePlan ? (
-                    <div className="w-full py-3 rounded-xl font-semibold mb-6 text-center bg-gray-100 text-gray-500">
-                      Current Plan
-                    </div>
-                  ) : (
-                    <div className="w-full py-3 rounded-xl font-semibold mb-6 text-center bg-gray-100 text-gray-400">
-                      Included
-                    </div>
-                  )}
-
-                  {/* Features */}
-                  <div className="space-y-3">
-                    {basicFeatures.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Professional Plan - From API */}
-              <div className={`relative bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-300 ${
-                isOnProfessionalPlan
-                  ? "border-4 border-[#7bc74d]"
-                  : "border-4 border-[#7bc74d] transform md:scale-105 z-10"
-              }`}>
-                {/* Badge */}
-                <div className="absolute top-0 right-0 bg-[#7bc74d] text-white text-xs font-semibold px-4 py-2 rounded-bl-xl">
-                  {isLoadingPlan ? <Loader2 className="w-3 h-3 animate-spin" /> : getProfessionalBadge()}
-                </div>
-
-                <div className="p-8">
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-4">
-                    <TrendingUp className="w-7 h-7 text-[#7bc74d]" />
-                  </div>
-
-                  {/* Plan Name */}
-                  <h3 className="text-2xl font-gilroy-black text-black mb-2">Professional</h3>
-                  <p className="text-gray-600 text-sm mb-6">For growing businesses ready to unlock unlimited potential</p>
-
-                  {/* Price */}
-                  <div className="mb-6">
-                    {isLoadingProducts ? (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-black" />
-                      </div>
-                    ) : displayPriceMYR !== null ? (
-                      <>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-5xl font-gilroy-black text-black">
-                            ${formatPrice(convertToUSD(displayPriceMYR))}
-                          </span>
-                          <span className="text-gray-600">
-                            /month
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-2">
-                          <span className="text-2xl font-gilroy-black text-gray-700">
-                            RM{formatPrice(displayPriceMYR)}
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            /month
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-gilroy-black text-black">-</span>
-                        <span className="text-gray-600">/month</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* CTA Button */}
-                  {isOnProfessionalPlan ? (
-                    <div className="w-full py-3 rounded-xl font-semibold mb-6 text-center bg-gray-100 text-gray-500">
-                      Current Plan
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => monthlyProduct && handleUpgrade(monthlyProduct.link)}
-                      disabled={!monthlyProduct || isLoadingProducts}
-                      className={`w-full py-3 rounded-xl font-semibold transition-colors mb-6 ${
-                        monthlyProduct && !isLoadingProducts
-                          ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                    >
-                      Upgrade Now
-                    </button>
-                  )}
-
-                  {/* Features */}
-                  <div className="space-y-3">
-                    {professionalFeatures.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-[#7bc74d] flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
