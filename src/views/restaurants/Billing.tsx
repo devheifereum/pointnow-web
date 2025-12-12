@@ -351,8 +351,137 @@ export default function Billing({ restaurantName }: BillingProps) {
           )}
         </div>
 
+        {/* Topup Wallet Section - Uses Stripe SDK */}
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black flex items-center gap-3">
+                <Wallet className="w-7 h-7 text-[#7bc74d]" />
+                Messaging Wallet
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Top up credits to send SMS messages to your customers
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Wallet Info Card */}
+            <div className="lg:col-span-1 bg-gradient-to-br from-[#7bc74d] to-[#5da336] rounded-2xl p-6 text-white">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/80 text-sm">SMS Credits</p>
+                  <p className="text-2xl font-gilroy-black">Coming Soon</p>
+                </div>
+              </div>
+              <p className="text-white/70 text-sm">
+                Use credits to blast promotional messages, OTP verification, and updates to your customers.
+              </p>
+            </div>
+
+            {/* Topup Options */}
+            <div className="lg:col-span-2">
+              <p className="text-sm font-semibold text-gray-700 mb-4">Select top-up amount</p>
+              
+              {/* Preset Options */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {TOPUP_OPTIONS.map((option) => {
+                  const isSelected = topupAmount === option.amount && !isCustomAmount;
+                  return (
+                    <button
+                      key={option.amount}
+                      type="button"
+                      onClick={() => handleSelectPresetAmount(option.amount)}
+                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                        isSelected
+                          ? "border-[#7bc74d] bg-[#7bc74d]/10"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
+                      }`}
+                    >
+                      <p className={`text-lg font-bold ${isSelected ? "text-[#7bc74d]" : "text-gray-900"}`}>
+                        RM{option.amount}
+                      </p>
+                      <p className="text-xs text-gray-500">{option.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Amount */}
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-2">Or enter custom amount (RM)</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (topupAmount > 2) {
+                        handleCustomAmountChange(Math.max(2, topupAmount - 10));
+                      }
+                    }}
+                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  >
+                    <Minus className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <input
+                    type="number"
+                    min="2"
+                    step="1"
+                    placeholder="Custom"
+                    value={isCustomAmount ? topupAmount : ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value) && value >= 2) {
+                        handleCustomAmountChange(value);
+                      } else if (e.target.value === "") {
+                        handleCustomAmountChange(2);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (!isCustomAmount) {
+                        setIsCustomAmount(true);
+                      }
+                    }}
+                    className={`flex-1 px-4 py-2 border-2 rounded-xl focus:outline-none text-center font-bold text-gray-900 transition-colors ${
+                      isCustomAmount
+                        ? "border-[#7bc74d] bg-white"
+                        : "border-gray-200 bg-white focus:border-[#7bc74d]"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCustomAmountChange(topupAmount + 10);
+                    }}
+                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Topup Button */}
+              <button
+                type="button"
+                onClick={handleTopupClick}
+                disabled={topupAmount < 2}
+                className={`w-full sm:w-auto px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                  topupAmount >= 2
+                    ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white shadow-lg shadow-[#7bc74d]/25"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                <Wallet className="w-5 h-5" />
+                Top Up RM{topupAmount}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Subscription Section */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
+        <div className="mt-8 bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200 overflow-hidden">
           <div className="mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black">
               Subscription
@@ -525,135 +654,6 @@ export default function Billing({ restaurantName }: BillingProps) {
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Topup Wallet Section - Uses Stripe SDK */}
-        <div className="mt-8 bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 md:p-10 border-2 border-gray-200">
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-gilroy-black text-black flex items-center gap-3">
-                <Wallet className="w-7 h-7 text-[#7bc74d]" />
-                Messaging Wallet
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Top up credits to send SMS messages to your customers
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Wallet Info Card */}
-            <div className="lg:col-span-1 bg-gradient-to-br from-[#7bc74d] to-[#5da336] rounded-2xl p-6 text-white">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-white/80 text-sm">SMS Credits</p>
-                  <p className="text-2xl font-gilroy-black">Coming Soon</p>
-                </div>
-              </div>
-              <p className="text-white/70 text-sm">
-                Use credits to blast promotional messages, OTP verification, and updates to your customers.
-              </p>
-            </div>
-
-            {/* Topup Options */}
-            <div className="lg:col-span-2">
-              <p className="text-sm font-semibold text-gray-700 mb-4">Select top-up amount</p>
-              
-              {/* Preset Options */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                {TOPUP_OPTIONS.map((option) => {
-                  const isSelected = topupAmount === option.amount && !isCustomAmount;
-                  return (
-                    <button
-                      key={option.amount}
-                      type="button"
-                      onClick={() => handleSelectPresetAmount(option.amount)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                        isSelected
-                          ? "border-[#7bc74d] bg-[#7bc74d]/10"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
-                    >
-                      <p className={`text-lg font-bold ${isSelected ? "text-[#7bc74d]" : "text-gray-900"}`}>
-                        RM{option.amount}
-                      </p>
-                      <p className="text-xs text-gray-500">{option.label}</p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Custom Amount */}
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">Or enter custom amount (RM)</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (topupAmount > 2) {
-                        handleCustomAmountChange(Math.max(2, topupAmount - 10));
-                      }
-                    }}
-                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                  >
-                    <Minus className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <input
-                    type="number"
-                    min="2"
-                    step="1"
-                    placeholder="Custom"
-                    value={isCustomAmount ? topupAmount : ""}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      if (!isNaN(value) && value >= 2) {
-                        handleCustomAmountChange(value);
-                      } else if (e.target.value === "") {
-                        handleCustomAmountChange(2);
-                      }
-                    }}
-                    onFocus={() => {
-                      if (!isCustomAmount) {
-                        setIsCustomAmount(true);
-                      }
-                    }}
-                    className={`flex-1 px-4 py-2 border-2 rounded-xl focus:outline-none text-center font-bold text-gray-900 transition-colors ${
-                      isCustomAmount
-                        ? "border-[#7bc74d] bg-white"
-                        : "border-gray-200 bg-white focus:border-[#7bc74d]"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleCustomAmountChange(topupAmount + 10);
-                    }}
-                    className="w-10 h-10 rounded-lg border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                  >
-                    <Plus className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Topup Button */}
-              <button
-                type="button"
-                onClick={handleTopupClick}
-                disabled={topupAmount < 2}
-                className={`w-full sm:w-auto px-8 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-                  topupAmount >= 2
-                    ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white shadow-lg shadow-[#7bc74d]/25"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                <Wallet className="w-5 h-5" />
-                Top Up RM{topupAmount}
-              </button>
             </div>
           </div>
         </div>

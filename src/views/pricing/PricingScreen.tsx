@@ -192,7 +192,7 @@ export default function PricingScreen() {
         {/* Navigation */}
         <Navbar />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-5xl md:text-6xl font-gilroy-black text-black mb-4">
@@ -201,6 +201,55 @@ export default function PricingScreen() {
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               Choose the perfect plan for your business.
             </p>
+          </div>
+
+          {/* CTA Section - Moved to top */}
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-center text-white mb-12 md:mb-16">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-3 sm:mb-4">
+                Ready to Grow Your Business?
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl opacity-90 mb-6 sm:mb-8">
+                Join hundreds of merchants using PointNow to build customer loyalty and increase sales.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {isAuthenticated && businessId ? (
+                  isOnProfessionalPlan ? (
+                    <div className="bg-white/20 text-white px-8 py-4 rounded-xl font-semibold inline-block text-center">
+                      You&apos;re on Professional! 🎉
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => monthlyProduct && handleUpgrade(monthlyProduct.link)}
+                      disabled={!monthlyProduct || isLoadingProducts}
+                      className={`px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center ${
+                        monthlyProduct && !isLoadingProducts
+                          ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
+                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      }`}
+                    >
+                      {isLoadingProducts ? "Loading..." : "Upgrade to Professional"}
+                    </button>
+                  )
+                ) : (
+                  <Link
+                    href="/auth?mode=business"
+                    className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
+                  >
+                    Get Started Free
+                  </Link>
+                )}
+                <Link
+                  href="/auth?mode=business"
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20 inline-block text-center"
+                >
+                  Schedule Demo
+                </Link>
+              </div>
+              <p className="text-sm opacity-75 mt-6">
+                Start free, upgrade anytime
+              </p>
+            </div>
           </div>
 
           {/* Pricing Cards */}
@@ -378,55 +427,6 @@ export default function PricingScreen() {
                   </p>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-center text-white">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-gilroy-black mb-3 sm:mb-4">
-                Ready to Grow Your Business?
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl opacity-90 mb-6 sm:mb-8">
-                Join hundreds of merchants using PointNow to build customer loyalty and increase sales.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {isAuthenticated && businessId ? (
-                  isOnProfessionalPlan ? (
-                    <div className="bg-white/20 text-white px-8 py-4 rounded-xl font-semibold inline-block text-center">
-                      You&apos;re on Professional! 🎉
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => monthlyProduct && handleUpgrade(monthlyProduct.link)}
-                      disabled={!monthlyProduct || isLoadingProducts}
-                      className={`px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center ${
-                        monthlyProduct && !isLoadingProducts
-                          ? "bg-[#7bc74d] hover:bg-[#6ab63d] text-white"
-                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                      }`}
-                    >
-                      {isLoadingProducts ? "Loading..." : "Upgrade to Professional"}
-                    </button>
-                  )
-                ) : (
-                  <Link
-                    href="/auth?mode=business"
-                    className="bg-[#7bc74d] hover:bg-[#6ab63d] text-white px-8 py-4 rounded-xl font-semibold transition-colors inline-block text-center"
-                  >
-                    Get Started Free
-                  </Link>
-                )}
-                <Link
-                  href="/auth?mode=business"
-                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-semibold transition-colors border border-white/20 inline-block text-center"
-                >
-                  Schedule Demo
-                </Link>
-              </div>
-              <p className="text-sm opacity-75 mt-6">
-                Start free, upgrade anytime
-              </p>
             </div>
           </div>
         </div>

@@ -279,8 +279,8 @@ export default function RestaurantAuthScreen() {
       <div className="relative z-10">
         <Navbar />
 
-        <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 py-6">
-          <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8 pt-24 pb-6">
+          <div className="flex items-center justify-center min-h-[calc(100vh-240px)] py-8">
             <div className="w-full max-w-[95%] lg:max-w-[90%] xl:max-w-[1400px] px-2 sm:px-4 lg:px-6">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
