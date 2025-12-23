@@ -1,19 +1,21 @@
-import Billing from "@/views/restaurants/Billing";
+import MessageBlasting from "@/views/restaurants/MessageBlasting";
 import RestaurantLayout from "@/components/restaurant/RestaurantLayout";
 
-interface BusinessBillingPageProps {
+interface BusinessMessageBlastingPageProps {
   params: Promise<{
     "business-name": string;
   }>;
 }
 
-export default async function BusinessBillingPage({ params }: BusinessBillingPageProps) {
+export default async function BusinessMessageBlastingPage({
+  params,
+}: BusinessMessageBlastingPageProps) {
   const resolvedParams = await params;
   const businessName = decodeURIComponent(resolvedParams["business-name"]);
-  
+
   return (
     <RestaurantLayout>
-      <Billing restaurantName={businessName} />
+      <MessageBlasting restaurantName={businessName} />
     </RestaurantLayout>
   );
 }

@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { subscriptionApi } from "@/lib/api/subscription";
 import { paymentApi } from "@/lib/api/payment";
+import { walletApi } from "@/lib/api/wallet";
+import { configTypesApi } from "@/lib/api/config-types";
 import { useAuthStore } from "@/lib/auth/store";
 import { CheckoutModal, BillingPortalButton } from "@/components/stripe";
 import type {
@@ -27,6 +29,8 @@ import type {
   SubscriptionType,
 } from "@/lib/types/subscription";
 import type { Invoice } from "@/lib/types/payment";
+import type { UsageCache } from "@/lib/types/wallet";
+import type { ConfigType } from "@/lib/types/config-types";
 
 interface BillingProps {
   restaurantName?: string;
@@ -60,6 +64,14 @@ export default function Billing({ restaurantName }: BillingProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
 
+  // State for wallet balance
+  const [usageCaches, setUsageCaches] = useState<UsageCache[]>([]);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+
+  // State for config types (rates)
+  const [configTypes, setConfigTypes] = useState<ConfigType[]>([]);
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
+
   // State for wallet topup
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [topupAmount, setTopupAmount] = useState(TOPUP_OPTIONS[1].amount);
@@ -89,6 +101,7 @@ export default function Billing({ restaurantName }: BillingProps) {
       );
       // Refresh data
       fetchInvoices();
+      fetchUsageCaches();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -158,6 +171,42 @@ export default function Billing({ restaurantName }: BillingProps) {
     }
   }, [businessId]);
 
+  const fetchUsageCaches = useCallback(async () => {
+    if (!businessId) return;
+
+    setIsLoadingBalance(true);
+    try {
+      const response = await walletApi.getUsageCaches({
+        business_id: businessId,
+        page: 1,
+        limit: 10,
+        with_business: true,
+        with_config_type: true,
+      });
+      setUsageCaches(response.data?.usage_caches || []);
+    } catch (err) {
+      console.error("Failed to load wallet balance:", err);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  }, [businessId]);
+
+  const fetchConfigTypes = useCallback(async () => {
+    setIsLoadingRates(true);
+    try {
+      const response = await configTypesApi.getAll({
+        name: "SMS",
+        page: 1,
+        limit: 10,
+      });
+      setConfigTypes(response.data?.config_types || []);
+    } catch (err) {
+      console.error("Failed to load config types:", err);
+    } finally {
+      setIsLoadingRates(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!businessId) {
       return;
@@ -166,7 +215,9 @@ export default function Billing({ restaurantName }: BillingProps) {
     fetchSubscriptionProducts();
     fetchActiveSubscription();
     fetchInvoices();
-  }, [businessId, fetchSubscriptionProducts, fetchActiveSubscription, fetchInvoices]);
+    fetchUsageCaches();
+    fetchConfigTypes();
+  }, [businessId, fetchSubscriptionProducts, fetchActiveSubscription, fetchInvoices, fetchUsageCaches, fetchConfigTypes]);
 
   // Original subscription upgrade handler - opens external link
   const handleUpgrade = (link: string) => {
@@ -198,6 +249,7 @@ export default function Billing({ restaurantName }: BillingProps) {
     setIsTopupModalOpen(false);
     setShowTopupSuccess(true);
     fetchInvoices();
+    fetchUsageCaches();
   };
 
   const formatPrice = (price: number) => {
@@ -374,9 +426,78 @@ export default function Billing({ restaurantName }: BillingProps) {
                 </div>
                 <div>
                   <p className="text-white/80 text-sm">SMS Credits</p>
-                  <p className="text-2xl font-gilroy-black">Available</p>
+                  <p className="text-2xl font-gilroy-black">Wallet</p>
                 </div>
               </div>
+              
+              {isLoadingBalance ? (
+                <div className="flex items-center justify-center py-4 mb-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                </div>
+              ) : usageCaches.length > 0 ? (
+                <div className="space-y-3 mb-4">
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-white/80 text-xs mb-1">Available Balance</p>
+                    <p className="text-xl font-gilroy-black">
+                      {usageCaches[0].balance.toLocaleString()} messages
+                    </p>
+                    <p className="text-white/70 text-xs mt-1">
+                      Messages available to send
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-white/80 text-xs mb-1">Messages Sent</p>
+                    <p className="text-xl font-gilroy-black">
+                      {usageCaches[0].current_count.toLocaleString()}
+                    </p>
+                    <p className="text-white/70 text-xs mt-1">
+                      Total messages already sent
+                    </p>
+                  </div>
+                  
+                  {configTypes.length > 0 && (
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-white/80 text-xs mb-1">Rate per Message</p>
+                      {isLoadingRates ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      ) : (
+                        <p className="text-xl font-gilroy-black">
+                          RM {configTypes[0].charge.toFixed(2)}
+                        </p>
+                      )}
+                      <p className="text-white/70 text-xs mt-1">
+                        Current SMS rate
+                      </p>
+                    </div>
+                  )}
+                  
+                  {usageCaches[0].config_types && (
+                    <p className="text-white/90 text-xs font-medium">
+                      {usageCaches[0].config_types.name} Service
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3 mb-4">
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-white/80 text-xs mb-1">Available Balance</p>
+                    <p className="text-xl font-gilroy-black">0 messages</p>
+                    <p className="text-white/70 text-xs mt-1">
+                      Messages available to send
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <p className="text-white/80 text-xs mb-1">Messages Sent</p>
+                    <p className="text-xl font-gilroy-black">0</p>
+                    <p className="text-white/70 text-xs mt-1">
+                      Total messages already sent
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-white/70 text-sm">
                 Use credits to blast promotional messages, OTP verification, and updates to your customers.
               </p>
@@ -404,7 +525,6 @@ export default function Billing({ restaurantName }: BillingProps) {
                       <p className={`text-lg font-bold ${isSelected ? "text-[#7bc74d]" : "text-gray-900"}`}>
                         RM{option.amount}
                       </p>
-                      <p className={`text-xs ${isSelected ? "text-green-700" : "text-gray-600"}`}>{option.label}</p>
                     </button>
                   );
                 })}

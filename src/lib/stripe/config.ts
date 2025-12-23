@@ -83,3 +83,4 @@ export const getReturnUrl = (businessName: string, paymentType?: string): string
   return `${baseUrl}/${encodeURIComponent(businessName)}/billing?payment=complete${typeParam}`;
 };
 
+

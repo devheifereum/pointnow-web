@@ -12,7 +12,8 @@ import {
   Target, 
   Heart,
   ArrowRight,
-  Sparkle
+  Sparkle,
+  Shield
 } from "lucide-react";
 
 export default function AboutScreen() {
@@ -184,6 +185,29 @@ export default function AboutScreen() {
                   </p>
                   <p className="text-lg text-gray-700 leading-relaxed">
                     And help millions of consumers discover local gems, compete for exclusive rewards, and build their own lifestyle &quot;Poinfolio.&quot;
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy & Security Section */}
+      <section className="py-24 md:py-32 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative">
+            <div className="flex items-start gap-6">
+              <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-3xl md:text-4xl font-gilroy-black text-gray-900 mb-6">
+                  🔐 Your Customer Data Is Safe With Us
+                </h2>
+                <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-200">
+                  <p className="text-lg text-gray-700 leading-relaxed">
+                    At PointNow, we take data privacy and security seriously. All customer data is encrypted and securely stored on protected servers, following industry best practices and security standards. We do not sell, share, or use your data for third-party advertising — your customer data belongs to you, and only you. Access is fully controlled, and only verified business owners can view or export their own customer list. Our system is built with multiple layers of security to minimize risks and ensure peace of mind for every merchant.
                   </p>
                 </div>
               </div>

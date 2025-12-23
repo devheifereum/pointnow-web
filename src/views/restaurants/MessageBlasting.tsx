@@ -1,0 +1,798 @@
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Loader2,
+  MessageSquare,
+  Wallet,
+  Send,
+  Users,
+  CheckCircle2,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Mail,
+  Phone,
+  User,
+  Sparkles,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
+import { customersApi } from "@/lib/api/customers";
+import { walletApi } from "@/lib/api/wallet";
+import { configTypesApi } from "@/lib/api/config-types";
+import { blastApi } from "@/lib/api/blast";
+import { useAuthStore } from "@/lib/auth/store";
+import { ApiClientError } from "@/lib/api/client";
+import type { Customer } from "@/lib/types/customers";
+import type { UsageCache } from "@/lib/types/wallet";
+import type { ConfigType } from "@/lib/types/config-types";
+
+interface MessageBlastingProps {
+  restaurantName?: string;
+}
+
+export default function MessageBlasting({ restaurantName }: MessageBlastingProps) {
+  const { user } = useAuthStore();
+  const businessId = user?.businessId || "";
+
+  // State for customers
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    total_pages: 0,
+    has_next: false,
+    has_previous: false,
+  });
+
+  // State for wallet balance
+  const [usageCaches, setUsageCaches] = useState<UsageCache[]>([]);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+
+  // State for config types (rates)
+  const [configTypes, setConfigTypes] = useState<ConfigType[]>([]);
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
+  const [selectedConfigType, setSelectedConfigType] = useState<ConfigType | null>(null);
+
+  // State for message
+  const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Step state
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+
+  // Fetch customers with pagination
+  const fetchCustomers = useCallback(async (page: number, query: string) => {
+    if (!businessId) return;
+
+    setIsLoadingCustomers(true);
+    try {
+      let response;
+      
+      // Use search API if there's a search query, otherwise use getByBusiness
+      if (query.trim()) {
+        response = await customersApi.search({
+          query: query.trim(),
+          page: page,
+          limit: pagination.limit,
+        });
+      } else {
+        response = await customersApi.getByBusiness(businessId, {
+          page: page,
+          limit: pagination.limit,
+        });
+      }
+
+      setCustomers(response.data?.customers || []);
+      setPagination((prev) => ({
+        ...prev,
+        page: response.data?.metadata?.page || page,
+        limit: response.data?.metadata?.limit || prev.limit,
+        total: response.data?.metadata?.total || 0,
+        total_pages: response.data?.metadata?.total_pages || 0,
+        has_next: response.data?.metadata?.has_next || false,
+        has_previous: response.data?.metadata?.has_previous || false,
+      }));
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+    } finally {
+      setIsLoadingCustomers(false);
+    }
+  }, [businessId, pagination.limit]);
+
+  // Fetch wallet balance
+  const fetchUsageCaches = useCallback(async () => {
+    if (!businessId) return;
+
+    setIsLoadingBalance(true);
+    try {
+      const response = await walletApi.getUsageCaches({
+        business_id: businessId,
+        page: 1,
+        limit: 10,
+        with_business: true,
+        with_config_type: true,
+      });
+      setUsageCaches(response.data?.usage_caches || []);
+    } catch (err) {
+      console.error("Failed to load wallet balance:", err);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  }, [businessId]);
+
+  // Fetch config types (rates)
+  const fetchConfigTypes = useCallback(async () => {
+    setIsLoadingRates(true);
+    try {
+      const response = await configTypesApi.getAll({
+        name: "SMS",
+        page: 1,
+        limit: 10,
+      });
+      const types = response.data?.config_types || [];
+      setConfigTypes(types);
+      if (types.length > 0) {
+        setSelectedConfigType(types[0]);
+      }
+    } catch (err) {
+      console.error("Failed to load config types:", err);
+    } finally {
+      setIsLoadingRates(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (businessId) {
+      fetchUsageCaches();
+      fetchConfigTypes();
+    }
+  }, [businessId, fetchUsageCaches, fetchConfigTypes]);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [searchQuery]);
+
+  // Fetch customers when page changes or search query changes (debounced)
+  useEffect(() => {
+    if (!businessId) return;
+
+    const timeoutId = setTimeout(() => {
+      fetchCustomers(pagination.page, searchQuery);
+    }, searchQuery.trim() ? 300 : 0); // Debounce search by 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [businessId, pagination.page, searchQuery, fetchCustomers]);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  };
+
+  // Use customers directly (already filtered by API if searching)
+  const filteredCustomers = customers;
+
+  // Toggle customer selection
+  const toggleCustomerSelection = (customerId: string) => {
+    setSelectedCustomers((prev) =>
+      prev.includes(customerId)
+        ? prev.filter((id) => id !== customerId)
+        : [...prev, customerId]
+    );
+  };
+
+  // Select all customers
+  const selectAllCustomers = () => {
+    if (selectedCustomers.length === filteredCustomers.length && filteredCustomers.length > 0) {
+      setSelectedCustomers([]);
+    } else {
+      setSelectedCustomers(filteredCustomers.map((c) => c.id));
+    }
+  };
+
+  // Calculate estimated cost
+  const estimatedCost = selectedCustomers.length > 0 && selectedConfigType
+    ? selectedCustomers.length * selectedConfigType.charge
+    : 0;
+
+  // Get current balance
+  const currentBalance = usageCaches.length > 0 ? usageCaches[0].balance : 0;
+
+  // Check if balance is sufficient
+  const hasSufficientBalance = currentBalance >= selectedCustomers.length;
+
+  // Handle send message
+  const handleSendMessage = async () => {
+    if (!message.trim()) {
+      setError("Please enter a message");
+      return;
+    }
+
+    if (selectedCustomers.length === 0) {
+      setError("Please select at least one customer");
+      return;
+    }
+
+    if (!hasSufficientBalance) {
+      setError("Insufficient balance. Please top up your wallet.");
+      return;
+    }
+
+    // Get phone numbers from selected customers
+    const selectedCustomerData = customers.filter((c) =>
+      selectedCustomers.includes(c.id)
+    );
+    const phoneNumbers = selectedCustomerData
+      .map((c) => c.phone_number)
+      .filter((phone): phone is string => !!phone && phone.trim() !== "");
+
+    if (phoneNumbers.length === 0) {
+      setError("Selected customers don't have phone numbers. Please select customers with phone numbers.");
+      return;
+    }
+
+    setIsSending(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await blastApi.sendOTP({
+        message: message.trim(),
+        phone_numbers: phoneNumbers,
+        business_id: businessId,
+      });
+
+      // Success
+      setSuccessMessage(
+        `Message sent successfully to ${phoneNumbers.length} customer(s)!`
+      );
+      setMessage("");
+      setSelectedCustomers([]);
+      
+      // Refresh balance after sending
+      await fetchUsageCaches();
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      
+      if (err instanceof ApiClientError) {
+        setError(err.message || "Failed to send message. Please try again.");
+      } else {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to send message. Please try again.";
+        setError(errorMessage);
+      }
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle step navigation
+  const handleNextStep = () => {
+    if (selectedCustomers.length === 0) {
+      setError("Please select at least one customer");
+      return;
+    }
+    
+    // Check if selected customers have phone numbers
+    const selectedCustomerData = customers.filter((c) =>
+      selectedCustomers.includes(c.id)
+    );
+    const withPhone = selectedCustomerData.filter(
+      (c) => c.phone_number && c.phone_number.trim() !== ""
+    ).length;
+    
+    if (withPhone === 0) {
+      setError("Selected customers don't have phone numbers. Please select customers with phone numbers.");
+      return;
+    }
+    
+    setError(null);
+    setCurrentStep(2);
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep(1);
+    setError(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#7bc74d] to-[#5da336] flex items-center justify-center shadow-lg shadow-[#7bc74d]/20">
+              <MessageSquare className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-gilroy-black text-gray-900">
+                Message Blasting
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
+                Send personalized messages to your customers
+              </p>
+            </div>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-[#7bc74d]' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
+                currentStep >= 1 
+                  ? 'bg-[#7bc74d] text-white' 
+                  : 'bg-gray-200 text-gray-500'
+              }`}>
+                {currentStep > 1 ? <CheckCircle2 className="w-5 h-5" /> : '1'}
+              </div>
+              <span className="text-sm font-medium">Select Customers</span>
+            </div>
+            <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-[#7bc74d]' : 'bg-gray-200'}`}></div>
+            <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-[#7bc74d]' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
+                currentStep >= 2 
+                  ? 'bg-[#7bc74d] text-white' 
+                  : 'bg-gray-200 text-gray-500'
+              }`}>
+                2
+              </div>
+              <span className="text-sm font-medium">Send Message</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-900">Error</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 p-1"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-green-900">Success</p>
+              <p className="text-sm text-green-700 mt-1">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-500 hover:text-green-700 p-1"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Always Show Balance and Rate */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          {/* Balance Card */}
+          <div className="bg-gradient-to-br from-[#7bc74d] to-[#5da336] rounded-2xl p-6 text-white shadow-xl shadow-[#7bc74d]/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-medium text-white/90">Available Balance</p>
+              </div>
+              {isLoadingBalance ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <p className="text-3xl font-gilroy-black mb-1">
+                  {currentBalance.toLocaleString()}
+                </p>
+              )}
+              <p className="text-sm text-white/80">messages available</p>
+            </div>
+          </div>
+
+          {/* Rate Card */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-blue-600" />
+              </div>
+              <p className="text-sm font-medium text-gray-600">Rate per Message</p>
+            </div>
+            {isLoadingRates ? (
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            ) : selectedConfigType ? (
+              <>
+                <p className="text-3xl font-gilroy-black text-gray-900 mb-1">
+                  RM {selectedConfigType.charge.toFixed(2)}
+                </p>
+                <p className="text-sm text-gray-500">per SMS</p>
+              </>
+            ) : (
+              <p className="text-lg text-gray-500">No rate available</p>
+            )}
+          </div>
+        </div>
+
+        {/* Step Content */}
+        <div className="space-y-6">
+
+          {/* Step 1: Select Customers */}
+          {currentStep === 1 && (
+            <>
+              {/* Selection Summary */}
+              {selectedCustomers.length > 0 && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">
+                          {selectedCustomers.length} customer{selectedCustomers.length !== 1 ? 's' : ''} selected
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {(() => {
+                            const selectedCustomerData = customers.filter((c) =>
+                              selectedCustomers.includes(c.id)
+                            );
+                            const withPhone = selectedCustomerData.filter(
+                              (c) => c.phone_number && c.phone_number.trim() !== ""
+                            ).length;
+                            return `${withPhone} with phone number${withPhone !== 1 ? 's' : ''}`;
+                          })()}
+                        </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Messages to send: <span className="font-semibold text-gray-900">
+                          {(() => {
+                            const selectedCustomerData = customers.filter((c) =>
+                              selectedCustomers.includes(c.id)
+                            );
+                            return selectedCustomerData.filter(
+                              (c) => c.phone_number && c.phone_number.trim() !== ""
+                            ).length;
+                          })()}
+                        </span>
+                      </p>
+                      </div>
+                    </div>
+                    {!hasSufficientBalance && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg border border-red-200">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <span className="text-xs font-medium text-red-700">Insufficient balance</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Customer Selection Card */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-gray-700" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-gilroy-black text-gray-900">Select Customers</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {pagination.total > 0 ? `${pagination.total} total customers` : 'Loading...'}
+                      </p>
+                    </div>
+                  </div>
+                  {filteredCustomers.length > 0 && (
+                    <button
+                      onClick={selectAllCustomers}
+                      className="px-4 py-2 text-sm font-medium text-[#7bc74d] hover:text-[#6ab63d] hover:bg-green-50 rounded-lg transition-colors"
+                    >
+                      {selectedCustomers.length === filteredCustomers.length
+                        ? "Deselect All"
+                        : "Select All"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or phone number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#7bc74d] focus:ring-2 focus:ring-[#7bc74d]/20 transition-all text-gray-900 placeholder:text-gray-400 bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              {/* Customer List */}
+              <div className="p-6">
+                <div className="max-h-[500px] overflow-y-auto space-y-2 -mx-2 px-2">
+                  {isLoadingCustomers ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#7bc74d] mb-3" />
+                      <p className="text-sm text-gray-500">Loading customers...</p>
+                    </div>
+                  ) : filteredCustomers.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <Users className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">
+                        {searchQuery.trim() ? "No customers found" : "No customers available"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {searchQuery.trim() ? "Try a different search term" : "Customers will appear here once added"}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredCustomers.map((customer) => {
+                      const isSelected = selectedCustomers.includes(customer.id);
+                      return (
+                        <div
+                          key={customer.id}
+                          onClick={() => toggleCustomerSelection(customer.id)}
+                          className={`group p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "border-[#7bc74d] bg-gradient-to-r from-green-50 to-emerald-50 shadow-md shadow-green-100/50"
+                              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm"
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                isSelected
+                                  ? "border-[#7bc74d] bg-[#7bc74d] shadow-sm"
+                                  : "border-gray-300 group-hover:border-gray-400"
+                              }`}
+                            >
+                              {isSelected && (
+                                <CheckCircle2 className="w-4 h-4 text-white" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <p className="font-semibold text-gray-900 truncate">
+                                  {customer.name || "Unknown"}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-gray-600">
+                                {customer.email && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Mail className="w-3.5 h-3.5" />
+                                    <span className="truncate max-w-[150px]">{customer.email}</span>
+                                  </div>
+                                )}
+                                {customer.phone_number && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Phone className="w-3.5 h-3.5" />
+                                    <span>{customer.phone_number}</span>
+                                  </div>
+                                )}
+                                {!customer.email && !customer.phone_number && (
+                                  <span className="text-gray-400">No contact info</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                {!isLoadingCustomers && filteredCustomers.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <p className="text-sm text-gray-600">
+                        Showing <span className="font-semibold text-gray-900">{((pagination.page - 1) * pagination.limit) + 1}</span> to{" "}
+                        <span className="font-semibold text-gray-900">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{" "}
+                        <span className="font-semibold text-gray-900">{pagination.total}</span> customers
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={!pagination.has_previous}
+                          className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeft className="w-4 h-4 text-gray-700" />
+                        </button>
+                        <div className="px-4 py-2 bg-gray-100 rounded-lg">
+                          <span className="text-sm font-medium text-gray-700">
+                            Page {pagination.page} of {pagination.total_pages || 1}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={!pagination.has_next}
+                          className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-700" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+              {/* Next Button */}
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleNextStep}
+                  disabled={selectedCustomers.length === 0}
+                  className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] hover:from-[#6ab63d] hover:to-[#5da336] text-white shadow-lg shadow-[#7bc74d]/30 hover:shadow-xl hover:shadow-[#7bc74d]/40 disabled:from-gray-200 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span>Continue to Message</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Step 2: Send Message */}
+          {currentStep === 2 && (
+            <>
+              {/* Selected Customers Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        {selectedCustomers.length} customer{selectedCustomers.length !== 1 ? 's' : ''} selected
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {(() => {
+                          const selectedCustomerData = customers.filter((c) =>
+                            selectedCustomers.includes(c.id)
+                          );
+                          const withPhone = selectedCustomerData.filter(
+                            (c) => c.phone_number && c.phone_number.trim() !== ""
+                          ).length;
+                          return `${withPhone} with phone number${withPhone !== 1 ? 's' : ''}`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePreviousStep}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-white rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Change Selection</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Message Composition Card */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-gilroy-black text-gray-900">Compose Message</h2>
+                    <p className="text-xs text-gray-500">Write your message below</p>
+                  </div>
+                </div>
+
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type your message here...&#10;&#10;Your message will be sent to all selected customers.&#10;&#10;You can personalize your message with customer names, promotions, or important updates."
+                  rows={16}
+                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#7bc74d] focus:ring-2 focus:ring-[#7bc74d]/20 resize-none mb-6 text-gray-900 placeholder:text-gray-400 bg-gray-50 transition-all text-base"
+                />
+
+                <div className="space-y-2 mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Characters</span>
+                    <span className="font-semibold text-gray-900">{message.length}</span>
+                  </div>
+                {selectedCustomers.length > 0 && (
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
+                    <span className="text-gray-600">Messages to send</span>
+                    <span className="font-semibold text-[#7bc74d]">
+                      {(() => {
+                        const selectedCustomerData = customers.filter((c) =>
+                          selectedCustomers.includes(c.id)
+                        );
+                        return selectedCustomerData.filter(
+                          (c) => c.phone_number && c.phone_number.trim() !== ""
+                        ).length;
+                      })()}
+                    </span>
+                  </div>
+                )}
+                </div>
+
+                <button
+                  onClick={handleSendMessage}
+                  disabled={
+                    isSending ||
+                    !message.trim() ||
+                    selectedCustomers.length === 0 ||
+                    !hasSufficientBalance
+                  }
+                  className="w-full px-6 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-[#7bc74d] to-[#6ab63d] hover:from-[#6ab63d] hover:to-[#5da336] text-white shadow-lg shadow-[#7bc74d]/30 hover:shadow-xl hover:shadow-[#7bc74d]/40 disabled:from-gray-200 disabled:to-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none transform hover:scale-[1.02] active:scale-[0.98] text-lg"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>
+                        Send to {selectedCustomers.length} Customer{selectedCustomers.length !== 1 ? 's' : ''}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                {(() => {
+                  const selectedCustomerData = customers.filter((c) =>
+                    selectedCustomers.includes(c.id)
+                  );
+                  const withPhone = selectedCustomerData.filter(
+                    (c) => c.phone_number && c.phone_number.trim() !== ""
+                  ).length;
+                  const hasPhoneWarning = message.trim() && selectedCustomers.length > 0 && hasSufficientBalance && withPhone < selectedCustomers.length;
+                  
+                  if (!message.trim() || selectedCustomers.length === 0 || !hasSufficientBalance || hasPhoneWarning) {
+                    return (
+                      <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <div className="text-xs text-amber-800">
+                            {!message.trim() && "Please enter a message"}
+                            {message.trim() && selectedCustomers.length === 0 && "Please select at least one customer"}
+                            {message.trim() && selectedCustomers.length > 0 && !hasSufficientBalance && "Insufficient balance. Please top up your wallet."}
+                            {hasPhoneWarning && withPhone === 0 && "Selected customers don't have phone numbers. Please select customers with phone numbers."}
+                            {hasPhoneWarning && withPhone > 0 && `${selectedCustomers.length - withPhone} selected customer(s) don't have phone numbers and will be skipped.`}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
