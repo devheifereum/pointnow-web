@@ -25,6 +25,7 @@ import { configTypesApi } from "@/lib/api/config-types";
 import { blastApi } from "@/lib/api/blast";
 import { useAuthStore } from "@/lib/auth/store";
 import { ApiClientError } from "@/lib/api/client";
+import { toast } from "sonner";
 import type { Customer } from "@/lib/types/customers";
 import type { UsageCache } from "@/lib/types/wallet";
 import type { ConfigType } from "@/lib/types/config-types";
@@ -239,38 +240,43 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
     setSuccessMessage(null);
 
     try {
-      await blastApi.sendOTP({
+      const response = await blastApi.sendOTP({
         message: message.trim(),
         phone_numbers: phoneNumbers,
         business_id: businessId,
       });
 
-      // Success
-      setSuccessMessage(
-        `Message sent successfully to ${phoneNumbers.length} customer(s)!`
-      );
+      // Success - Show toast notification
+      toast.success("Message sent successfully!", {
+        description: `Your message has been sent to ${phoneNumbers.length} customer${phoneNumbers.length !== 1 ? 's' : ''}.`,
+        duration: 5000,
+      });
+
+      // Clear form
       setMessage("");
       setSelectedCustomers([]);
+      setError(null);
+      setSuccessMessage(null);
       
       // Refresh balance after sending
       await fetchUsageCaches();
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
     } catch (err) {
       console.error("Failed to send message:", err);
       
+      // Show error toast notification
+      let errorMessage = "Failed to send message. Please try again.";
       if (err instanceof ApiClientError) {
-        setError(err.message || "Failed to send message. Please try again.");
-      } else {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to send message. Please try again.";
-        setError(errorMessage);
+        errorMessage = err.message || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
       }
+
+      toast.error("Failed to send message", {
+        description: errorMessage,
+        duration: 5000,
+      });
+
+      setError(errorMessage);
     } finally {
       setIsSending(false);
     }
