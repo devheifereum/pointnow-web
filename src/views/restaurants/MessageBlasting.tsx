@@ -408,7 +408,7 @@ export default function MessageBlasting({ restaurantName }: MessageBlastingProps
                   {currentBalance.toLocaleString()}
                 </p>
               )}
-              <p className="text-sm text-white/80">messages available</p>
+              <p className="text-sm text-white/80">credits available</p>
             </div>
           </div>
 

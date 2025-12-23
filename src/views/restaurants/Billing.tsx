@@ -439,10 +439,10 @@ export default function Billing({ restaurantName }: BillingProps) {
                   <div className="bg-white/10 rounded-lg p-3">
                     <p className="text-white/80 text-xs mb-1">Available Balance</p>
                     <p className="text-xl font-gilroy-black">
-                      {usageCaches[0].balance.toLocaleString()} messages
+                      {usageCaches[0].balance.toLocaleString()} credits
                     </p>
                     <p className="text-white/70 text-xs mt-1">
-                      Messages available to send
+                      Credits available to send
                     </p>
                   </div>
                   
@@ -482,9 +482,9 @@ export default function Billing({ restaurantName }: BillingProps) {
                 <div className="space-y-3 mb-4">
                   <div className="bg-white/10 rounded-lg p-3">
                     <p className="text-white/80 text-xs mb-1">Available Balance</p>
-                    <p className="text-xl font-gilroy-black">0 messages</p>
+                    <p className="text-xl font-gilroy-black">0 credits</p>
                     <p className="text-white/70 text-xs mt-1">
-                      Messages available to send
+                      Credits available to send
                     </p>
                   </div>
                   
