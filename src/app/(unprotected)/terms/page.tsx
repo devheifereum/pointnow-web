@@ -25,7 +25,7 @@ export default function TermsOfServicePage() {
       />
       <div className="sr-only">
         <h1>Terms of Service</h1>
-        <p>PointNow's Terms of Service - Your rights and responsibilities</p>
+        <p>PointNow&apos;s Terms of Service - Your rights and responsibilities</p>
       </div>
       <TermsOfServiceScreen />
     </>

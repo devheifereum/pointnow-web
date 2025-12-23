@@ -33,7 +33,7 @@ interface MessageBlastingProps {
   restaurantName?: string;
 }
 
-export default function MessageBlasting({ restaurantName }: MessageBlastingProps) {
+export default function MessageBlasting({ restaurantName: _restaurantName }: MessageBlastingProps) {
   const { user } = useAuthStore();
   const businessId = user?.businessId || "";
 
@@ -56,7 +56,6 @@ export default function MessageBlasting({ restaurantName }: MessageBlastingProps
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
   // State for config types (rates)
-  const [configTypes, setConfigTypes] = useState<ConfigType[]>([]);
   const [isLoadingRates, setIsLoadingRates] = useState(false);
   const [selectedConfigType, setSelectedConfigType] = useState<ConfigType | null>(null);
 
@@ -139,7 +138,6 @@ export default function MessageBlasting({ restaurantName }: MessageBlastingProps
         limit: 10,
       });
       const types = response.data?.config_types || [];
-      setConfigTypes(types);
       if (types.length > 0) {
         setSelectedConfigType(types[0]);
       }
@@ -199,10 +197,6 @@ export default function MessageBlasting({ restaurantName }: MessageBlastingProps
     }
   };
 
-  // Calculate estimated cost
-  const estimatedCost = selectedCustomers.length > 0 && selectedConfigType
-    ? selectedCustomers.length * selectedConfigType.charge
-    : 0;
 
   // Get current balance
   const currentBalance = usageCaches.length > 0 ? usageCaches[0].balance : 0;
@@ -245,7 +239,7 @@ export default function MessageBlasting({ restaurantName }: MessageBlastingProps
     setSuccessMessage(null);
 
     try {
-      const response = await blastApi.sendOTP({
+      await blastApi.sendOTP({
         message: message.trim(),
         phone_numbers: phoneNumbers,
         business_id: businessId,

@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
       />
       <div className="sr-only">
         <h1>Privacy Policy</h1>
-        <p>PointNow's Privacy Policy - How we protect and handle your data</p>
+        <p>PointNow&apos;s Privacy Policy - How we protect and handle your data</p>
       </div>
       <PrivacyPolicyScreen />
     </>
