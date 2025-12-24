@@ -31,6 +31,9 @@ export const businessApi = {
     if (params?.country_code) {
       queryParams.append("country_code", params.country_code);
     }
+    if (params?.with_images !== undefined) {
+      queryParams.append("with_images", params.with_images.toString());
+    }
 
     const queryString = queryParams.toString();
     return api.get<BusinessesResponse>(`/business/search${queryString ? `?${queryString}` : ""}`);

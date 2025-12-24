@@ -11,6 +11,7 @@ export interface Business {
   created_at?: string;
   updated_at?: string;
   business_images?: BusinessImage[];
+  image_urls?: BusinessImage[]; // Alternative field name from search API
 }
 
 export interface BusinessesMetadata {
@@ -36,6 +37,7 @@ export interface BusinessesParams {
   limit?: number;
   query?: string;
   country_code?: string;
+  with_images?: boolean;
 }
 
 export interface BusinessAdmin {

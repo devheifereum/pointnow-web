@@ -12,7 +12,7 @@ import { businessApi } from "@/lib/api/business";
 import { regionsApi } from "@/lib/api/regions";
 import { ApiClientError } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/auth/store";
-import type { Business, TrendingBusiness } from "@/lib/types/business";
+import type { Business, TrendingBusiness, BusinessImage } from "@/lib/types/business";
 import type { RegionCountryCode } from "@/lib/types/regions";
 
 const FEATURED_BUSINESS_ID = "cmhw3d766000zq2h240xtkpiz";
@@ -61,6 +61,11 @@ const getRayColor = (index: number): string => {
     "rgba(34, 197, 94, 0.4)",
   ];
   return colors[index % colors.length];
+};
+
+// Helper function to get business images from either business_images or image_urls field
+const getBusinessImages = (business: Business): BusinessImage[] => {
+  return business.business_images || business.image_urls || [];
 };
 
 export default function AllRestaurants() {
@@ -230,6 +235,7 @@ export default function AllRestaurants() {
           page, 
           limit,
           country_code: selectedCountryCode || undefined,
+          with_images: true,
         });
         
         // Ensure minimum loading time to prevent blinking
@@ -289,15 +295,16 @@ export default function AllRestaurants() {
   }, [page, limit, searchQuery, selectedCountryCode]);
 
   const featuredSlug = featuredBusiness ? createSlug(featuredBusiness.name) : "";
-  const featuredHasMultipleImages = featuredBusiness?.business_images && featuredBusiness.business_images.length > 1;
-  const currentFeaturedImage = featuredBusiness?.business_images?.[featuredImageIndex];
+  const featuredImages = featuredBusiness ? getBusinessImages(featuredBusiness) : [];
+  const featuredHasMultipleImages = featuredImages.length > 1;
+  const currentFeaturedImage = featuredImages[featuredImageIndex];
 
   const handleFeaturedPreviousImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (featuredBusiness?.business_images && featuredBusiness.business_images.length > 0) {
+    if (featuredImages.length > 0) {
       const newIndex = featuredImageIndex === 0 
-        ? featuredBusiness.business_images.length - 1 
+        ? featuredImages.length - 1 
         : featuredImageIndex - 1;
       setFeaturedImageIndex(newIndex);
     }
@@ -306,8 +313,8 @@ export default function AllRestaurants() {
   const handleFeaturedNextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (featuredBusiness?.business_images && featuredBusiness.business_images.length > 0) {
-      const newIndex = (featuredImageIndex + 1) % featuredBusiness.business_images.length;
+    if (featuredImages.length > 0) {
+      const newIndex = (featuredImageIndex + 1) % featuredImages.length;
       setFeaturedImageIndex(newIndex);
     }
   };
@@ -598,9 +605,9 @@ export default function AllRestaurants() {
                                 >
                                   <ChevronRight className="w-5 h-5 text-gray-800" />
                                 </button>
-                                {featuredBusiness.business_images && (
+                                {featuredImages.length > 0 && (
                                   <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-full z-20 font-medium">
-                                    {featuredImageIndex + 1} / {featuredBusiness.business_images.length}
+                                    {featuredImageIndex + 1} / {featuredImages.length}
                                   </div>
                                 )}
                               </>
@@ -949,16 +956,17 @@ export default function AllRestaurants() {
                 const slug = createSlug(business.name);
                 const iconColor = getBusinessIconColor(business.name);
                 const rayColor = getRayColor(index);
+                const businessImages = getBusinessImages(business);
                 const currentImageIndex = imageIndices[business.id] || 0;
-                const hasMultipleImages = business.business_images && business.business_images.length > 1;
-                const currentImage = business.business_images?.[currentImageIndex];
+                const hasMultipleImages = businessImages.length > 1;
+                const currentImage = businessImages[currentImageIndex];
                 
                 const handlePreviousImage = (e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (business.business_images && business.business_images.length > 0) {
+                  if (businessImages.length > 0) {
                     const newIndex = currentImageIndex === 0 
-                      ? business.business_images.length - 1 
+                      ? businessImages.length - 1 
                       : currentImageIndex - 1;
                     setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
                   }
@@ -967,8 +975,8 @@ export default function AllRestaurants() {
                 const handleNextImage = (e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (business.business_images && business.business_images.length > 0) {
-                    const newIndex = (currentImageIndex + 1) % business.business_images.length;
+                  if (businessImages.length > 0) {
+                    const newIndex = (currentImageIndex + 1) % businessImages.length;
                     setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
                   }
                 };
@@ -1008,9 +1016,9 @@ export default function AllRestaurants() {
                                 >
                                   <ChevronRight className="w-4 h-4 text-black" />
                                 </button>
-                                {business.business_images && (
+                                {businessImages.length > 0 && (
                                   <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full z-20">
-                                    {currentImageIndex + 1} / {business.business_images.length}
+                                    {currentImageIndex + 1} / {businessImages.length}
                                   </div>
                                 )}
                               </>
@@ -1085,16 +1093,17 @@ export default function AllRestaurants() {
                       {/* Business Image */}
                       <div className="relative w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                         {(() => {
+                          const businessImages = getBusinessImages(business);
                           const currentImageIndex = imageIndices[business.id] || 0;
-                          const hasMultipleImages = business.business_images && business.business_images.length > 1;
-                          const currentImage = business.business_images?.[currentImageIndex];
+                          const hasMultipleImages = businessImages.length > 1;
+                          const currentImage = businessImages[currentImageIndex];
                           
                           const handlePreviousImage = (e: React.MouseEvent) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (business.business_images && business.business_images.length > 0) {
+                            if (businessImages.length > 0) {
                               const newIndex = currentImageIndex === 0 
-                                ? business.business_images.length - 1 
+                                ? businessImages.length - 1 
                                 : currentImageIndex - 1;
                               setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
                             }
@@ -1103,8 +1112,8 @@ export default function AllRestaurants() {
                           const handleNextImage = (e: React.MouseEvent) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (business.business_images && business.business_images.length > 0) {
-                              const newIndex = (currentImageIndex + 1) % business.business_images.length;
+                            if (businessImages.length > 0) {
+                              const newIndex = (currentImageIndex + 1) % businessImages.length;
                               setImageIndices(prev => ({ ...prev, [business.id]: newIndex }));
                             }
                           };
