@@ -41,6 +41,8 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   // State for customers
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  // Store selected customers with their full data (including phone numbers) to handle pagination
+  const [selectedCustomersData, setSelectedCustomersData] = useState<Map<string, Customer>>(new Map());
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState({
@@ -181,20 +183,61 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   const filteredCustomers = customers;
 
   // Toggle customer selection
-  const toggleCustomerSelection = (customerId: string) => {
-    setSelectedCustomers((prev) =>
-      prev.includes(customerId)
-        ? prev.filter((id) => id !== customerId)
-        : [...prev, customerId]
-    );
+  const toggleCustomerSelection = (customer: Customer) => {
+    const customerId = customer.id;
+    setSelectedCustomers((prev) => {
+      if (prev.includes(customerId)) {
+        // Remove from selection
+        setSelectedCustomersData((prevData) => {
+          const newData = new Map(prevData);
+          newData.delete(customerId);
+          return newData;
+        });
+        return prev.filter((id) => id !== customerId);
+      } else {
+        // Add to selection - store full customer data
+        setSelectedCustomersData((prevData) => {
+          const newData = new Map(prevData);
+          newData.set(customerId, customer);
+          return newData;
+        });
+        return [...prev, customerId];
+      }
+    });
   };
 
   // Select all customers
   const selectAllCustomers = () => {
-    if (selectedCustomers.length === filteredCustomers.length && filteredCustomers.length > 0) {
-      setSelectedCustomers([]);
+    // Check if all current page customers are selected
+    const allCurrentPageSelected = filteredCustomers.every((c) =>
+      selectedCustomers.includes(c.id)
+    );
+
+    if (allCurrentPageSelected && filteredCustomers.length > 0) {
+      // Deselect all current page customers - remove only current page customers from the map and array
+      setSelectedCustomersData((prevData) => {
+        const newData = new Map(prevData);
+        filteredCustomers.forEach((c) => newData.delete(c.id));
+        return newData;
+      });
+      setSelectedCustomers((prev) =>
+        prev.filter((id) => !filteredCustomers.some((c) => c.id === id))
+      );
     } else {
-      setSelectedCustomers(filteredCustomers.map((c) => c.id));
+      // Select all current page customers - add current page customers to the map
+      setSelectedCustomersData((prevData) => {
+        const newData = new Map(prevData);
+        filteredCustomers.forEach((c) => {
+          newData.set(c.id, c);
+        });
+        return newData;
+      });
+      setSelectedCustomers((prev) => {
+        const currentPageIds = filteredCustomers.map((c) => c.id);
+        // Add current page IDs that aren't already selected
+        const newIds = currentPageIds.filter((id) => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
     }
   };
 
@@ -202,8 +245,13 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   // Get current balance
   const currentBalance = usageCaches.length > 0 ? usageCaches[0].balance : 0;
 
-  // Check if balance is sufficient
-  const hasSufficientBalance = currentBalance >= selectedCustomers.length;
+  // Calculate customers with phone numbers from stored data
+  const selectedCustomersWithPhone = Array.from(selectedCustomersData.values()).filter(
+    (c) => c.phone_number && c.phone_number.trim() !== ""
+  );
+
+  // Check if balance is sufficient - use actual count of customers with phone numbers
+  const hasSufficientBalance = currentBalance >= selectedCustomersWithPhone.length;
 
   // Handle send message
   const handleSendMessage = async () => {
@@ -222,11 +270,9 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
       return;
     }
 
-    // Get phone numbers from selected customers
-    const selectedCustomerData = customers.filter((c) =>
-      selectedCustomers.includes(c.id)
-    );
-    const phoneNumbers = selectedCustomerData
+    // Get phone numbers from selected customers using the stored data map
+    // This ensures we get all selected customers regardless of pagination
+    const phoneNumbers = Array.from(selectedCustomersData.values())
       .map((c) => c.phone_number)
       .filter((phone): phone is string => !!phone && phone.trim() !== "");
 
@@ -255,6 +301,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
       // Clear form
       setMessage("");
       setSelectedCustomers([]);
+      setSelectedCustomersData(new Map());
       setError(null);
       setSuccessMessage(null);
       
@@ -455,10 +502,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                         </p>
                         <p className="text-xs text-gray-600">
                           {(() => {
-                            const selectedCustomerData = customers.filter((c) =>
-                              selectedCustomers.includes(c.id)
-                            );
-                            const withPhone = selectedCustomerData.filter(
+                            const withPhone = Array.from(selectedCustomersData.values()).filter(
                               (c) => c.phone_number && c.phone_number.trim() !== ""
                             ).length;
                             return `${withPhone} with phone number${withPhone !== 1 ? 's' : ''}`;
@@ -466,14 +510,9 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                         </p>
                       <p className="text-xs text-gray-600 mt-1">
                         Messages to send: <span className="font-semibold text-gray-900">
-                          {(() => {
-                            const selectedCustomerData = customers.filter((c) =>
-                              selectedCustomers.includes(c.id)
-                            );
-                            return selectedCustomerData.filter(
-                              (c) => c.phone_number && c.phone_number.trim() !== ""
-                            ).length;
-                          })()}
+                          {Array.from(selectedCustomersData.values()).filter(
+                            (c) => c.phone_number && c.phone_number.trim() !== ""
+                          ).length}
                         </span>
                       </p>
                       </div>
@@ -556,7 +595,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                       return (
                         <div
                           key={customer.id}
-                          onClick={() => toggleCustomerSelection(customer.id)}
+                          onClick={() => toggleCustomerSelection(customer)}
                           className={`group p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                             isSelected
                               ? "border-[#7bc74d] bg-gradient-to-r from-green-50 to-emerald-50 shadow-md shadow-green-100/50"
@@ -762,12 +801,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                 </button>
 
                 {(() => {
-                  const selectedCustomerData = customers.filter((c) =>
-                    selectedCustomers.includes(c.id)
-                  );
-                  const withPhone = selectedCustomerData.filter(
-                    (c) => c.phone_number && c.phone_number.trim() !== ""
-                  ).length;
+                  const withPhone = selectedCustomersWithPhone.length;
                   const hasPhoneWarning = message.trim() && selectedCustomers.length > 0 && hasSufficientBalance && withPhone < selectedCustomers.length;
                   
                   if (!message.trim() || selectedCustomers.length === 0 || !hasSufficientBalance || hasPhoneWarning) {
