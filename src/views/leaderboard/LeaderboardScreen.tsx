@@ -36,6 +36,14 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
   const [isLoadingPosition, setIsLoadingPosition] = useState(false);
   const [isNotCustomer, setIsNotCustomer] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    total_pages: 0,
+    has_next: false,
+    has_previous: false,
+  });
   const { user: authUser } = useAuthStore();
 
 
@@ -95,13 +103,21 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         
         const response = await customersApi.getLeaderboard({
           business_id: businessId,
-          page: 1,
-          limit: 100,
+          page: pagination.page,
+          limit: pagination.limit,
           start_date: startDate,
           end_date: timeFilter !== "all-time" ? endDate : undefined,
         });
         
         setLeaderboardData(response.data.customers || []);
+        setPagination({
+          page: response.data.metadata.page,
+          limit: response.data.metadata.limit,
+          total: response.data.metadata.total,
+          total_pages: response.data.metadata.total_pages,
+          has_next: response.data.metadata.has_next,
+          has_previous: response.data.metadata.has_previous,
+        });
       } catch (err) {
         if (err instanceof ApiClientError) {
           setError(err.message || "Failed to load leaderboard");
@@ -114,7 +130,20 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
     };
 
     fetchLeaderboard();
-  }, [businessId, timeFilter]);
+  }, [businessId, timeFilter, pagination.page]);
+
+  // Reset to page 1 when time filter changes
+  useEffect(() => {
+    if (businessId) {
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [timeFilter, businessId]);
+
+  const handlePageChange = (newPage: number) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Fetch user position
   useEffect(() => {
@@ -332,10 +361,12 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
       const totalPoints = (customer as Customer & { total_points?: number }).total_points || customer.points || 0;
       const totalVisits = (customer as Customer & { total_visits?: number }).total_visits || customer.visits || 0;
       const lastVisitAt = (customer as Customer & { last_visit_at?: string }).last_visit_at || customer.last_visit;
+      // Calculate rank based on pagination
+      const rank = (pagination.page - 1) * pagination.limit + index + 1;
       
       return {
         ...customer,
-        rank: index + 1,
+        rank,
         points: totalPoints,
         visits: totalVisits,
         lastVisit: formatDate(lastVisitAt),
@@ -378,7 +409,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
         {/* Navigation */}
         <Navbar />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-8">
           {/* Back Button */}
           <Link 
             href="/businesses"
@@ -469,7 +500,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                 
                 <div className="flex gap-3 sm:gap-4 md:gap-6 text-white text-center w-full md:w-auto justify-center md:justify-end">
                   <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 flex-1 md:flex-none md:min-w-[120px]">
-                    <div className="text-2xl sm:text-3xl font-gilroy-black">{leaderboardData.length}</div>
+                    <div className="text-2xl sm:text-3xl font-gilroy-black">{pagination.total || leaderboardData.length}</div>
                     <div className="text-xs sm:text-sm opacity-90">Total Members</div>
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 flex-1 md:flex-none md:min-w-[120px]">
@@ -561,8 +592,8 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
             </div>
           )}
 
-          {/* Top 3 Podium - Only show when no search or when top 3 are in results */}
-          {!isLoading && filteredLeaderboard.length > 0 && (!searchQuery || filteredLeaderboard.some(c => c.rank <= 3)) && (
+          {/* Top 3 Podium - Only show on page 1 when no search or when top 3 are in results */}
+          {!isLoading && filteredLeaderboard.length > 0 && pagination.page === 1 && (!searchQuery || filteredLeaderboard.some(c => c.rank <= 3)) && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {/* 2nd Place */}
               {filteredLeaderboard.length > 1 && (!searchQuery || filteredLeaderboard.some(c => c.rank === 2)) && (
@@ -680,7 +711,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredLeaderboard.slice(searchQuery ? 0 : 3).map((customer) => (
+                      {filteredLeaderboard.slice((!searchQuery && pagination.page === 1) ? 3 : 0).map((customer) => (
                         <tr key={customer.id || customer.rank} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -721,7 +752,7 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
-                {filteredLeaderboard.slice(searchQuery ? 0 : 3).map((customer) => (
+                {filteredLeaderboard.slice((!searchQuery && pagination.page === 1) ? 3 : 0).map((customer) => (
                   <div key={customer.id || customer.rank} className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -758,6 +789,66 @@ export default function LeaderboardScreen({ restaurantName }: LeaderboardScreenP
                 ))}
               </div>
             </>
+          )}
+
+          {/* Pagination - Only show when not searching */}
+          {!isLoading && !searchQuery && pagination.total_pages > 1 && (
+            <div className="mt-6 sm:mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6 py-4 sm:py-5">
+                <div className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
+                  Showing page <span className="font-semibold text-black">{pagination.page}</span> of{" "}
+                  <span className="font-semibold text-black">{pagination.total_pages}</span> (
+                  <span className="font-semibold text-black">{pagination.total}</span> total customers)
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={!pagination.has_previous}
+                    className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Show page numbers */}
+                    {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                      let pageNum: number;
+                      if (pagination.total_pages <= 5) {
+                        pageNum = i + 1;
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1;
+                      } else if (pagination.page >= pagination.total_pages - 2) {
+                        pageNum = pagination.total_pages - 4 + i;
+                      } else {
+                        pageNum = pagination.page - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
+                            pagination.page === pageNum
+                              ? "bg-[#7bc74d] text-white shadow-md"
+                              : "text-gray-700 hover:bg-gray-100 border border-gray-200"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={!pagination.has_next}
+                    className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* No Results */}

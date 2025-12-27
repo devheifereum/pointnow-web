@@ -294,6 +294,21 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     }
   };
 
+  // Helper function to get customer points
+  const getCustomerPoints = (customer: Customer): number => {
+    // First check if customer_businesses exists and find the matching business
+    if (customer.customer_businesses && customer.customer_businesses.length > 0) {
+      const customerBusiness = customer.customer_businesses.find(
+        (cb) => cb.business?.id === businessId
+      );
+      if (customerBusiness) {
+        return customerBusiness.total_points || 0;
+      }
+    }
+    // Fallback to total_points if available
+    return customer.total_points || customer.points || 0;
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -452,6 +467,7 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
         Name: customer.name || "",
         Email: customer.email || "",
         "Phone Number": customer.phone_number || "",
+        Points: getCustomerPoints(customer),
         "Joined Date": customer.created_at
           ? new Date(customer.created_at).toLocaleDateString("en-US", {
               month: "short",
@@ -570,6 +586,62 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
         </div>
       ) : (
         <>
+          {/* Top Pagination */}
+          {pagination.total_pages > 1 && (
+            <div className="mb-6 flex items-center justify-between flex-col sm:flex-row gap-4 bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+              <div className="text-sm text-gray-700">
+                Showing page {pagination.page} of {pagination.total_pages} ({pagination.total} total customers)
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.has_previous}
+                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white disabled:text-gray-700 rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-6 h-6 font-bold" />
+                </button>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  {/* Show page numbers */}
+                  {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                    let pageNum: number;
+                    if (pagination.total_pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.page <= 3) {
+                      pageNum = i + 1;
+                    } else if (pagination.page >= pagination.total_pages - 2) {
+                      pageNum = pagination.total_pages - 4 + i;
+                    } else {
+                      pageNum = pagination.page - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
+                          pagination.page === pageNum
+                            ? "bg-[#7bc74d] text-white shadow-md"
+                            : "text-gray-700 hover:bg-gray-100 border border-gray-200"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.has_next}
+                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white disabled:text-gray-700 rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-6 h-6 font-bold" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -585,6 +657,9 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                       Phone
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
+                      Points
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden xl:table-cell">
                       Joined
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -613,6 +688,11 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                         <div className="text-sm text-gray-900">{customer.phone_number || "—"}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                        <div className="text-sm font-semibold text-[#7bc74d]">
+                          {getCustomerPoints(customer).toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap hidden xl:table-cell">
                         <div className="text-sm text-gray-500">{formatDate(customer.created_at)}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -661,7 +741,7 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={!pagination.has_previous}
-                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white disabled:text-gray-700 rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="w-6 h-6 font-bold" />
@@ -669,7 +749,7 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={!pagination.has_next}
-                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  className="p-3 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white disabled:text-gray-700 rounded-xl transition-colors shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center min-w-[44px] min-h-[44px]"
                   aria-label="Next page"
                 >
                   <ChevronRight className="w-6 h-6 font-bold" />

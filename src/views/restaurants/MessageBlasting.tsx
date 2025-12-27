@@ -47,7 +47,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 50,
     total: 0,
     total_pages: 0,
     has_next: false,
@@ -94,15 +94,24 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
       }
 
       setCustomers(response.data?.customers || []);
-      setPagination((prev) => ({
-        ...prev,
-        page: response.data?.metadata?.page || page,
-        limit: response.data?.metadata?.limit || prev.limit,
-        total: response.data?.metadata?.total || 0,
-        total_pages: response.data?.metadata?.total_pages || 0,
-        has_next: response.data?.metadata?.has_next || false,
-        has_previous: response.data?.metadata?.has_previous || false,
-      }));
+      const metadata = response.data?.metadata || {};
+      const total = metadata.total || 0;
+      
+      setPagination((prev) => {
+        const limit = metadata.limit || prev.limit;
+        // Calculate total_pages if not provided by API
+        const calculatedTotalPages = metadata.total_pages || (total > 0 ? Math.ceil(total / limit) : 0);
+        
+        return {
+          ...prev,
+          page: metadata.page || page,
+          limit: limit,
+          total: total,
+          total_pages: calculatedTotalPages,
+          has_next: metadata.has_next !== undefined ? metadata.has_next : (page * limit < total),
+          has_previous: metadata.has_previous !== undefined ? metadata.has_previous : (page > 1),
+        };
+      });
     } catch (err) {
       console.error("Failed to load customers:", err);
     } finally {
@@ -177,10 +186,30 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   // Handle page change
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
+    // Scroll to top of customer list when page changes
+    const customerListElement = document.querySelector('[data-customer-list]');
+    if (customerListElement) {
+      customerListElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   // Use customers directly (already filtered by API if searching)
   const filteredCustomers = customers;
+
+  // Helper function to get customer points
+  const getCustomerPoints = (customer: Customer): number => {
+    // First check if customer_businesses exists and find the matching business
+    if (customer.customer_businesses && customer.customer_businesses.length > 0) {
+      const customerBusiness = customer.customer_businesses.find(
+        (cb) => cb.business?.id === businessId
+      );
+      if (customerBusiness) {
+        return customerBusiness.total_points || 0;
+      }
+    }
+    // Fallback to total_points if available
+    return customer.total_points || customer.points || 0;
+  };
 
   // Toggle customer selection
   const toggleCustomerSelection = (customer: Customer) => {
@@ -569,9 +598,81 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                 </div>
               </div>
 
+              {/* Top Pagination Controls */}
+              {!isLoadingCustomers && (() => {
+                const shouldShowPagination = 
+                  pagination.total_pages > 1 || 
+                  pagination.has_next || 
+                  pagination.has_previous || 
+                  (pagination.total > pagination.limit && filteredCustomers.length === pagination.limit);
+                
+                if (!shouldShowPagination) return null;
+                
+                const totalPages = pagination.total_pages || Math.max(1, Math.ceil(pagination.total / pagination.limit));
+                
+                return (
+                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
+                        Showing page <span className="font-semibold text-gray-900">{pagination.page}</span> of{" "}
+                        <span className="font-semibold text-gray-900">{totalPages}</span> (
+                        <span className="font-semibold text-gray-900">{pagination.total || filteredCustomers.length}</span> total customers)
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={!pagination.has_previous}
+                          className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                          aria-label="Previous page"
+                        >
+                          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          {/* Show page numbers */}
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum: number;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (pagination.page <= 3) {
+                              pageNum = i + 1;
+                            } else if (pagination.page >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = pagination.page - 2 + i;
+                            }
+                            
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
+                                  pagination.page === pageNum
+                                    ? "bg-[#7bc74d] text-white shadow-md"
+                                    : "text-gray-700 hover:bg-gray-100 border border-gray-200"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <button
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={!pagination.has_next}
+                          className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                          aria-label="Next page"
+                        >
+                          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Customer List */}
               <div className="p-6">
-                <div className="max-h-[500px] overflow-y-auto space-y-2 -mx-2 px-2">
+                <div className="max-h-[500px] overflow-y-auto space-y-2 -mx-2 px-2" data-customer-list>
                   {isLoadingCustomers ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-[#7bc74d] mb-3" />
@@ -621,7 +722,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                                   {customer.name || "Unknown"}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-4 text-xs text-gray-600">
+                              <div className="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
                                 {customer.email && (
                                   <div className="flex items-center gap-1.5">
                                     <Mail className="w-3.5 h-3.5" />
@@ -634,6 +735,11 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                                     <span>{customer.phone_number}</span>
                                   </div>
                                 )}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-[#7bc74d]">
+                                    {getCustomerPoints(customer).toLocaleString()} pts
+                                  </span>
+                                </div>
                                 {!customer.email && !customer.phone_number && (
                                   <span className="text-gray-400">No contact info</span>
                                 )}
@@ -647,38 +753,76 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                 </div>
 
                 {/* Pagination Controls */}
-                {!isLoadingCustomers && filteredCustomers.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <p className="text-sm text-gray-600">
-                        Showing <span className="font-semibold text-gray-900">{((pagination.page - 1) * pagination.limit) + 1}</span> to{" "}
-                        <span className="font-semibold text-gray-900">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{" "}
-                        <span className="font-semibold text-gray-900">{pagination.total}</span> customers
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handlePageChange(pagination.page - 1)}
-                          disabled={!pagination.has_previous}
-                          className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronLeft className="w-4 h-4 text-gray-700" />
-                        </button>
-                        <div className="px-4 py-2 bg-gray-100 rounded-lg">
-                          <span className="text-sm font-medium text-gray-700">
-                            Page {pagination.page} of {pagination.total_pages || 1}
-                          </span>
+                {!isLoadingCustomers && (() => {
+                  const shouldShowPagination = 
+                    pagination.total_pages > 1 || 
+                    pagination.has_next || 
+                    pagination.has_previous || 
+                    (pagination.total > pagination.limit && filteredCustomers.length === pagination.limit);
+                  
+                  if (!shouldShowPagination) return null;
+                  
+                  const totalPages = pagination.total_pages || Math.max(1, Math.ceil(pagination.total / pagination.limit));
+                  
+                  return (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
+                          Showing page <span className="font-semibold text-gray-900">{pagination.page}</span> of{" "}
+                          <span className="font-semibold text-gray-900">{totalPages}</span> (
+                          <span className="font-semibold text-gray-900">{pagination.total || filteredCustomers.length}</span> total customers)
                         </div>
-                        <button
-                          onClick={() => handlePageChange(pagination.page + 1)}
-                          disabled={!pagination.has_next}
-                          className="p-2 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronRight className="w-4 h-4 text-gray-700" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handlePageChange(pagination.page - 1)}
+                            disabled={!pagination.has_previous}
+                            className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                            aria-label="Previous page"
+                          >
+                            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                          </button>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            {/* Show page numbers */}
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum: number;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (pagination.page <= 3) {
+                                pageNum = i + 1;
+                              } else if (pagination.page >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = pagination.page - 2 + i;
+                              }
+                              
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => handlePageChange(pageNum)}
+                                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
+                                    pagination.page === pageNum
+                                      ? "bg-[#7bc74d] text-white shadow-md"
+                                      : "text-gray-700 hover:bg-gray-100 border border-gray-200"
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => handlePageChange(pagination.page + 1)}
+                            disabled={!pagination.has_next}
+                            className="flex items-center justify-center p-2 sm:p-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-[#7bc74d] hover:border-[#7bc74d] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-gray-500 transition-all duration-200"
+                            aria-label="Next page"
+                          >
+                            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
 
@@ -712,10 +856,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                       </p>
                       <p className="text-xs text-gray-600">
                         {(() => {
-                          const selectedCustomerData = customers.filter((c) =>
-                            selectedCustomers.includes(c.id)
-                          );
-                          const withPhone = selectedCustomerData.filter(
+                          const withPhone = Array.from(selectedCustomersData.values()).filter(
                             (c) => c.phone_number && c.phone_number.trim() !== ""
                           ).length;
                           return `${withPhone} with phone number${withPhone !== 1 ? 's' : ''}`;
@@ -762,14 +903,9 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
                     <span className="text-gray-600">Messages to send</span>
                     <span className="font-semibold text-[#7bc74d]">
-                      {(() => {
-                        const selectedCustomerData = customers.filter((c) =>
-                          selectedCustomers.includes(c.id)
-                        );
-                        return selectedCustomerData.filter(
-                          (c) => c.phone_number && c.phone_number.trim() !== ""
-                        ).length;
-                      })()}
+                      {Array.from(selectedCustomersData.values()).filter(
+                        (c) => c.phone_number && c.phone_number.trim() !== ""
+                      ).length}
                     </span>
                   </div>
                 )}
