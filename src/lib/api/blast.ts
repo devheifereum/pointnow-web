@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { BlastOTPRequest, BlastOTPResponse } from "../types/blast";
+import type { BlastOTPRequest, BlastOTPResponse, BlastVariablesResponse } from "../types/blast";
 
 export const blastApi = {
   /**
@@ -9,6 +9,14 @@ export const blastApi = {
    */
   sendOTP: async (payload: BlastOTPRequest): Promise<BlastOTPResponse> => {
     return api.post<BlastOTPResponse>("/blast/otp", payload);
+  },
+
+  /**
+   * Get available variables for message customization
+   * @returns Available variables with descriptions
+   */
+  getVariables: async (): Promise<BlastVariablesResponse> => {
+    return api.get<BlastVariablesResponse>("/blast/variables");
   },
 };
 

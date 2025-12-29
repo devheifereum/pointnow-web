@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Loader2,
   MessageSquare,
@@ -18,6 +18,9 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Code,
+  Eye,
+  Plus,
 } from "lucide-react";
 import { customersApi } from "@/lib/api/customers";
 import { walletApi } from "@/lib/api/wallet";
@@ -29,6 +32,7 @@ import { toast } from "sonner";
 import type { Customer } from "@/lib/types/customers";
 import type { UsageCache } from "@/lib/types/wallet";
 import type { ConfigType } from "@/lib/types/config-types";
+import type { BlastVariable } from "@/lib/types/blast";
 
 interface MessageBlastingProps {
   restaurantName?: string;
@@ -67,6 +71,12 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // State for variables
+  const [variables, setVariables] = useState<BlastVariable[]>([]);
+  const [isLoadingVariables, setIsLoadingVariables] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   // Step state
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -160,12 +170,29 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
     }
   }, []);
 
+  // Fetch available variables
+  const fetchVariables = useCallback(async () => {
+    setIsLoadingVariables(true);
+    try {
+      const response = await blastApi.getVariables();
+      setVariables(response.data?.variables || []);
+    } catch (err) {
+      console.error("Failed to load variables:", err);
+      toast.error("Failed to load variables", {
+        description: "Some features may not be available",
+      });
+    } finally {
+      setIsLoadingVariables(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (businessId) {
       fetchUsageCaches();
       fetchConfigTypes();
+      fetchVariables();
     }
-  }, [businessId, fetchUsageCaches, fetchConfigTypes]);
+  }, [businessId, fetchUsageCaches, fetchConfigTypes, fetchVariables]);
 
   // Reset to page 1 when search query changes
   useEffect(() => {
@@ -385,6 +412,84 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
   const handlePreviousStep = () => {
     setCurrentStep(1);
     setError(null);
+  };
+
+  // Insert variable at cursor position
+  const insertVariable = (variable: string) => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentMessage = message;
+    
+    const newMessage = 
+      currentMessage.substring(0, start) + 
+      variable + 
+      currentMessage.substring(end);
+    
+    setMessage(newMessage);
+    
+    // Set cursor position after inserted variable
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newPosition = start + variable.length;
+        textareaRef.current.setSelectionRange(newPosition, newPosition);
+        textareaRef.current.focus();
+      }
+    }, 0);
+  };
+
+  // Highlight variables in message preview
+  const renderMessagePreview = (text: string) => {
+    if (!text) return null;
+    
+    const parts: Array<{ text: string; isVariable: boolean }> = [];
+    let lastIndex = 0;
+    const variablePattern = /\{(\w+)\}/g;
+    let match;
+    
+    while ((match = variablePattern.exec(text)) !== null) {
+      // Add text before variable
+      if (match.index > lastIndex) {
+        parts.push({
+          text: text.substring(lastIndex, match.index),
+          isVariable: false,
+        });
+      }
+      
+      // Add variable
+      parts.push({
+        text: match[0],
+        isVariable: true,
+      });
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push({
+        text: text.substring(lastIndex),
+        isVariable: false,
+      });
+    }
+    
+    return parts.map((part, index) => {
+      if (part.isVariable) {
+        const variable = variables.find(v => v.variable === part.text);
+        return (
+          <span
+            key={index}
+            className="inline-block px-2 py-1 mx-0.5 rounded-md bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 font-semibold text-sm border border-blue-200"
+            title={variable?.description || "Variable"}
+          >
+            {part.text}
+          </span>
+        );
+      }
+      return <span key={index}>{part.text}</span>;
+    });
   };
 
   return (
@@ -875,40 +980,124 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
               </div>
 
               {/* Message Composition Card */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-gilroy-black text-gray-900">Compose Message</h2>
-                    <p className="text-xs text-gray-500">Write your message below</p>
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <MessageSquare className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-gilroy-black text-gray-900">Compose Message</h2>
+                        <p className="text-xs text-gray-500">Customize your message with variables</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowPreview(!showPreview)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>{showPreview ? "Hide" : "Show"} Preview</span>
+                    </button>
                   </div>
                 </div>
 
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message here...&#10;&#10;Your message will be sent to all selected customers.&#10;&#10;You can personalize your message with customer names, promotions, or important updates."
-                  rows={16}
-                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#7bc74d] focus:ring-2 focus:ring-[#7bc74d]/20 resize-none mb-6 text-gray-900 placeholder:text-gray-400 bg-gray-50 transition-all text-base"
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+                  {/* Variables Panel */}
+                  <div className="lg:col-span-1">
+                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 sticky top-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Code className="w-5 h-5 text-indigo-600" />
+                        <h3 className="text-sm font-semibold text-gray-900">Available Variables</h3>
+                      </div>
+                      {isLoadingVariables ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                        </div>
+                      ) : variables.length === 0 ? (
+                        <p className="text-xs text-gray-500 text-center py-4">No variables available</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {variables.map((variable, index) => (
+                            <button
+                              key={index}
+                              onClick={() => insertVariable(variable.variable)}
+                              className="w-full text-left p-3 rounded-lg bg-white border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all group"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <code className="text-xs font-mono font-semibold text-indigo-700 bg-indigo-100 px-2 py-1 rounded">
+                                  {variable.variable}
+                                </code>
+                                <Plus className="w-4 h-4 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                              </div>
+                              <p className="text-xs text-gray-600 mt-1">{variable.description}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-4 pt-4 border-t border-indigo-200">
+                        <p className="text-xs text-gray-600">
+                          💡 Click any variable to insert it into your message at the cursor position
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="space-y-2 mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Characters</span>
-                    <span className="font-semibold text-gray-900">{message.length}</span>
+                  {/* Message Editor */}
+                  <div className="lg:col-span-2 space-y-4">
+                    {/* Message Textarea */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Your Message
+                      </label>
+                      <textarea
+                        ref={textareaRef}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Type your message here...&#10;&#10;Click variables on the left to insert them.&#10;&#10;Example: Hello {name}, you have {total_points} points!"
+                        rows={12}
+                        className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#7bc74d] focus:ring-2 focus:ring-[#7bc74d]/20 resize-none text-gray-900 placeholder:text-gray-400 bg-gray-50 transition-all text-base font-mono"
+                      />
+                    </div>
+
+                    {/* Message Preview */}
+                    {showPreview && (
+                      <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Eye className="w-4 h-4 text-gray-600" />
+                          <h3 className="text-sm font-semibold text-gray-900">Message Preview</h3>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-gray-200 min-h-[100px] text-sm text-gray-700 whitespace-pre-wrap">
+                          {message.trim() ? (
+                            renderMessagePreview(message)
+                          ) : (
+                            <span className="text-gray-400 italic">Your message preview will appear here...</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Variables will be replaced with actual customer data when sent
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Characters</span>
+                        <span className="font-semibold text-gray-900">{message.length}</span>
+                      </div>
+                      {selectedCustomers.length > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Messages to send</span>
+                          <span className="font-semibold text-[#7bc74d]">
+                            {Array.from(selectedCustomersData.values()).filter(
+                              (c) => c.phone_number && c.phone_number.trim() !== ""
+                            ).length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                {selectedCustomers.length > 0 && (
-                  <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
-                    <span className="text-gray-600">Messages to send</span>
-                    <span className="font-semibold text-[#7bc74d]">
-                      {Array.from(selectedCustomersData.values()).filter(
-                        (c) => c.phone_number && c.phone_number.trim() !== ""
-                      ).length}
-                    </span>
-                  </div>
-                )}
                 </div>
 
                 <button

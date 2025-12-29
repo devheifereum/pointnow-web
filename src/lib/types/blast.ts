@@ -43,6 +43,18 @@ export interface BlastOTPResponse {
   };
 }
 
+export interface BlastVariable {
+  variable: string;
+  description: string;
+}
+
+export interface BlastVariablesResponse {
+  message: string;
+  data: {
+    variables: BlastVariable[];
+  };
+}
+
 
 
 
