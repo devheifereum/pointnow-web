@@ -69,6 +69,7 @@ export interface CustomersParams {
 
 export interface CustomersSearchParams {
   query: string;
+  business_id?: string;
   page?: number;
   limit?: number;
 }

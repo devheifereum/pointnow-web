@@ -93,6 +93,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
       if (query.trim()) {
         response = await customersApi.search({
           query: query.trim(),
+          business_id: businessId,
           page: page,
           limit: pagination.limit,
         });
@@ -306,8 +307,13 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
     (c) => c.phone_number && c.phone_number.trim() !== ""
   );
 
-  // Check if balance is sufficient - use actual count of customers with phone numbers
-  const hasSufficientBalance = currentBalance >= selectedCustomersWithPhone.length;
+  // Check if balance is sufficient - calculate total cost (number of messages × cost per message)
+  const totalCost = selectedConfigType 
+    ? selectedCustomersWithPhone.length * selectedConfigType.charge
+    : 0;
+  const hasSufficientBalance = selectedConfigType 
+    ? currentBalance >= totalCost
+    : false;
 
   // Handle send message
   const handleSendMessage = async () => {
@@ -681,7 +687,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                       onClick={selectAllCustomers}
                       className="px-4 py-2 text-sm font-medium text-[#7bc74d] hover:text-[#6ab63d] hover:bg-green-50 rounded-lg transition-colors"
                     >
-                      {selectedCustomers.length === filteredCustomers.length
+                      {filteredCustomers.every((c) => selectedCustomers.includes(c.id))
                         ? "Deselect All"
                         : "Select All"}
                     </button>

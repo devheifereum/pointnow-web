@@ -439,7 +439,7 @@ export default function Billing({ restaurantName }: BillingProps) {
                   <div className="bg-white/10 rounded-lg p-3">
                     <p className="text-white/80 text-xs mb-1">Available Balance</p>
                     <p className="text-xl font-gilroy-black">
-                      {usageCaches[0].balance.toLocaleString()} credits
+                      {(usageCaches[0].balance * 10).toLocaleString()} credits
                     </p>
                     <p className="text-white/70 text-xs mt-1">
                       Credits available to send
@@ -463,7 +463,7 @@ export default function Billing({ restaurantName }: BillingProps) {
                         <Loader2 className="w-4 h-4 animate-spin text-white" />
                       ) : (
                         <p className="text-xl font-gilroy-black">
-                          RM {configTypes[0].charge.toFixed(2)}
+                          RM {(configTypes[0].charge * 10).toFixed(2)}
                         </p>
                       )}
                       <p className="text-white/70 text-xs mt-1">

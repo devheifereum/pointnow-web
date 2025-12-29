@@ -59,6 +59,9 @@ export const customersApi = {
       query: params.query,
     });
 
+    if (params.business_id) {
+      queryParams.append("business_id", params.business_id);
+    }
     if (params.page) {
       queryParams.append("page", params.page.toString());
     }
