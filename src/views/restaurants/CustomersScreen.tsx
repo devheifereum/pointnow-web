@@ -116,8 +116,10 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
     setError(null);
 
     try {
-      // Use /customers/business/{business_id} endpoint
-      const response = await customersApi.getByBusiness(businessId, {
+      // Use search endpoint with empty query to get all customers
+      const response = await customersApi.search({
+        query: "",
+        business_id: businessId,
         page: pagination.page,
         limit: pagination.limit,
       });
@@ -301,12 +303,16 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
       const customerBusiness = customer.customer_businesses.find(
         (cb) => cb.business?.id === businessId
       );
-      if (customerBusiness) {
-        return customerBusiness.total_points || 0;
+      if (customerBusiness && customerBusiness.total_points !== undefined) {
+        return customerBusiness.total_points;
       }
     }
-    // Fallback to total_points if available
-    return customer.total_points || customer.points || 0;
+    // Fallback to total_points if available (from search API or other endpoints)
+    if (customer.total_points !== undefined) {
+      return customer.total_points;
+    }
+    // Legacy fallback
+    return customer.points || 0;
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -444,7 +450,9 @@ export default function CustomersScreen({ restaurantName }: CustomersScreenProps
       const limit = 100; // Use a larger limit to reduce API calls
 
       while (hasMore) {
-        const response = await customersApi.getByBusiness(businessId, {
+        const response = await customersApi.search({
+          query: "",
+          business_id: businessId,
           page: currentPage,
           limit: limit,
         });

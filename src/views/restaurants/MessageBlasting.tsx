@@ -87,22 +87,13 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
 
     setIsLoadingCustomers(true);
     try {
-      let response;
-      
-      // Use search API if there's a search query, otherwise use getByBusiness
-      if (query.trim()) {
-        response = await customersApi.search({
-          query: query.trim(),
-          business_id: businessId,
-          page: page,
-          limit: pagination.limit,
-        });
-      } else {
-        response = await customersApi.getByBusiness(businessId, {
-          page: page,
-          limit: pagination.limit,
-        });
-      }
+      // Always use search API - use empty string to get all customers when no query
+      const response = await customersApi.search({
+        query: query.trim() || "",
+        business_id: businessId,
+        page: page,
+        limit: pagination.limit,
+      });
 
       setCustomers(response.data?.customers || []);
       const metadata = response.data?.metadata || {};
@@ -231,12 +222,16 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
       const customerBusiness = customer.customer_businesses.find(
         (cb) => cb.business?.id === businessId
       );
-      if (customerBusiness) {
-        return customerBusiness.total_points || 0;
+      if (customerBusiness && customerBusiness.total_points !== undefined) {
+        return customerBusiness.total_points;
       }
     }
-    // Fallback to total_points if available
-    return customer.total_points || customer.points || 0;
+    // Fallback to total_points if available (from search API or other endpoints)
+    if (customer.total_points !== undefined) {
+      return customer.total_points;
+    }
+    // Legacy fallback
+    return customer.points || 0;
   };
 
   // Toggle customer selection
