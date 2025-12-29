@@ -481,7 +481,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <p className="text-3xl font-gilroy-black mb-1">
-                  {currentBalance.toLocaleString()}
+                  {(currentBalance * 10).toLocaleString()}
                 </p>
               )}
               <p className="text-sm text-white/80">credits available</p>
@@ -501,7 +501,7 @@ export default function MessageBlasting({ restaurantName: _restaurantName }: Mes
             ) : selectedConfigType ? (
               <>
                 <p className="text-3xl font-gilroy-black text-gray-900 mb-1">
-                  RM {selectedConfigType.charge.toFixed(2)}
+                  RM {(selectedConfigType.charge * 10).toFixed(2)}
                 </p>
                 <p className="text-sm text-gray-500">per SMS</p>
               </>
