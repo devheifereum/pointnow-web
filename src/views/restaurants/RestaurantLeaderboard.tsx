@@ -114,13 +114,8 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
         })
       : "Never";
 
-    // Determine badge based on points - use total_points from leaderboard API
+    // Use total_points from leaderboard API
     const points = customer.total_points ?? customer.points ?? 0;
-    let badge = "Bronze";
-    if (points >= 10000) badge = "Diamond";
-    else if (points >= 5000) badge = "Platinum";
-    else if (points >= 2000) badge = "Gold";
-    else if (points >= 1000) badge = "Silver";
 
     // Use total_visits from leaderboard API
     const visits = customer.total_visits ?? customer.visits ?? 0;
@@ -148,7 +143,6 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
       visits: visits,
       joinedDate,
       lastVisit,
-      badge,
       avatarColor,
     };
   };
@@ -227,23 +221,6 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
     return <span className="text-gray-400 font-bold text-sm sm:text-base">#{rank}</span>;
   };
 
-  const getBadgeColor = (badge: string) => {
-    switch (badge) {
-      case "Diamond":
-        return "bg-purple-100 text-purple-700";
-      case "Platinum":
-        return "bg-gray-100 text-gray-700";
-      case "Gold":
-        return "bg-yellow-100 text-yellow-700";
-      case "Silver":
-        return "bg-gray-200 text-gray-800";
-      case "Bronze":
-        return "bg-orange-100 text-orange-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
   return (
     <>
       {/* Page Header */}
@@ -303,9 +280,6 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
                         Visits
                       </th>
                       <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Badge
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Last Visit
                       </th>
                     </tr>
@@ -337,18 +311,13 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
                             <div className="text-sm text-gray-900">{entry.visits} times</div>
                           </td>
                           <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                            <span className={`${getBadgeColor(entry.badge)} text-xs font-semibold px-2 lg:px-3 py-1 rounded-full`}>
-                              {entry.badge}
-                            </span>
-                          </td>
-                          <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">{entry.lastVisit}</div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                           No customers found
                         </td>
                       </tr>
@@ -376,9 +345,6 @@ export default function RestaurantLeaderboard({ restaurantName }: RestaurantLead
                           <p className="text-xs text-gray-600">{entry.phone}</p>
                         </div>
                       </div>
-                      <span className={`${getBadgeColor(entry.badge)} text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 ml-2`}>
-                        {entry.badge}
-                      </span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
