@@ -16,6 +16,7 @@ import {
   UserCircle,
   CreditCard,
   MessageSquare,
+  Gift,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 import { useSidebar } from "./SidebarContext";
@@ -36,6 +37,7 @@ const sidebarItems: SidebarItem[] = [
   { label: "Message Blasting", href: (name) => `/${name}/message-blasting`, icon: MessageSquare },
   { label: "Branches", href: (name) => `/${name}/branches`, icon: Building2 },
   { label: "Staff", href: (name) => `/${name}/staff`, icon: Users },
+  { label: "Rewards", href: (name) => `/${name}/rewards`, icon: Gift },
   { label: "Billing", href: (name) => `/${name}/billing`, icon: CreditCard },
   { label: "Settings", href: (name) => `/${name}/settings`, icon: Settings },
 ];
@@ -59,7 +61,7 @@ export default function RestaurantSidebar() {
 
   const fetchBusinessName = async () => {
     if (!businessId) return;
-    
+
     try {
       const response = await businessApi.getById(businessId);
       setBusinessName(response.data.business.name || "");
@@ -96,8 +98,8 @@ export default function RestaurantSidebar() {
         <div className="flex flex-col h-full w-full min-w-0">
           {/* Logo/Header */}
           <div className="p-4 xl:p-6 border-b border-gray-200 flex items-center justify-between w-full min-w-0">
-            <Link 
-              href={`/${businessNameParam}/dashboard`} 
+            <Link
+              href={`/${businessNameParam}/dashboard`}
               className="flex items-center flex-1 min-w-0"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -136,10 +138,9 @@ export default function RestaurantSidebar() {
                   className={`
                     flex items-center px-4 xl:px-0 xl:justify-center py-4 xl:py-3 rounded-xl transition-all duration-200
                     group relative w-full min-w-0
-                    ${
-                      isActive
-                        ? "bg-[#7bc74d] text-white shadow-md"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    ${isActive
+                      ? "bg-[#7bc74d] text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }
                   `}
                 >
