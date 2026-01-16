@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { User, Phone, X, Plus, Search, Mail, Loader2, Gift, ArrowLeft } from "lucide-react";
+import { User, Phone, X, Plus, Search, Mail, Loader2, Gift, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { toast } from "sonner";
@@ -512,45 +512,127 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="mb-4 sm:mb-6 pt-2 sm:pt-0">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-gilroy-black text-black mb-2">Dashboard</h1>
-        <p className="text-xs sm:text-sm lg:text-base text-gray-600">Manage customer points</p>
+      {/* Page Header with Timeline */}
+      <div className="mb-4 sm:mb-6 pt-2 sm:pt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-gilroy-black text-black mb-1">Dashboard</h1>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-600">Manage customer points</p>
+        </div>
+        
+        {/* Compact Timeline */}
+        <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 shadow-sm border border-gray-100">
+          {/* Step 1 */}
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+            <div className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+              currentCustomer 
+                ? "bg-[#7bc74d] shadow-sm" 
+                : "bg-[#7bc74d] ring-2 ring-[#7bc74d]/30"
+            }`}>
+              {currentCustomer ? (
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white" />
+              ) : (
+                <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white">1</span>
+              )}
+            </div>
+            <span className={`hidden sm:inline text-[9px] sm:text-[10px] md:text-xs font-medium transition-colors ${
+              currentCustomer ? "text-[#7bc74d] font-semibold" : "text-gray-600"
+            }`}>Customer</span>
+          </div>
+          
+          {/* Connector 1 */}
+          <div className={`w-2 sm:w-3 md:w-4 h-0.5 rounded-full transition-all duration-300 ${
+            currentCustomer ? "bg-[#7bc74d]" : "bg-gray-200"
+          }`} />
+          
+          {/* Step 2 */}
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+            <div className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+              currentCustomer && (pointsInput || selectedReward)
+                ? "bg-[#7bc74d] shadow-sm"
+                : currentCustomer
+                ? "bg-[#7bc74d]/80 ring-2 ring-[#7bc74d]/30"
+                : "bg-gray-200"
+            }`}>
+              {currentCustomer && (pointsInput || selectedReward) ? (
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white" />
+              ) : currentCustomer ? (
+                <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white">2</span>
+              ) : (
+                <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-gray-400">2</span>
+              )}
+            </div>
+            <span className={`hidden sm:inline text-[9px] sm:text-[10px] md:text-xs font-medium transition-colors ${
+              currentCustomer && (pointsInput || selectedReward) 
+                ? "text-[#7bc74d] font-semibold" 
+                : currentCustomer 
+                ? "text-[#7bc74d]/80" 
+                : "text-gray-400"
+            }`}>Points</span>
+          </div>
+          
+          {/* Connector 2 */}
+          <div className={`w-2 sm:w-3 md:w-4 h-0.5 rounded-full transition-all duration-300 ${
+            currentCustomer && (pointsInput || selectedReward) ? "bg-[#7bc74d]" : "bg-gray-200"
+          }`} />
+          
+          {/* Step 3 */}
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all duration-300 bg-gray-200">
+              <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-gray-400">3</span>
+            </div>
+            <span className="hidden sm:inline text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-400">Done</span>
+          </div>
+        </div>
       </div>
 
-      {/* Branch Selection */}
+      {/* Branch Selection with Next Button */}
       <div className="mb-4 sm:mb-6">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
           Select Branch *
         </label>
-        <div className="relative">
-          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-          <select
-            value={selectedBranchId}
-            onChange={(e) => setSelectedBranchId(e.target.value)}
-            disabled={isLoadingBranches || branches.length === 0}
-            className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black bg-white appearance-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+          {/* Branch Dropdown */}
+          <div className="relative flex-1 min-w-0 max-w-xs sm:max-w-sm md:max-w-md">
+            <Building2 className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 z-10" />
+            <select
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+              disabled={isLoadingBranches || branches.length === 0}
+              className="w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7bc74d] focus:border-transparent text-black bg-white appearance-none disabled:bg-gray-100 disabled:cursor-not-allowed truncate"
+            >
+              {isLoadingBranches ? (
+                <option>Loading...</option>
+              ) : branches.length === 0 ? (
+                <option>No branches</option>
+              ) : (
+                <>
+                  <option value="">Select branch</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+            <ChevronDown className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+          </div>
+          
+          {/* Spacer to push Next button to right */}
+          <div className="flex-1" />
+          
+          {/* Next Button */}
+          <button
+            disabled={!selectedBranchId}
+            className="flex-shrink-0 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base"
           >
-            {isLoadingBranches ? (
-              <option>Loading branches...</option>
-            ) : branches.length === 0 ? (
-              <option>No branches available</option>
-            ) : (
-              <>
-                <option value="">-- Select a branch --</option>
-                {branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <span>Next</span>
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+          </button>
         </div>
         {branches.length === 0 && !isLoadingBranches && (
-          <p className="mt-1 text-xs text-amber-600">
-            No branches found. Please create a branch first in the admin section.
+          <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-amber-600">
+            No branches found. Please create a branch first.
           </p>
         )}
       </div>
@@ -562,7 +644,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+      <div className={`grid grid-cols-1 ${currentCustomer ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-6 lg:gap-8 transition-all duration-300`}>
         {/* Left Column - Customer Info */}
         <div className="space-y-4 sm:space-y-6">
           {/* Customer Display */}
@@ -599,7 +681,7 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
 
               {/* Points Display */}
               <div className="bg-gradient-to-br from-[#7bc74d] to-[#6ab63d] rounded-xl p-4 sm:p-5 md:p-6 text-center mb-4 sm:mb-6">
-                <p className="text-gray-700 text-xs sm:text-sm mb-2 font-medium">Current Points</p>
+                <p className="text-white text-xs sm:text-sm mb-2 font-medium">Current Points</p>
                 <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-gilroy-black text-white">
                   {currentCustomer.total_points ?? currentCustomer.points ?? 0}
                 </p>
@@ -959,6 +1041,115 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 </button>
               </div>
 
+              {/* Numpad */}
+              <div className="mb-4 sm:mb-6">
+                <div className="space-y-2 sm:space-y-3">
+                  {/* Number Row 1 */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    {[1, 2, 3].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setSearchQuery((prev) => {
+                            const newQuery = prev + num.toString();
+                            if (prev.length === 0) {
+                              setShowCustomerSearch(true);
+                            }
+                            return newQuery;
+                          });
+                        }}
+                        className="bg-gray-100 hover:bg-gray-200 text-black font-gilroy-extrabold text-xl sm:text-2xl py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Number Row 2 */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    {[4, 5, 6].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setSearchQuery((prev) => {
+                            const newQuery = prev + num.toString();
+                            if (prev.length === 0) {
+                              setShowCustomerSearch(true);
+                            }
+                            return newQuery;
+                          });
+                        }}
+                        className="bg-gray-100 hover:bg-gray-200 text-black font-gilroy-extrabold text-xl sm:text-2xl py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Number Row 3 */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    {[7, 8, 9].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setSearchQuery((prev) => {
+                            const newQuery = prev + num.toString();
+                            if (prev.length === 0) {
+                              setShowCustomerSearch(true);
+                            }
+                            return newQuery;
+                          });
+                        }}
+                        className="bg-gray-100 hover:bg-gray-200 text-black font-gilroy-extrabold text-xl sm:text-2xl py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Bottom Row: Clear, 0, Backspace */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setShowCustomerSearch(false);
+                      }}
+                      className="bg-red-100 hover:bg-red-200 text-red-600 font-semibold text-base sm:text-lg py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearchQuery((prev) => {
+                          const newQuery = prev + "0";
+                          if (prev.length === 0) {
+                            setShowCustomerSearch(true);
+                          }
+                          return newQuery;
+                        });
+                      }}
+                      className="bg-gray-100 hover:bg-gray-200 text-black font-gilroy-extrabold text-xl sm:text-2xl py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                    >
+                      0
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearchQuery((prev) => {
+                          const newQuery = prev.slice(0, -1);
+                          if (newQuery.length === 0) {
+                            setShowCustomerSearch(false);
+                          }
+                          return newQuery;
+                        });
+                      }}
+                      className="bg-gray-100 hover:bg-gray-200 text-black font-semibold text-base sm:text-lg py-3 sm:py-4 md:py-5 lg:py-6 rounded-lg sm:rounded-xl transition-colors shadow-sm active:scale-95"
+                    >
+                      ⌫
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Customer List or Add New Button */}
               {showCustomerSearch && (
                 <div className="space-y-2 max-h-80 sm:max-h-96 overflow-y-auto">
@@ -1017,15 +1208,14 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
           )}
         </div>
 
-        {/* Right Column - Keypad */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-gilroy-black text-black mb-4 sm:mb-6 text-center">
-            {!currentCustomer
-              ? "Select Customer First"
-              : mode === "rewards"
+        {/* Right Column - Keypad - Only show when customer is selected */}
+        {currentCustomer && (
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 border border-gray-100">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-gilroy-black text-black mb-4 sm:mb-6 text-center">
+              {mode === "rewards"
                 ? "Select a Reward"
                 : "Enter Points"}
-          </h2>
+            </h2>
 
           {/* Points Display - Show in points mode */}
           {mode === "points" && (
@@ -1123,19 +1313,8 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
               </p>
             </div>
           )}
-
-          {/* No Customer Selected */}
-          {!currentCustomer && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <User className="w-10 h-10 text-gray-400" />
-              </div>
-              <p className="text-gray-500">
-                Search and select a customer to get started
-              </p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Redeem Confirmation Dialog */}
