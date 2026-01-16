@@ -417,6 +417,13 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
     setSearchQuery("");
   };
 
+  const handlePrevious = () => {
+    // Clear customer selection and go back to Step 1
+    handleClearCustomer();
+    setSelectedReward(null);
+    setRewardSearchQuery("");
+  };
+
   const createTransaction = async (amount: number, type: "EARN" | "REDEEM") => {
     if (!currentCustomer || !businessId || !staffId || !selectedBranchId) {
       setError("Please select a branch first");
@@ -618,12 +625,23 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
             <ChevronDown className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
           </div>
           
-          {/* Spacer to push Next button to right */}
+          {/* Spacer to push buttons to right */}
           <div className="flex-1" />
+          
+          {/* Previous Button - Only show on Step 2+ (when customer is selected) */}
+          {currentCustomer && (
+            <button
+              onClick={handlePrevious}
+              className="flex-shrink-0 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+              <span>Previous</span>
+            </button>
+          )}
           
           {/* Next Button */}
           <button
-            disabled={!selectedBranchId}
+            disabled={!selectedBranchId || !currentCustomer}
             className="flex-shrink-0 bg-[#7bc74d] hover:bg-[#6ab63d] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base"
           >
             <span>Next</span>
@@ -1029,6 +1047,18 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                 </div>
                 <button
                   onClick={() => {
+                    // Auto-fill phone number if search query looks like a phone number
+                    if (searchQuery.trim() && /^\d+$/.test(searchQuery.trim())) {
+                      // Convert to E.164 format for PhoneInput
+                      const phoneNum = searchQuery.trim();
+                      if (phoneNum.startsWith('0')) {
+                        setPhoneValue(`+60${phoneNum.substring(1)}`);
+                      } else if (phoneNum.startsWith('60')) {
+                        setPhoneValue(`+${phoneNum}`);
+                      } else {
+                        setPhoneValue(`+60${phoneNum}`);
+                      }
+                    }
                     setShowNewCustomerForm(true);
                     setShowCustomerSearch(false);
                   }}
@@ -1191,6 +1221,18 @@ export default function RestaurantDashboard({ restaurantName }: RestaurantDashbo
                       <p className="text-gray-500 mb-4">No customers found</p>
                       <button
                         onClick={() => {
+                          // Auto-fill phone number if search query looks like a phone number
+                          if (searchQuery.trim() && /^\d+$/.test(searchQuery.trim())) {
+                            // Convert to E.164 format for PhoneInput
+                            const phoneNum = searchQuery.trim();
+                            if (phoneNum.startsWith('0')) {
+                              setPhoneValue(`+60${phoneNum.substring(1)}`);
+                            } else if (phoneNum.startsWith('60')) {
+                              setPhoneValue(`+${phoneNum}`);
+                            } else {
+                              setPhoneValue(`+60${phoneNum}`);
+                            }
+                          }
                           setShowNewCustomerForm(true);
                           setShowCustomerSearch(false);
                         }}
